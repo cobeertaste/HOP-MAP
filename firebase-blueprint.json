@@ -1,0 +1,83 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile in Hop Map",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "username": { "type": "string" },
+        "points": { "type": "number" },
+        "favorites": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "friends": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Rating": {
+      "title": "Rating",
+      "description": "User beer rating for a bar",
+      "type": "object",
+      "properties": {
+        "stars": { "type": "number" },
+        "texto_rating": { "type": "string", "maxLength": 100 },
+        "tipo_cerveja": { "type": "string" },
+        "barId": { "type": "string" },
+        "barName": { "type": "string" },
+        "userName": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["stars", "texto_rating", "tipo_cerveja", "barId", "barName", "userName"]
+    },
+    "FriendRequest": {
+      "title": "FriendRequest",
+      "description": "Pending and active friend requests between users",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderPoints": { "type": "number" },
+        "receiverId": { "type": "string" },
+        "receiverName": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "senderName", "receiverId", "receiverName", "status"]
+    },
+    "SpotTaps": {
+      "title": "SpotTaps",
+      "description": "Spot TAPS count",
+      "type": "object",
+      "properties": {
+        "taps": { "type": "number" }
+      },
+      "required": ["taps"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User documents stored by their unique auth UID"
+    },
+    "ratings/{ratingId}": {
+      "schema": "Rating",
+      "description": "Global user beer rating entries"
+    },
+    "friend_requests/{requestId}": {
+      "schema": "FriendRequest",
+      "description": "Friend request entries linking two users"
+    },
+    "spots_taps/{spotId}": {
+      "schema": "SpotTaps",
+      "description": "Total TAPS points recorded for each individual bar spot"
+    }
+  }
+}

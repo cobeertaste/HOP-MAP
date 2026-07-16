@@ -1,0 +1,6 @@
+{
+  "name": "HOP MAP",
+  "description": "Descobre os melhores spots de cerveja artesanal em Portugal continental, Madeira e Açores com rotas otimizadas, fidelidade, eventos de cerveja e design estilo Apple.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

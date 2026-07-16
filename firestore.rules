@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidUser(user) {
+      return user.uid is string && user.uid.size() <= 128
+        && user.email is string && user.email.size() <= 100
+        && user.username is string && user.username.size() <= 100
+        && (!('points' in user) || user.points is number)
+        && (!('favorites' in user) || user.favorites is list)
+        && (!('friends' in user) || user.friends is list);
+    }
+
+    function isValidRating(rating) {
+      return rating.stars is number && rating.stars >= 1 && rating.stars <= 5
+        && rating.texto_rating is string && rating.texto_rating.size() <= 100
+        && rating.tipo_cerveja is string && rating.tipo_cerveja.size() <= 100
+        && rating.barId is string && rating.barId.size() <= 100
+        && rating.barName is string && rating.barName.size() <= 100
+        && rating.userName is string && rating.userName.size() <= 100
+        && rating.userId is string && rating.userId == request.auth.uid;
+    }
+
+    // 2. Users Collection
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(request.resource.data);
+      allow update: if isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // 3. Ratings Collection
+    match /ratings/{ratingId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidRating(request.resource.data);
+      allow update: if isSignedIn() && isValidRating(request.resource.data) 
+                    && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == resource.data.userId; // userId is immutable
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // 4. Friend Requests Collection
+    match /friend_requests/{requestId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.receiverId == request.auth.uid || resource.data.senderId == request.auth.uid);
+      allow delete: if isSignedIn() && (resource.data.receiverId == request.auth.uid || resource.data.senderId == request.auth.uid);
+    }
+
+    // 5. Spots Taps Collection
+    match /spots_taps/{spotId} {
+      allow read: if true;
+      allow create, update: if isSignedIn() && request.resource.data.taps is number && request.resource.data.taps >= 0;
+    }
+  }
+}

@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@theme {
+  --font-sans: "Inter", "Helvetica Neue", system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-press-start: "Press Start 2P", monospace;
+  
+  --color-brand-gold: #FFCA00;
+
+  --color-amber-50: #FFCA00;
+  --color-amber-100: #FFCA00;
+  --color-amber-200: #FFCA00;
+  --color-amber-300: #FFCA00;
+  --color-amber-400: #FFCA00;
+  --color-amber-500: #FFCA00;
+  --color-amber-600: #FFCA00;
+  --color-amber-700: #FFCA00;
+  --color-amber-800: #FFCA00;
+  --color-amber-900: #FFCA00;
+
+  --color-orange-50: #FFCA00;
+  --color-orange-100: #FFCA00;
+  --color-orange-200: #FFCA00;
+  --color-orange-300: #FFCA00;
+  --color-orange-400: #FFCA00;
+  --color-orange-500: #FFCA00;
+  --color-orange-600: #FFCA00;
+  --color-orange-700: #FFCA00;
+  --color-orange-800: #FFCA00;
+  --color-orange-900: #FFCA00;
+
+  --color-yellow-50: #FFCA00;
+  --color-yellow-100: #FFCA00;
+  --color-yellow-200: #FFCA00;
+  --color-yellow-300: #FFCA00;
+  --color-yellow-400: #FFCA00;
+  --color-yellow-500: #FFCA00;
+  --color-yellow-600: #FFCA00;
+  --color-yellow-700: #FFCA00;
+  --color-yellow-800: #FFCA00;
+  --color-yellow-900: #FFCA00;
+}
+
+body {
+  margin: 0;
+  background-color: #030303;
+  color: #ffffff;
+  font-family: var(--font-sans);
+}
+
+/* Custom scrollbar styling with yellow #FFCA00 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 15, 15, 0.8);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #FFCA00;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(15, 15, 15, 0.8);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #E0B300;
+}
+
+/* Support firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #FFCA00 rgba(15, 15, 15, 0.8);
+}
+
+@keyframes hueRotate {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.animate-legendary {
+  animation: hueRotate 6s linear infinite;
+  background: linear-gradient(to right, #FFCA00, #ec4899, #3b82f6, #FFCA00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+}
+
