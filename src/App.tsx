@@ -10,7 +10,7 @@ import {
   Search, Bell, Shield, Fingerprint, CreditCard, Sparkles, 
   Navigation, CheckCircle, ArrowRight, Instagram, Facebook, 
   X, Compass, Filter, Share2, Flame, RefreshCcw, Smile, Check, Zap, CheckSquare, Square,
-  Camera, LogOut, Trophy
+  Camera, LogOut, Trophy, ChevronDown
 } from 'lucide-react';
 
 import { BARS_DATA, EVENTS_DATA, getReviewsForBar } from './data';
@@ -27,7 +27,8 @@ import {
   signOut, 
   onAuthStateChanged,
   createUserWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, setDoc, collection, addDoc, getDocs, getDoc, query, orderBy, where, limit, onSnapshot } from 'firebase/firestore';
 
@@ -61,30 +62,57 @@ interface FirestoreErrorInfo {
 const CITY_COORDINATES: Record<string, { latitude: number; longitude: number; zone: string }> = {
   'Porto': { latitude: 41.1524, longitude: -8.6186, zone: 'Porto' },
   'Lisboa': { latitude: 38.7144, longitude: -9.1512, zone: 'Lisboa' },
-  'Braga': { latitude: 41.5492, longitude: -8.4273, zone: 'Outro' },
-  'Coimbra': { latitude: 40.2033, longitude: -8.4103, zone: 'Outro' },
-  'Aveiro': { latitude: 40.6405, longitude: -8.6538, zone: 'Outro' },
-  'Viana do Castelo': { latitude: 41.6932, longitude: -8.8328, zone: 'Outro' },
-  'Caminha': { latitude: 41.8755, longitude: -8.8385, zone: 'Outro' },
-  'Ericeira': { latitude: 38.9631, longitude: -9.4124, zone: 'Lisboa' },
-  'Castelo de Vide': { latitude: 39.4149, longitude: -7.4542, zone: 'Outro' },
-  'Vila Verde': { latitude: 41.6433, longitude: -8.4358, zone: 'Outro' },
-  'Alvaiázere': { latitude: 39.8247, longitude: -8.3804, zone: 'Outro' },
-  'Furadouro': { latitude: 40.8715, longitude: -8.6738, zone: 'Outro' },
-  'Caldas da Rainha': { latitude: 39.4058, longitude: -9.1368, zone: 'Outro' },
+  'Braga': { latitude: 41.5499154, longitude: -8.4303589, zone: 'Norte' },
+  'Coimbra': { latitude: 40.231595, longitude: -18.0345764, zone: 'Centro' },
+  'Aveiro': { latitude: 40.6432682, longitude: -9.2602503, zone: 'Centro' },
+  'Viana do Castelo': { latitude: 41.6945518, longitude: -9.4409041, zone: 'Norte' },
+  'Caminha': { latitude: 38.7677295, longitude: -18.8529999, zone: 'Norte' },
+  'Ericeira': { latitude: 38.7677295, longitude: -18.8529999, zone: 'Centro' },
+  'Castelo de Vide': { latitude: 40.1151208, longitude: -13.7255423, zone: 'Centro' },
+  'Vila Verde': { latitude: 41.6499821, longitude: -9.0485132, zone: 'Norte' },
+  'Alvaiázere': { latitude: 39.8247, longitude: -8.3804, zone: 'Centro' },
+  'Furadouro': { latitude: 40.8715, longitude: -8.6738, zone: 'Centro' },
+  'Caldas da Rainha': { latitude: 39.4075503, longitude: -9.1383124, zone: 'Centro' },
   'Linhó': { latitude: 38.7658, longitude: -9.3812, zone: 'Lisboa' },
-  'Borba de Montanha': { latitude: 41.3858, longitude: -7.9812, zone: 'Outro' },
-  'Arco de Baúlhe': { latitude: 41.4858, longitude: -7.9812, zone: 'Outro' },
-  'Évora': { latitude: 38.5714, longitude: -7.9135, zone: 'Outro' },
-  'Constância': { latitude: 39.4758, longitude: -8.3312, zone: 'Outro' },
-  'V.N.Gaia': { latitude: 41.1333, longitude: -8.6167, zone: 'Porto' },
+  'Borba de Montanha': { latitude: 41.3858, longitude: -7.9812, zone: 'Norte' },
+  'Arco de Baúlhe': { latitude: 41.4858, longitude: -7.9812, zone: 'Norte' },
+  'Évora': { latitude: 38.7677295, longitude: -18.8529999, zone: 'Sul' },
+  'Constância': { latitude: 39.4758, longitude: -8.3312, zone: 'Centro' },
+  'V.N.Gaia': { latitude: 41.1119466, longitude: -8.6051778, zone: 'Porto' },
   'Maia': { latitude: 41.2333, longitude: -8.6167, zone: 'Porto' },
-  'Guimarães': { latitude: 41.4425, longitude: -8.2918, zone: 'Outro' },
-  'Santa Maria da Feira': { latitude: 40.9258, longitude: -8.5431, zone: 'Outro' },
-  'Famalicão': { latitude: 41.4074, longitude: -8.5192, zone: 'Outro' },
-  'Silves': { latitude: 37.1895, longitude: -8.4410, zone: 'Outro' },
-  'Póvoa do Lanhoso': { latitude: 41.5772, longitude: -8.2721, zone: 'Outro' },
-  'Amadora': { latitude: 38.7596, longitude: -9.2244, zone: 'Lisboa' }
+  'Guimarães': { latitude: 35.5239262, longitude: -29.4270742, zone: 'Norte' },
+  'Santa Maria da Feira': { latitude: 40.9257534, longitude: -9.151358, zone: 'Norte' },
+  'Famalicão': { latitude: 41.4074, longitude: -8.5192, zone: 'Norte' },
+  'Silves': { latitude: 37.1895, longitude: -8.4410, zone: 'Sul' },
+  'Póvoa do Lanhoso': { latitude: 41.5772, longitude: -8.2721, zone: 'Norte' },
+  'Amadora': { latitude: 38.7596, longitude: -9.2244, zone: 'Lisboa' },
+  'Açores': { latitude: 37.7392, longitude: -25.6698, zone: 'Açores' },
+  'Madeira': { latitude: 32.6508, longitude: -16.9114, zone: 'Madeira' },
+  'Óbidos': { latitude: 40.1151208, longitude: -13.7255423, zone: 'Centro' },
+  'Colares': { latitude: 38.9939066, longitude: -9.8505184, zone: 'Lisboa' },
+  'Sintra': { latitude: 38.830703, longitude: -9.5634142, zone: 'Lisboa' },
+  'Cascais': { latitude: 38.6984785, longitude: -19.1767006, zone: 'Lisboa' },
+  'Bragança': { latitude: 38.6984785, longitude: -19.1767006, zone: 'Norte' },
+  'Matosinhos': { latitude: 41.1809308, longitude: -9.302481, zone: 'Norte' },
+  'Setúbal': { latitude: 38.7677295, longitude: -18.8529999, zone: 'Sul' },
+  'Lagos': { latitude: 38.7677295, longitude: -18.8529999, zone: 'Sul' },
+  'Portimão': { latitude: 37.1325847, longitude: -8.5388601, zone: 'Sul' },
+  'Faro': { latitude: 38.7677295, longitude: -18.8529999, zone: 'Sul' },
+  'Tavira': { latitude: 38.7677295, longitude: -18.8529999, zone: 'Sul' },
+  'Fuzeta': { latitude: 38.7677295, longitude: -18.8529999, zone: 'Sul' },
+  'Vila Viçosa': { latitude: 38.8849116, longitude: -9.9356054, zone: 'Sul' },
+  'Lagoa': { latitude: 37.1208858, longitude: -9.0972714, zone: 'Sul' },
+  'Figueira de Castelo Rodrigo': { latitude: 37.0982979, longitude: -18.4250966, zone: 'Norte' },
+  'Arganil': { latitude: 37.0982979, longitude: -18.4250966, zone: 'Centro' },
+  'Vila Nova de Poiares': { latitude: 37.0982979, longitude: -18.4250966, zone: 'Centro' },
+  'Monsanto': { latitude: 40.231595, longitude: -18.0345764, zone: 'Centro' },
+  'Oliveira de Azeméis': { latitude: 40.1151208, longitude: -13.7255423, zone: 'Centro' },
+  'Fermelã': { latitude: 40.6432682, longitude: -9.2602503, zone: 'Centro' },
+  'Penafiel': { latitude: 41.2063364, longitude: -8.8922874, zone: 'Norte' },
+  'Senhora da Hora': { latitude: 41.1866184, longitude: -8.6655937, zone: 'Porto' },
+  'Amarante': { latitude: 41.2682937, longitude: -8.0771978, zone: 'Norte' },
+  'Lourinhã': { latitude: 39.2426474, longitude: -9.3164026, zone: 'Centro' },
+  'Jesufrei': { latitude: 41.4595667, longitude: -8.5124325, zone: 'Norte' }
 };
 
 function isPermissionError(err: any): boolean {
@@ -326,6 +354,21 @@ export function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: 
   return R * c;
 }
 
+// Calcula a distância exata em metros entre duas coordenadas utilizando a fórmula matemática de Haversine
+export function getHaversineDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000; // Raio da Terra em metros
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export interface SpotTierDetails {
   title: string;
   concept: string;
@@ -405,6 +448,8 @@ export default function App() {
   // Filtering and Searching
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedZone, setSelectedZone] = useState<string>('All');
+  const [isZoneDropdownOpen, setIsZoneDropdownOpen] = useState(false);
+  const [zoneSearchQuery, setZoneSearchQuery] = useState('');
   const [selectedStyle, setSelectedStyle] = useState<string>('All');
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [proximitySort, setProximitySort] = useState(false);
@@ -448,6 +493,13 @@ export default function App() {
   const [authError, setAuthError] = useState('');
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const isLocalAuthFallback = false;
+
+  // Password reset states
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState('');
+  const [isResetLoading, setIsResetLoading] = useState(false);
 
   // Notifications
   const [notifications, setNotifications] = useState<HopNotification[]>([
@@ -1448,21 +1500,38 @@ export default function App() {
 
   // Synchronize simulated user coordinates when zone filters change
   useEffect(() => {
-    if (selectedZone === 'Porto') {
-      setUserLocation({ latitude: 41.1524, longitude: -8.6186 }); // Port center (Catraio)
-    } else if (selectedZone === 'Lisboa') {
-      setUserLocation({ latitude: 38.7144, longitude: -9.1512 }); // Lisbon center (Cerveteca)
-    } else if (selectedZone === 'Madeira') {
-      setUserLocation({ latitude: 32.6508, longitude: -16.9114 }); // Funchal center (Fuga)
-    } else if (selectedZone === 'Açores') {
-      setUserLocation({ latitude: 37.7392, longitude: -25.6698 }); // Ponta Delgada center (Crafty Corner)
-    } else if (selectedZone === 'Outro') {
-      setUserLocation({ latitude: 41.5492, longitude: -8.4273 }); // Braga center (Letraria)
-    } else {
+    if (selectedZone === 'All') {
       // Default / All: Porto center is a great anchor
       setUserLocation({ latitude: 41.1524, longitude: -8.6186 });
+    } else {
+      const barInZone = bars.find(b => b.zone === selectedZone);
+      if (barInZone && barInZone.latitude && barInZone.longitude) {
+        setUserLocation({ latitude: barInZone.latitude, longitude: barInZone.longitude });
+      }
     }
-  }, [selectedZone]);
+  }, [selectedZone, bars]);
+
+  // Helper zones and counts computed dynamically from the current bars list
+  const { zoneCounts, activeZones } = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    bars.forEach(b => {
+      if (b.zone) {
+        counts[b.zone] = (counts[b.zone] || 0) + 1;
+      }
+    });
+    // Define a solid regional presentation order
+    const defaultOrder = ['Porto', 'Norte', 'Centro', 'Lisboa', 'Açores', 'Madeira', 'Sul'];
+    // Filter and keep only those that actually exist in current spots
+    const uniqueFromBars = Array.from(new Set(bars.map(b => b.zone as string))).filter(Boolean) as string[];
+    const ordered = defaultOrder.filter(z => uniqueFromBars.includes(z));
+    // Any remaining custom zones not in defaultOrder can be appended
+    uniqueFromBars.forEach(z => {
+      if (!ordered.includes(z)) {
+        ordered.push(z);
+      }
+    });
+    return { zoneCounts: counts, activeZones: ordered };
+  }, [bars]);
 
   // Helper styles extracted
   const stylesList = Array.from(new Set(BARS_DATA.flatMap(b => b.styles)));
@@ -1531,13 +1600,12 @@ export default function App() {
       return;
     }
 
-    const barDistanceMeters = getDistanceInKm(userLocation.latitude, userLocation.longitude, bar.latitude, bar.longitude) * 1000;
-    const isWithinRange = isGpsWithin50m && barDistanceMeters <= 50;
+    const exactDistance = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, bar.latitude, bar.longitude);
+    const isWithinRange = exactDistance <= 50;
     if (!isWithinRange) {
-      const displayDist = isGpsWithin50m ? Math.round(barDistanceMeters) : 840;
       triggerSelfPush(
         'Fora do Raio de Check-in!',
-        `A tua localização atual (simulada: ${displayDist} metros) está fora do limite de 50 metros para ${bar.name}. Aproxima-te do bar para validar o teu selo!`,
+        `Estás demasiado longe deste local para fazer check-in. Deves encontrar-te a menos de 50 metros do spot (atualmente estás a ${Math.round(exactDistance)} metros).`,
         'system'
       );
       return;
@@ -1550,10 +1618,10 @@ export default function App() {
       const nextStamps = currentStamps + 1;
       const willReset = nextStamps >= 5;
       
-      let alertMsg = `Aprovado! +1 carimbo no Hop Card e ganhaste +1 ponto HOP!`;
+      let alertMsg = `Check-in efetuado! Ganhaste 1 check-in neste spot.`;
 
       if (willReset) {
-        alertMsg = `Card preenchido! Ganhaste +1 ponto HOP e 1 Cerveja Grátis neste bar! 🎉`;
+        alertMsg = `Check-in efetuado! Ganhaste 1 check-in neste spot. Card preenchido! Ganhaste +1 ponto HOP e 1 Cerveja Grátis neste bar! 🎉`;
       }
 
       // Save the updated points to the user document in Firestore if using cloud auth
@@ -2323,7 +2391,7 @@ export default function App() {
               </button>
 
               {/* Register Toggle Link */}
-              <div className="text-center">
+              <div className="text-center flex flex-col items-center gap-2">
                 <button 
                   onClick={() => {
                     setIsRegisterMode(!isRegisterMode);
@@ -2333,6 +2401,20 @@ export default function App() {
                 >
                   {isRegisterMode ? 'Já tens conta? Entrar' : 'Não tens conta? Criar conta'}
                 </button>
+
+                {!isRegisterMode && (
+                  <button 
+                    onClick={() => {
+                      setResetEmail(loginEmail);
+                      setResetError('');
+                      setResetSuccess('');
+                      setShowResetModal(true);
+                    }}
+                    className="text-[10px] text-zinc-400 hover:text-zinc-300 font-bold underline cursor-pointer mt-0.5"
+                  >
+                    Esqueci-me da palavra-passe
+                  </button>
+                )}
               </div>
             </div>
 
@@ -2418,22 +2500,157 @@ export default function App() {
                     </button>
                   </div>
 
-                  {/* Region Specific selections */}
-                  <div className="grid grid-cols-3 gap-1 pt-1">
-                    {Object.values(BarZone).map(zone => (
-                      <button
-                        key={zone}
-                        onClick={() => setSelectedZone(selectedZone === zone ? 'All' : zone)}
-                        className={`text-[9px] font-bold p-1.5 rounded-lg border text-center transition-all truncate ${
-                          selectedZone === zone 
-                            ? 'bg-amber-500/20 text-amber-500 border-amber-500/60 font-bold' 
-                            : (darkMode ? 'bg-white/5 border-white/10 text-neutral-400 hover:text-white' : 'bg-white border-neutral-200 text-neutral-600')
-                        }`}
-                        id={`zone-selector-${zone.toLowerCase().replace(' ', '-')}`}
-                      >
-                        {zone.replace('Portugal ', '')}
-                      </button>
-                    ))}
+                  {/* Region Dropdown Filter */}
+                  <div className="relative pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsZoneDropdownOpen(!isZoneDropdownOpen)}
+                      className={`w-full p-2.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                        selectedZone !== 'All'
+                          ? 'bg-amber-500/10 border-amber-500/50 text-amber-500'
+                          : (darkMode ? 'bg-white/5 border-white/10 text-neutral-300 hover:bg-white/10' : 'bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-50 shadow-xs')
+                      }`}
+                      id="zone-dropdown-trigger"
+                    >
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <MapPin className={`w-3.5 h-3.5 shrink-0 ${selectedZone !== 'All' ? 'text-amber-500' : 'text-neutral-500'}`} />
+                        <span className="truncate">
+                          {selectedZone === 'All' ? 'Todas as Zonas' : selectedZone}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1.5 shrink-0 ml-2">
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
+                          selectedZone !== 'All'
+                            ? 'bg-amber-500/20 text-amber-500'
+                            : (darkMode ? 'bg-white/10 text-neutral-400' : 'bg-neutral-100 text-neutral-500')
+                        }`}>
+                          {selectedZone === 'All' ? bars.length : (zoneCounts[selectedZone] || 0)} spots
+                        </span>
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isZoneDropdownOpen ? 'rotate-180' : ''}`} />
+                      </div>
+                    </button>
+
+                    {isZoneDropdownOpen && (
+                      <>
+                        {/* Click outside backdrop overlay */}
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => {
+                            setIsZoneDropdownOpen(false);
+                            setZoneSearchQuery('');
+                          }} 
+                        />
+                        
+                        {/* Dropdown Floating Box */}
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.15 }}
+                          className={`absolute left-0 right-0 mt-1.5 rounded-2xl border shadow-2xl z-50 overflow-hidden flex flex-col ${
+                            darkMode 
+                              ? 'bg-zinc-950 border-white/10 text-white shadow-black/80' 
+                              : 'bg-white border-neutral-200 text-neutral-900 shadow-neutral-400/30'
+                          }`}
+                          id="zone-dropdown-list-container"
+                        >
+                          {/* Search input inside dropdown */}
+                          <div className={`p-2 border-b ${darkMode ? 'border-white/5 bg-white/2' : 'border-neutral-100 bg-neutral-50'}`}>
+                            <div className="relative">
+                              <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-neutral-400" />
+                              <input
+                                type="text"
+                                placeholder="Pesquisar zona..."
+                                value={zoneSearchQuery}
+                                onChange={(e) => setZoneSearchQuery(e.target.value)}
+                                className={`w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border focus:outline-none transition-all ${
+                                  darkMode
+                                    ? 'bg-black border-white/10 text-white placeholder-neutral-600 focus:border-amber-500/60'
+                                    : 'bg-white border-neutral-200 text-neutral-900 placeholder-neutral-450 focus:border-amber-500'
+                                }`}
+                                id="zone-dropdown-search"
+                              />
+                              {zoneSearchQuery && (
+                                <button
+                                  type="button"
+                                  onClick={() => setZoneSearchQuery('')}
+                                  className="absolute right-2 top-2 text-neutral-400 hover:text-neutral-200"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Scrollable List of Zones */}
+                          <div className="max-h-56 overflow-y-auto divide-y dark:divide-white/5 divide-neutral-100 py-1">
+                            {/* 'All' option */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedZone('All');
+                                setIsZoneDropdownOpen(false);
+                                setZoneSearchQuery('');
+                              }}
+                              className={`w-full text-left px-3.5 py-2 text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                                selectedZone === 'All'
+                                  ? 'bg-amber-500/10 text-amber-500 font-extrabold'
+                                  : (darkMode ? 'hover:bg-white/5 text-neutral-300' : 'hover:bg-neutral-50 text-neutral-700')
+                              }`}
+                            >
+                              <div className="flex items-center space-x-2">
+                                <MapPin className={`w-3.5 h-3.5 ${selectedZone === 'All' ? 'text-amber-500' : 'text-neutral-500'}`} />
+                                <span>Todas as Zonas</span>
+                              </div>
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
+                                selectedZone === 'All'
+                                  ? 'bg-amber-500/20 text-amber-500'
+                                  : (darkMode ? 'bg-white/10 text-neutral-400' : 'bg-neutral-100 text-neutral-500')
+                              }`}>
+                                {bars.length}
+                              </span>
+                            </button>
+
+                            {/* Filtered Zones */}
+                            {activeZones
+                              .filter(zone => zone.toLowerCase().includes(zoneSearchQuery.toLowerCase()))
+                              .map(zone => (
+                                <button
+                                  key={zone}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedZone(zone);
+                                    setIsZoneDropdownOpen(false);
+                                    setZoneSearchQuery('');
+                                  }}
+                                  className={`w-full text-left px-3.5 py-2 text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                                    selectedZone === zone
+                                      ? 'bg-amber-500/15 text-amber-500 font-extrabold'
+                                      : (darkMode ? 'hover:bg-white/5 text-neutral-300' : 'hover:bg-neutral-50 text-neutral-700')
+                                  }`}
+                                  id={`zone-option-${zone.toLowerCase().replace(' ', '-')}`}
+                                >
+                                  <span>{zone}</span>
+                                  <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
+                                    selectedZone === zone
+                                      ? 'bg-amber-500/25 text-amber-500'
+                                      : (darkMode ? 'bg-white/10 text-neutral-400' : 'bg-neutral-100 text-neutral-500')
+                                  }`}>
+                                    {zoneCounts[zone] || 0}
+                                  </span>
+                                </button>
+                              ))}
+                              
+                            {/* No results state */}
+                            {activeZones.filter(zone => zone.toLowerCase().includes(zoneSearchQuery.toLowerCase())).length === 0 && (
+                              <div className={`p-4 text-center text-xs ${darkMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
+                                Nenhuma zona encontrada
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -2971,6 +3188,13 @@ export default function App() {
                         type="button"
                         onClick={() => {
                           setIsGpsWithin50m(true);
+                          const referenceBar = selectedBar || bars[0];
+                          if (referenceBar) {
+                            setUserLocation({
+                              latitude: referenceBar.latitude + 0.0001,
+                              longitude: referenceBar.longitude + 0.0001
+                            });
+                          }
                           triggerSelfPush('GPS Ativado', 'Caminhaste até ao bar. Estás a 15 metros de distância!', 'system');
                         }}
                         className={`px-2.5 py-1 text-[9px] font-bold rounded-lg transition-all cursor-pointer ${
@@ -2985,6 +3209,13 @@ export default function App() {
                         type="button"
                         onClick={() => {
                           setIsGpsWithin50m(false);
+                          const referenceBar = selectedBar || bars[0];
+                          if (referenceBar) {
+                            setUserLocation({
+                              latitude: referenceBar.latitude + 0.0076,
+                              longitude: referenceBar.longitude + 0.0001
+                            });
+                          }
                           triggerSelfPush('GPS Ativado', 'Deslocaste-te para longe. Estás a 840 metros de distância!', 'system');
                         }}
                         className={`px-2.5 py-1 text-[9px] font-bold rounded-lg transition-all cursor-pointer ${
@@ -3014,19 +3245,22 @@ export default function App() {
                   <div className="pl-1">
                     <h4 className="text-xs font-bold uppercase tracking-widest text-neutral-400 font-display">Cartão de Selos Cobeer</h4>
                     <p className="text-[10px] text-neutral-500 mt-0.5">Visite spots parceiros, faça check-ins verificados e troque por cerveja grátis!</p>
+                    <p className="text-[9px] text-zinc-400 italic mt-1 leading-normal">
+                      Nota: Para garantir a precisão de 50 metros, utiliza um telemóvel com o GPS ativo.
+                    </p>
                   </div>
                   
                   <div className="space-y-3">
                     {(() => {
                       const sortedBars = [...bars].sort((a, b) => {
-                        const distA = getDistanceInKm(userLocation.latitude, userLocation.longitude, a.latitude, a.longitude);
-                        const distB = getDistanceInKm(userLocation.latitude, userLocation.longitude, b.latitude, b.longitude);
+                        const distA = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, a.latitude, a.longitude);
+                        const distB = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, b.latitude, b.longitude);
                         return distA - distB;
                       });
                       return sortedBars.map(bar => {
                         const userStamps = user.stamps[bar.id] || 0;
-                        const distM = getDistanceInKm(userLocation.latitude, userLocation.longitude, bar.latitude, bar.longitude) * 1000;
-                        const canCheckIn = isGpsWithin50m && distM <= 50;
+                        const distM = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, bar.latitude, bar.longitude);
+                        const isNear = distM <= 50;
                         return (
                         <div 
                           key={bar.id}
@@ -3037,28 +3271,17 @@ export default function App() {
                           <div className={`flex justify-between items-center p-1 rounded-xl -m-1 mb-2 ${darkMode ? 'bg-white/2' : 'bg-neutral-50'}`}>
                             <div className="pl-1">
                               <h5 className={`text-[11px] font-extrabold leading-tight font-display ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{bar.name}</h5>
-                              <span className={`text-[8px] font-mono font-bold uppercase tracking-wider block mt-1 ${canCheckIn ? 'text-emerald-500 animate-pulse' : 'text-neutral-500'}`}>
-                                {canCheckIn ? `Estás no local (${Math.round(distM)}m)` : `Distância: ${Math.round(distM)}m (Bloqueado >50m)`}
+                              <span className={`text-[8px] font-mono font-bold uppercase tracking-wider block mt-1 ${isNear ? 'text-emerald-500 animate-pulse' : 'text-neutral-500'}`}>
+                                {isNear ? `Estás no local (${Math.round(distM)}m)` : `Distância: ${Math.round(distM)}m`}
                               </span>
                             </div>
-                            {canCheckIn ? (
-                              <button
-                                onClick={() => initiateCheckin(bar)}
-                                className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[9px] px-3 py-1.5 rounded-xl transition shadow-md font-display shrink-0 cursor-pointer"
-                                id={`btn-checkin-${bar.id}`}
-                              >
-                                Check-In + Selo
-                              </button>
-                            ) : (
-                              <button
-                                disabled
-                                className="bg-neutral-800 text-neutral-500 font-bold text-[9px] px-3 py-1.5 rounded-xl border border-white/5 font-display shrink-0 cursor-not-allowed"
-                                id={`btn-checkin-disabled-${bar.id}`}
-                                title="Deves estar a menos de 50 metros do bar para fazer check-in"
-                              >
-                                Bloqueado
-                              </button>
-                            )}
+                            <button
+                              onClick={() => initiateCheckin(bar)}
+                              className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[9px] px-3 py-1.5 rounded-xl transition shadow-md font-display shrink-0 cursor-pointer"
+                              id={`btn-checkin-${bar.id}`}
+                            >
+                              Check-In + Selo
+                            </button>
                           </div>
 
                           {/* Stamp Holes display (iOS native stamp visual) */}
@@ -3739,33 +3962,24 @@ export default function App() {
               </div>
 
               {/* Active checkin bar button */}
-              <div className="mt-4.5 pt-4 border-t border-white/5 flex space-x-2">
+              <div className="mt-4.5 pt-4 border-t border-white/5 flex flex-col space-y-2">
                 {(() => {
-                  const drawerDistanceMeters = getDistanceInKm(userLocation.latitude, userLocation.longitude, selectedBar.latitude, selectedBar.longitude) * 1000;
-                  const canCheckInDrawer = isGpsWithin50m && drawerDistanceMeters <= 50;
-                  return canCheckInDrawer ? (
+                  const drawerDistanceMeters = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, selectedBar.latitude, selectedBar.longitude);
+                  return (
                     <button 
                       onClick={() => initiateCheckin(selectedBar)}
-                      className="flex-1 h-11 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl transition-all duration-150 flex items-center justify-center space-x-1.5 shadow-lg shadow-amber-500/10 active:scale-95 font-display cursor-pointer"
+                      className="w-full h-11 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl transition-all duration-150 flex items-center justify-center space-x-1.5 shadow-lg shadow-amber-500/10 active:scale-95 font-display cursor-pointer"
                       id={`btn-checkin-drawer-${selectedBar.id}`}
                     >
                       <Fingerprint className="w-4 h-4 text-black stroke-[2.5]" />
                       <span>Validar Check-In Seguro (${Math.round(drawerDistanceMeters)}m)</span>
                     </button>
-                  ) : (
-                    <button 
-                      disabled
-                      className="flex-1 h-11 bg-neutral-800 text-neutral-500 font-bold text-xs rounded-xl border border-white/5 flex items-center justify-center space-x-1.5 font-display cursor-not-allowed"
-                      id={`btn-checkin-drawer-disabled-${selectedBar.id}`}
-                      title="Deves estar a menos de 50 metros do bar para fazer check-in"
-                    >
-                      <Shield className="w-4 h-4 text-neutral-600" />
-                      <span>Check-In Bloqueado (&gt;50m)</span>
-                    </button>
                   );
                 })()}
 
-
+                <p className="text-[10px] text-zinc-400 text-center italic mt-1 leading-normal">
+                  Nota: Para garantir a precisão de 50 metros, utiliza um telemóvel com o GPS ativo.
+                </p>
               </div>
 
               {/* Reviews subsection */}
@@ -4057,7 +4271,7 @@ export default function App() {
             {/* TAB 1: EXPLORE */}
             <button 
               onClick={() => { playPacmanSound(); setActiveTab('explore'); setSelectedBar(null); }}
-              className="flex flex-col items-center justify-center space-y-1 z-10 transition-all duration-150 relative cursor-pointer"
+              className="flex flex-col items-center justify-center space-y-1 z-10 transition-all duration-150 relative cursor-pointer h-full py-1.5 px-2 min-w-[55px]"
               id="tab-btn-explore"
             >
               <div className={`p-1 rounded-md transition-all ${activeTab === 'explore' ? 'scale-110' : 'opacity-65'}`}>
@@ -4069,7 +4283,7 @@ export default function App() {
             {/* TAB 2: MAP / ROUTING */}
             <button 
               onClick={() => { playPacmanSound(); setActiveTab('map'); setSelectedBar(null); }}
-              className="flex flex-col items-center justify-center space-y-1 z-10 transition-all duration-150 relative cursor-pointer"
+              className="flex flex-col items-center justify-center space-y-1 z-10 transition-all duration-150 relative cursor-pointer h-full py-1.5 px-2 min-w-[55px]"
               id="tab-btn-map"
             >
               <div className={`p-1 rounded-md transition-all ${activeTab === 'map' ? 'scale-110' : 'opacity-65'}`}>
@@ -4081,7 +4295,7 @@ export default function App() {
             {/* TAB 3: FESTIVALS & TICKETS */}
             <button 
               onClick={() => { playPacmanSound(); setActiveTab('events'); setSelectedBar(null); }}
-              className="flex flex-col items-center justify-center space-y-1 z-10 transition-all duration-150 relative cursor-pointer"
+              className="flex flex-col items-center justify-center space-y-1 z-10 transition-all duration-150 relative cursor-pointer h-full py-1.5 px-2 min-w-[55px]"
               id="tab-btn-events"
             >
               <div className={`p-1 rounded-md transition-all ${activeTab === 'events' ? 'scale-110' : 'opacity-65'}`}>
@@ -4093,7 +4307,7 @@ export default function App() {
             {/* TAB 4: GAMIFICATION LOYALTY */}
             <button 
               onClick={() => { playPacmanSound(); setActiveTab('loyalty'); setSelectedBar(null); }}
-              className="flex flex-col items-center justify-center space-y-1 z-10 transition-all duration-150 relative cursor-pointer"
+              className="flex flex-col items-center justify-center space-y-1 z-10 transition-all duration-150 relative cursor-pointer h-full py-1.5 px-2 min-w-[55px]"
               id="tab-btn-loyalty"
             >
               <div className={`p-1 rounded-md transition-all ${activeTab === 'loyalty' ? 'scale-110' : 'opacity-65'}`}>
@@ -4105,7 +4319,7 @@ export default function App() {
             {/* TAB 5: PROFILE SETTINGS */}
             <button 
               onClick={() => { playPacmanSound(); setActiveTab('profile'); setSelectedBar(null); }}
-              className="flex flex-col items-center justify-center space-y-1 z-10 transition-all duration-150 relative cursor-pointer"
+              className="flex flex-col items-center justify-center space-y-1 z-10 transition-all duration-150 relative cursor-pointer h-full py-1.5 px-2 min-w-[55px]"
               id="tab-btn-profile"
             >
               <div className={`p-1 rounded-md transition-all ${activeTab === 'profile' ? 'scale-110' : 'opacity-65'}`}>
@@ -4542,6 +4756,190 @@ export default function App() {
 
               </div>
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* --- PASSWORD RESET MODAL --- */}
+        <AnimatePresence>
+          {showResetModal && (
+            <div className="absolute inset-0 z-[400] flex items-center justify-center p-4">
+              {/* Backdrop blur overlay */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => {
+                  if (!isResetLoading) setShowResetModal(false);
+                }}
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              />
+
+              {/* Modal Box */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className={`relative w-full max-w-[320px] rounded-[32px] p-5 border shadow-2xl z-10 space-y-4 ${
+                  darkMode ? 'bg-zinc-900 border-white/10 text-white' : 'bg-white border-zinc-200 text-zinc-950'
+                }`}
+              >
+                <div className="flex justify-between items-center pb-1.5 border-b border-white/10">
+                  <h3 className="text-[10px] font-bold uppercase tracking-wider text-amber-500 font-press-start">
+                    Recuperar Password
+                  </h3>
+                  <button 
+                    disabled={isResetLoading}
+                    onClick={() => setShowResetModal(false)}
+                    className="text-zinc-500 hover:text-zinc-400 font-bold text-xs p-1 rounded-lg hover:bg-white/5 transition"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {resetSuccess ? (
+                  <div className="space-y-4 py-2">
+                    <div className="p-3.5 rounded-2xl text-[11px] font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-left leading-relaxed">
+                      {resetSuccess}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowResetModal(false);
+                        setResetSuccess('');
+                      }}
+                      className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs rounded-xl shadow-lg shadow-amber-500/10 active:scale-98 transition duration-150 cursor-pointer"
+                    >
+                      Concluído
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-[10px] text-zinc-400 leading-relaxed pl-1">
+                      Introduz o teu e-mail e enviaremos um link para redefinires a tua palavra-passe.
+                    </p>
+
+                    <div className="space-y-1.5 text-left">
+                      <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 pl-1">E-Mail</label>
+                      <input
+                        type="email"
+                        placeholder="email@exemplo.com"
+                        value={resetEmail}
+                        onChange={e => {
+                          setResetEmail(e.target.value);
+                          if (resetError) setResetError('');
+                        }}
+                        disabled={isResetLoading}
+                        className={`w-full px-4 py-2 text-xs rounded-xl border transition-all outline-none ${
+                          darkMode ? 'bg-zinc-950 border-white/10 text-white focus:border-amber-500' : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-amber-500'
+                        }`}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            const trimmedEmail = resetEmail.trim();
+                            if (!trimmedEmail) {
+                              setResetError('Por favor, introduz o teu e-mail.');
+                              return;
+                            }
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (!emailRegex.test(trimmedEmail)) {
+                              setResetError('Formato de e-mail inválido.');
+                              return;
+                            }
+                            setIsResetLoading(true);
+                            sendPasswordResetEmail(auth, trimmedEmail)
+                              .then(() => {
+                                setResetSuccess('E-mail de recuperação enviado! Verifica a tua caixa de correio (e a pasta de spam).');
+                                triggerSelfPush(
+                                  'Recuperação de Password',
+                                  'Instruções enviadas para o teu e-mail.',
+                                  'system'
+                                );
+                              })
+                              .catch((err: any) => {
+                                let errorMsg = 'Erro ao enviar e-mail de recuperação.';
+                                if (err.code === 'auth/user-not-found') {
+                                  errorMsg = 'Este e-mail não está associado a nenhuma conta.';
+                                } else if (err.code === 'auth/invalid-email') {
+                                  errorMsg = 'Formato de e-mail inválido.';
+                                } else {
+                                  errorMsg = err.message || errorMsg;
+                                }
+                                setResetError(errorMsg);
+                              })
+                              .finally(() => {
+                                setIsResetLoading(false);
+                              });
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {resetError && (
+                      <div className="p-3 rounded-xl text-[10px] font-medium bg-red-500/10 border border-red-500/25 text-red-400 text-left leading-normal animate-fade-in">
+                        {resetError}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2.5 pt-1">
+                      <button
+                        type="button"
+                        disabled={isResetLoading}
+                        onClick={() => setShowResetModal(false)}
+                        className={`flex-1 py-2 text-[10px] font-bold rounded-xl border transition active:scale-98 cursor-pointer ${
+                          darkMode 
+                            ? 'border-white/10 text-zinc-400 hover:text-white hover:bg-white/5' 
+                            : 'border-zinc-200 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'
+                        }`}
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isResetLoading}
+                        onClick={() => {
+                          const trimmedEmail = resetEmail.trim();
+                          if (!trimmedEmail) {
+                            setResetError('Por favor, introduz o teu e-mail.');
+                            return;
+                          }
+                          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                          if (!emailRegex.test(trimmedEmail)) {
+                            setResetError('Formato de e-mail inválido.');
+                            return;
+                          }
+                          setIsResetLoading(true);
+                          sendPasswordResetEmail(auth, trimmedEmail)
+                            .then(() => {
+                              setResetSuccess('E-mail de recuperação enviado! Verifica a tua caixa de correio (e a pasta de spam).');
+                              triggerSelfPush(
+                                'Recuperação de Password',
+                                'Instruções enviadas para o teu e-mail.',
+                                'system'
+                              );
+                            })
+                            .catch((err: any) => {
+                              let errorMsg = 'Erro ao enviar e-mail de recuperação.';
+                              if (err.code === 'auth/user-not-found') {
+                                errorMsg = 'Este e-mail não está associado a nenhuma conta.';
+                              } else if (err.code === 'auth/invalid-email') {
+                                errorMsg = 'Formato de e-mail inválido.';
+                              } else {
+                                errorMsg = err.message || errorMsg;
+                              }
+                              setResetError(errorMsg);
+                            })
+                            .finally(() => {
+                              setIsResetLoading(false);
+                            });
+                        }}
+                        className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-[10px] rounded-xl shadow-lg shadow-amber-500/10 active:scale-98 transition duration-150 cursor-pointer disabled:opacity-50"
+                      >
+                        {isResetLoading ? 'A enviar...' : 'Recuperar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
 

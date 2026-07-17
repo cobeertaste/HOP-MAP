@@ -15,8 +15,8 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/eabab170-fdc1-4d6b-898e-859f60b073b0/01A.png?format=500w',
     instagramUrl: 'https://www.instagram.com/azoresbrewingcompany/',
     facebookUrl: 'https://www.facebook.com/azoresbrewingcompany/',
-    latitude: 37.8214,
-    longitude: -25.5224,
+    latitude: 37.8020501,
+    longitude: -26.1275482,
     hasApplePay: true
   },
   {
@@ -32,8 +32,8 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/31cbc708-1f21-405a-aed8-6a3747b17c2b/02A.png?format=750w',
     instagramUrl: 'https://www.instagram.com/beerstore.pt/',
     facebookUrl: 'https://www.facebook.com/p/BeerStore-100075874127447/',
-    latitude: 38.6548,
-    longitude: -27.2198,
+    latitude: 38.6558383,
+    longitude: -36.9790818,
     hasApplePay: true
   },
   {
@@ -49,8 +49,8 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/723076a5-4153-4e37-8cf3-89c0644c8e5e/03A.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/vulcanacerveja',
     facebookUrl: 'https://www.facebook.com/vulcanacerveja',
-    latitude: 37.8242,
-    longitude: -25.5255,
+    latitude: 38.6558383,
+    longitude: -36.9790818,
     hasApplePay: true
   },
   {
@@ -66,8 +66,8 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/27416552-1122-4866-ac8a-0d451f33be58/04A.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/cervejakorisca/',
     facebookUrl: 'https://www.facebook.com/CervejaKorisca/',
-    latitude: 37.7812,
-    longitude: -25.5786,
+    latitude: 37.7749523,
+    longitude: -35.3156197,
     hasApplePay: true
   },
   {
@@ -83,8 +83,8 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/ad021383-8d04-41e6-acce-083eb3378ada/05A.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/bela.cerveja/',
     facebookUrl: 'https://www.facebook.com/Belabelacerveja/?ref=NONE_xav_ig_profile_page_web',
-    latitude: 37.7654,
-    longitude: -25.6982,
+    latitude: 38.2051405,
+    longitude: -27.1208935,
     hasApplePay: true
   },
 
@@ -102,8 +102,8 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/6f7ce71e-b869-434f-90d7-31166bfae604/01M.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/funchaltaproom/',
     facebookUrl: 'https://www.facebook.com/FunchalTaproom/',
-    latitude: 32.6482,
-    longitude: -16.9078,
+    latitude: 32.6486355,
+    longitude: -17.515478,
     hasApplePay: true
   },
   {
@@ -118,8 +118,8 @@ export const BARS_A: Bar[] = [
     reviewsCount: 104,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/58fe4663-48a9-4fff-b2c2-1bf6aa202b70/02M.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/fugacidade2014/',
-    latitude: 32.6454,
-    longitude: -16.9242,
+    latitude: 32.6767824,
+    longitude: -26.6911097,
     hasApplePay: true
   },
   {
@@ -135,8 +135,8 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/a03fbdca-1bc9-4160-8f76-985689cff3c3/03M.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/beerhouse.restaurant/',
     facebookUrl: 'https://www.facebook.com/beerhousemadeira',
-    latitude: 32.6442,
-    longitude: -16.9082,
+    latitude: 32.6767824,
+    longitude: -26.6911097,
     hasApplePay: true
   },
   {
@@ -152,8 +152,8 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/9cf72061-b893-471e-8f50-10636b3a3d46/04M.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/vilhoa/',
     facebookUrl: 'https://www.facebook.com/vilhoa/?locale=pt_PT',
-    latitude: 32.6522,
-    longitude: -16.9154,
+    latitude: 32.6767824,
+    longitude: -26.6911097,
     hasApplePay: true
   },
   {
@@ -168,8 +168,8 @@ export const BARS_A: Bar[] = [
     reviewsCount: 75,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/137fd4c4-eef1-46a0-8c3f-cf373dea5315/05M.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/cervejaria_halemary/',
-    latitude: 32.6492,
-    longitude: -16.9742,
+    latitude: 32.6487334,
+    longitude: -16.9780699,
     hasApplePay: true
   },
 
@@ -177,7 +177,7 @@ export const BARS_A: Bar[] = [
   {
     id: 'magnifica-evora',
     name: 'Magnífica Beer House (Évora)',
-    zone: BarZone.SUL,
+    zone: BarZone.EVORA,
     address: 'Mercado Municipal de Évora, Loja 24, 7000-650 Évora',
     workingHours: 'Qua a Sáb: 11:30h às 23:30h | Dom: 11:30h às 22:00h',
     styles: ['Witbier', 'Belgian IPA', 'Quadrupel', 'Dry Stout'],
@@ -186,14 +186,14 @@ export const BARS_A: Bar[] = [
     reviewsCount: 142,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/78f74f38-fd1c-4e53-86a3-a1fcfb6e903a/01S.jpeg?format=500w',
     instagramUrl: 'https://www.instagram.com/magnificabeerhouse/',
-    latitude: 38.5682,
-    longitude: -7.9112,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
     id: 'barona',
     name: 'Barona Craft Beer House (Castelo de Vide)',
-    zone: BarZone.SUL,
+    zone: BarZone.CASTELO_DE_VIDE,
     address: 'R. de Bartolomeu Álvares da Santa 42, 7320-115 Castelo de Vide',
     workingHours: 'Seg a Sex: 09:00h às 01:00h | Fins de Semana: 10:00h às 02:00h',
     styles: ['Blond Ale', 'APA', 'IPA', 'Baltic Porter'],
@@ -203,14 +203,14 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/b3b5170a-29f2-4650-b5ed-aab085a48de5/02S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/baronacraftbeerhouse/',
     facebookUrl: 'https://www.facebook.com/BaronaCraftBeerHouse/?locale=pt_PT',
-    latitude: 39.4142,
-    longitude: -7.4542,
+    latitude: 40.1151208,
+    longitude: -13.7255423,
     hasApplePay: true
   },
   {
     id: 'skal-pub',
     name: 'Skal Artesanal - Craft Beer & Sports Bar (Setúbal)',
-    zone: BarZone.SUL,
+    zone: BarZone.SETUBAL,
     address: 'Estr. de Palmela 99, 2900-536 Setúbal',
     workingHours: 'Seg a Sáb: 11:00h às 00:00h | Dom: 15:00h às 22:00h',
     styles: ['Pilsner', 'West Coast IPA', 'DIPA', 'Fruited Sour'],
@@ -220,14 +220,14 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/103d52c1-dd5f-4d93-8897-b63950933f8a/03S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/skal.pub/',
     facebookUrl: 'https://www.facebook.com/105395191051505?ref=PROFILE_EDIT_xav_ig_profile_page_web',
-    latitude: 38.5282,
-    longitude: -8.8912,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
     id: 'capt-tap',
     name: 'Capt. Tap (Setúbal)',
-    zone: BarZone.SUL,
+    zone: BarZone.SETUBAL,
     address: 'R. António Maria Eusébio 83, 2900-236 Setúbal',
     workingHours: 'Qua a Sáb: 17:00h às 00:00h | Dom: 17:00h às 22:00h',
     styles: ['IPA', 'Stout', 'Pilsner', 'Gose'],
@@ -237,14 +237,14 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/ee8fa9b5-67a0-400a-b7e9-e65ca8b18e8f/04S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/capt.tap/',
     facebookUrl: 'https://www.facebook.com/Capt.Tap/?locale=pt_PT',
-    latitude: 38.5242,
-    longitude: -8.8924,
+    latitude: 37.0982979,
+    longitude: -18.4250966,
     hasApplePay: true
   },
   {
     id: 'ophiussa-taproom',
     name: 'Ophiussa Taproom (Setúbal)',
-    zone: BarZone.SUL,
+    zone: BarZone.SETUBAL,
     address: 'Parque Industrial Sado Internacional, Pavilhão C 14, 2910-130 Setúbal',
     workingHours: 'Recomendado verificar o horário no website oficial.',
     styles: ['Wild Ale', 'Triple IPA', 'Imperial Stout', 'Saison'],
@@ -254,14 +254,14 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/fb68df4a-fccb-44d8-99a2-c0051bd74a29/05S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/ophiussabrewing/',
     facebookUrl: 'https://www.facebook.com/ophiussabrewingco/',
-    latitude: 38.5412,
-    longitude: -8.8412,
+    latitude: 38.541996,
+    longitude: -9.4520366,
     hasApplePay: true
   },
   {
     id: 'lagos-beer-co',
     name: 'Lagos Beer & Co (Lagos)',
-    zone: BarZone.SUL,
+    zone: BarZone.LAGOS,
     address: 'R. Marreiros Netto nº45, 8600-754 Lagos',
     workingHours: 'Diariamente: 11:00h às 02:00h (Cozinha até às 22h)',
     styles: ['Lager', 'IPA', 'Wheat Beer', 'Dark Ale'],
@@ -271,14 +271,14 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/14934ff0-31f8-4339-8904-4555b5181000/06S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/lagosbeer/',
     facebookUrl: 'https://www.facebook.com/lagosbeer/',
-    latitude: 37.1012,
-    longitude: -8.6742,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
     id: 'collab-bar-lagos',
     name: 'The Collab Bar (Lagos)',
-    zone: BarZone.SUL,
+    zone: BarZone.LAGOS,
     address: 'Antiga Fábrica da Ribeira (Loja A, Av. dos Descobrimentos, 8600-315 Lagos',
     workingHours: 'Diariamente: Meio-dia até à meia-noite (Fecha Terças em Jan/Fev)',
     styles: ['West Coast IPA', 'NEIPA', 'Sour', 'Session Pale Ale'],
@@ -287,14 +287,14 @@ export const BARS_A: Bar[] = [
     reviewsCount: 145,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/f1c3d9db-1bde-4529-8d57-d8c298d67521/07S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/thecollabbarlagos/',
-    latitude: 37.1032,
-    longitude: -8.6712,
+    latitude: 37.0982979,
+    longitude: -18.4250966,
     hasApplePay: true
   },
   {
     id: 'mania-beer-brewery',
     name: 'Mania Beer (Brewery) (Lagos)',
-    zone: BarZone.SUL,
+    zone: BarZone.LAGOS,
     address: 'sítio da ameijeirinha, R. da Atalaia, 8600-641 Lagos',
     workingHours: 'Consultar horários no site oficial (Fábrica/Localização).',
     styles: ['Lager', 'Blond', 'Amber', 'IPA'],
@@ -304,14 +304,14 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/8121a497-924c-4508-a127-16eccbda7445/08S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/mania.beer/',
     facebookUrl: 'https://www.facebook.com/profile.php?id=100063618937811',
-    latitude: 37.0982,
-    longitude: -8.6812,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
     id: 'algarvian-brewing',
     name: 'Algarvian Brewing Company (Portimão)',
-    zone: BarZone.SUL,
+    zone: BarZone.PORTIMAO,
     address: 'Oceanário Residence, Av. Afonso Henriques Loja I, 8500-502 Portimão',
     workingHours: 'Ter a Sáb: 12:00h às 24:00h (Fecha Dom e Seg)',
     styles: ['IPA', 'Stout', 'Lager', 'Tequila Beer'],
@@ -321,14 +321,14 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/d19c9a7b-48ce-4357-be66-177c30f2b8f1/09S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/algarvian.brewing/',
     facebookUrl: 'https://www.facebook.com/algarvian/',
-    latitude: 37.1282,
-    longitude: -8.5382,
+    latitude: 37.1325847,
+    longitude: -8.5388601,
     hasApplePay: true
   },
   {
     id: 'boheme-faro',
     name: 'Boheme Cervejaria (Faro)',
-    zone: BarZone.SUL,
+    zone: BarZone.FARO,
     address: 'R. Conselheiro Bivar 2, 8000-078 Faro',
     workingHours: 'Diariamente: 10:00h às 02:00h (Verificar no local)',
     styles: ['West Coast IPA', 'NEIPA', 'Imperial Stout', 'Berliner Weisse'],
@@ -338,14 +338,14 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/685a0372-3903-4ce5-9d2a-922bceacca7b/10S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/boheme.cervejaria/',
     facebookUrl: 'https://www.facebook.com/bohemefaro/?locale=pt_PT',
-    latitude: 37.0162,
-    longitude: -7.9342,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
     id: 'boheme-tavira',
     name: 'Boheme (Tavira)',
-    zone: BarZone.SUL,
+    zone: BarZone.TAVIRA,
     address: 'R. 5 de Outubro 10, 8800-351 Tavira',
     workingHours: 'Consultar no local',
     styles: ['Lager', 'IPA', 'Stout'],
@@ -355,14 +355,14 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/685a0372-3903-4ce5-9d2a-922bceacca7b/10S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/boheme.cervejaria/',
     facebookUrl: 'https://www.facebook.com/bohemefaro/?locale=pt_PT',
-    latitude: 37.1242,
-    longitude: -7.6442,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
     id: 'nanobrew-fuzeta',
     name: 'NanoBrew Fuzeta (Fuzeta)',
-    zone: BarZone.SUL,
+    zone: BarZone.FUZETA,
     address: 'R. Dr. Virgílio Inglês 114, 8700-032 Fuseta',
     workingHours: 'Sex a Dom: 17:00h às 21:00h',
     styles: ['Session IPA', 'Lager', 'Amber Ale', 'Sour'],
@@ -372,14 +372,14 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/d655c61c-8c25-4559-bc27-c7802a0e3f27/12S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/nanobrewfuzeta?igsh=MTVhcXp1OGNjMm9tcw%3D%3D',
     facebookUrl: 'https://www.facebook.com/nanobrewfuzeta/?locale=pt_PT',
-    latitude: 37.0542,
-    longitude: -7.7442,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
     id: 'craft-heritage',
     name: 'Craft Heritage - Beer & Spirits (Vila Viçosa)',
-    zone: BarZone.SUL,
+    zone: BarZone.VILA_VICOSA,
     address: 'Parque Industrial, lote 123, Vila Viçosa',
     workingHours: 'Consultar no site',
     styles: ['German Lager', 'Pilsner', 'Gin Beer', 'Liqueur Beer'],
@@ -389,14 +389,14 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/24a9331a-068b-40b5-860b-df19e8da8fd2/13S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/craft____heritage/',
     facebookUrl: 'https://www.facebook.com/libatacraftbeer/?locale=pt_PT',
-    latitude: 38.7812,
-    longitude: -7.4142,
+    latitude: 38.8849116,
+    longitude: -9.9356054,
     hasApplePay: true
   },
   {
     id: 'dos-santos-lagoa',
     name: 'Dos Santos Craft Beer - Taproom (Lagoa)',
-    zone: BarZone.SUL,
+    zone: BarZone.LAGOA,
     address: 'R. do Pestana Golf Resort 1, 8400-049 Estômbar',
     workingHours: 'Recomendado verificar o horário no site oficial.',
     styles: ['German Pilsner', 'Helles', 'Weizen', 'Dunkel'],
@@ -406,8 +406,8 @@ export const BARS_A: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/a281ea8a-de21-4fb2-a514-783e2ea20aa3/14S.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/dossantoscraftbeer/',
     facebookUrl: 'https://www.facebook.com/dossantoscraftbeer',
-    latitude: 37.1482,
-    longitude: -8.4412,
+    latitude: 37.1208858,
+    longitude: -9.0972714,
     hasApplePay: true
   }
 ];

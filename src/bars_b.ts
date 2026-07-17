@@ -15,8 +15,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/95f8927a-61e4-41e9-bb73-b2f0e805c802/11P.png?format=500w',
     instagramUrl: 'https://www.instagram.com/cask_toughloveporto/',
     facebookUrl: 'https://www.facebook.com/caskbeerbar/?locale=pt_BR',
-    latitude: 41.1442,
-    longitude: -8.6214,
+    latitude: 40.1151208,
+    longitude: -13.7255423,
     hasApplePay: true
   },
   {
@@ -32,8 +32,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/5e2a0ac4-eac9-4622-9e4f-bfb0b500b741/12P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/guldendraak.porto/',
     facebookUrl: 'https://www.facebook.com/guldendraakbierhuisporto/',
-    latitude: 41.1504,
-    longitude: -8.6142,
+    latitude: 41.1485826,
+    longitude: -14.220745,
     hasApplePay: true
   },
   {
@@ -49,8 +49,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/e57e078d-050f-46e7-8d77-ba68bf58fe0f/01P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/baobab_craftbeer/',
     facebookUrl: 'https://www.facebook.com/p/Baobab-craftbeer-Porto-100083390616590/',
-    latitude: 41.1512,
-    longitude: -8.6124,
+    latitude: 40.1151208,
+    longitude: -13.7255423,
     hasApplePay: true
   },
   {
@@ -66,8 +66,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/8a10f765-6f73-4eb7-9618-b9fa5ea8ab6d/02P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/cervejariadocarmo/',
     facebookUrl: 'https://www.facebook.com/cervejariadocarmo/',
-    latitude: 41.1494,
-    longitude: -8.6162,
+    latitude: 37.0982979,
+    longitude: -18.4250966,
     hasApplePay: true
   },
   {
@@ -83,8 +83,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/8ff5aa76-fd52-486a-a27c-360ecaed66de/03P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/musadasvirtudes/',
     facebookUrl: 'https://www.facebook.com/musadasvirtudes/',
-    latitude: 41.1454,
-    longitude: -8.6182,
+    latitude: 41.1828129,
+    longitude: -9.2064939,
     hasApplePay: true
   },
   {
@@ -100,8 +100,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/fbab0b98-509b-4713-9581-2e4dc4c6fa59/04P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/catraiocraftbeer/',
     facebookUrl: 'https://www.facebook.com/CatraioCraftBeer',
-    latitude: 41.1524,
-    longitude: -8.6186,
+    latitude: 41.1828129,
+    longitude: -9.2064939,
     hasApplePay: true
   },
   {
@@ -117,8 +117,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/67b57a1e-d76e-4464-ac6f-118b334d66eb/06P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/cervejanortada/',
     facebookUrl: 'https://www.facebook.com/cervejarianortada.porto',
-    latitude: 41.1462,
-    longitude: -8.6082,
+    latitude: 40.1151208,
+    longitude: -13.7255423,
     hasApplePay: true
   },
   {
@@ -134,8 +134,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/17feb2da-8134-4bb4-9b1c-d72025079fa3/07P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/explore/locations/436104783445908/armazem-da-cerveja-craft-beer-bar-shop/',
     facebookUrl: 'https://www.facebook.com/ArmazemCerveja/',
-    latitude: 41.1472,
-    longitude: -8.6012,
+    latitude: 40.1151208,
+    longitude: -13.7255423,
     hasApplePay: true
   },
   {
@@ -151,8 +151,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/9097c235-5003-4f9e-9c96-22ee348fd452/08P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/afabricadapicaria/',
     facebookUrl: 'https://www.facebook.com/afabricadapicaria/',
-    latitude: 41.1508,
-    longitude: -8.6132,
+    latitude: 40.1151208,
+    longitude: -13.7255423,
     hasApplePay: true
   },
   {
@@ -168,8 +168,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/89052570-f4a0-4df6-9657-75a297a0d660/09P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/levare_craftbeer/',
     facebookUrl: 'https://www.facebook.com/levarecraftbeer/',
-    latitude: 41.1464,
-    longitude: -8.6054,
+    latitude: 41.1457595,
+    longitude: -47.6296262,
     hasApplePay: true
   },
   {
@@ -185,14 +185,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/d6de3ea9-6f49-4cf2-96b9-eb6a1fb02b21/14P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/letrariaporto/',
     facebookUrl: 'https://www.facebook.com/LetrariaPortoDowntown/',
-    latitude: 41.1514,
-    longitude: -8.6152,
+    latitude: 41.1828129,
+    longitude: -9.2064939,
     hasApplePay: true
   },
   {
     id: 'deuses-do-malte',
     name: 'Deuses do Malte (V.N. Gaia)',
-    zone: BarZone.PORTO,
+    zone: BarZone.VN_GAIA,
     address: 'Rua soares dos reis 1324 A9 4430-240 VNGaia',
     workingHours: 'Todas as sextas das 18h às 00h',
     styles: ['Lager', 'NEIPA', 'Sour', 'Stout'],
@@ -202,8 +202,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/ef4cbb37-8eef-4871-9a6d-e2a367d2b2d2/10P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/deusesdomalte/',
     facebookUrl: 'https://pt-pt.facebook.com/deusesdomalte',
-    latitude: 41.1214,
-    longitude: -8.6042,
+    latitude: 41.1119466,
+    longitude: -8.6051778,
     hasApplePay: true
   },
   {
@@ -219,8 +219,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/fda60f93-ac23-46d7-ba75-295ea74944c5/13P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/cerveja_dos_diabos_/',
     facebookUrl: 'https://www.facebook.com/CervejaDosDiabos/',
-    latitude: 41.1528,
-    longitude: -8.5912,
+    latitude: 37.0982979,
+    longitude: -18.4250966,
     hasApplePay: true
   },
   {
@@ -236,8 +236,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/e6299268-b849-4ca6-8737-9cbf5dc9b868/15P.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/obandido.pt/',
     facebookUrl: 'https://web.facebook.com/profile.php?id=61557502203540&ref=PROFILE_EDIT_xav_ig_profile_page_web',
-    latitude: 41.1682,
-    longitude: -8.6012,
+    latitude: 41.1842513,
+    longitude: -8.6031597,
     hasApplePay: true
   },
 
@@ -245,7 +245,7 @@ export const BARS_B: Bar[] = [
   {
     id: 'canto-do-lobo',
     name: 'Canto do Lobo (Caminha)',
-    zone: BarZone.NORTE,
+    zone: BarZone.CAMINHA,
     address: 'R. Direita 125, 4910-155 Caminha',
     workingHours: 'Ter a Sáb: 12:00-15:00 e 19:30-01:00h (Fecha Dom/Seg)',
     styles: ['Lager', 'IPA', 'Weizen', 'Stout'],
@@ -255,14 +255,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/411d7f2f-1fb8-42d8-8750-b0bec631f655/01N.png?format=750w',
     instagramUrl: 'https://www.instagram.com/cantodolobo.caminha/',
     facebookUrl: 'https://www.facebook.com/CANTODOLOBO.CAMINHA/',
-    latitude: 41.8762,
-    longitude: -8.8354,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
     id: 'ribeiros-brewers',
     name: 'Ribeiro’s Brewers (Viana do Castelo)',
-    zone: BarZone.NORTE,
+    zone: BarZone.VIANA_DO_CASTELO,
     address: 'R. dos Manjovos n38 ,326, 4900-326 Viana do Castelo',
     workingHours: 'Ter a Qui: 18:00h às 24:00h | Sex e Sáb: 16:00h às 02:00h',
     styles: ['Pilsner', 'West Coast IPA', 'Stout', 'Amber Ale'],
@@ -272,14 +272,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/d9232887-876a-4755-a5c0-9ac5c4c14fb4/02N.png?format=750w',
     instagramUrl: 'https://www.instagram.com/ribeirosbrewers/',
     facebookUrl: 'https://www.facebook.com/ribeirosbrewers/',
-    latitude: 41.6934,
-    longitude: -8.8322,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
     id: 'letraria-viana',
     name: 'Letraria de Viana do Castelo (Viana do Castelo)',
-    zone: BarZone.NORTE,
+    zone: BarZone.VIANA_DO_CASTELO,
     address: 'Av. Conde Carreira 28, 4900-343 Viana do Castelo',
     workingHours: 'Geralmente: 17:00h às 00:00h (Verificar no local)',
     styles: ['Letra A', 'Letra B', 'Letra C', 'Letra D', 'Letra F'],
@@ -289,14 +289,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/a8c20890-1379-4e96-8a09-a7a711c8735d/03N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/letrariaviana/',
     facebookUrl: 'https://www.facebook.com/letrariaviana/',
-    latitude: 41.6954,
-    longitude: -8.8282,
+    latitude: 41.6945518,
+    longitude: -9.4409041,
     hasApplePay: true
   },
   {
     id: 'dona-beer-braga',
     name: 'Dona Beer (Braga)',
-    zone: BarZone.NORTE,
+    zone: BarZone.BRAGA,
     address: 'R. 25 de Abril 356 R/c, 4710-914 Braga',
     workingHours: 'Seg a Sex: 17:00h às 23:00h (Fecha Sáb e Dom)',
     styles: ['Lager', 'Weizen', 'IPA', 'Stout'],
@@ -306,14 +306,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/25b96102-0ed5-479d-aae1-ba10885a5c2b/04N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/dona_beer/',
     facebookUrl: 'https://www.facebook.com/DonaBeerCervejaria/',
-    latitude: 41.5542,
-    longitude: -8.4112,
+    latitude: 38.6984785,
+    longitude: -19.1767006,
     hasApplePay: true
   },
   {
     id: 'mal-amado-braga',
     name: 'Mal Amado (Braga)',
-    zone: BarZone.NORTE,
+    zone: BarZone.BRAGA,
     address: 'R. Dom Paio Mendes 87, 4700-424 Braga',
     workingHours: 'Dom a Qui: 16:00h à 01:00h | Sex e Sáb: 16:00h às 02:00h',
     styles: ['NEIPA', 'Sour', 'Imperial Stout', 'Saison'],
@@ -323,14 +323,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/0ad290a4-7206-4671-b5eb-4eee6bbda423/05N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/malamado.bar/',
     facebookUrl: 'https://www.facebook.com/malamado.bar/',
-    latitude: 41.5502,
-    longitude: -8.4292,
+    latitude: 41.5499154,
+    longitude: -8.4303589,
     hasApplePay: true
   },
   {
     id: 'craft-draft-braganca',
     name: 'Craft & Draft (Bragança)',
-    zone: BarZone.NORTE,
+    zone: BarZone.BRAGANCA,
     address: 'R. Alexandre Herculano 59, 5300-075 Bragança',
     workingHours: 'Consultar horários no site oficial.',
     styles: ['IPA', 'Lager', 'Stout', 'Belgian Strong'],
@@ -340,14 +340,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/981468f3-4e18-4806-a1a3-b99b2aaf69d8/06N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/craftdraft.pt/',
     facebookUrl: 'https://www.facebook.com/craftdraftpt/',
-    latitude: 41.8054,
-    longitude: -6.7582,
+    latitude: 38.6984785,
+    longitude: -19.1767006,
     hasApplePay: true
   },
   {
     id: 'letraria-vila-verde',
     name: 'Letraria de Vila Verde (Vila Verde)',
-    zone: BarZone.NORTE,
+    zone: BarZone.VILA_VERDE,
     address: 'Av. Prof. Machado Vilela 147, 4730-684 Vila Verde',
     workingHours: 'Recomendado verificar o horário no site oficial.',
     styles: ['Letra A', 'Letra B', 'Letra C', 'Letra D', 'Letra F'],
@@ -357,14 +357,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/855f3d0d-9a95-4de2-af7b-137989339da1/07N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/letrariavilaverde/',
     facebookUrl: 'https://www.facebook.com/LetrariaVilaVerde',
-    latitude: 41.6482,
-    longitude: -8.4382,
+    latitude: 41.6499821,
+    longitude: -9.0485132,
     hasApplePay: true
   },
   {
     id: 'hop-trip',
     name: 'Hop Trip - Craft Beer Shop (Matosinhos)',
-    zone: BarZone.NORTE,
+    zone: BarZone.MATOSINHOS,
     address: 'R. Heróis de França 617, 4450-159 Matosinhos',
     workingHours: 'Ter a Qui: 14:00h às 23:00h | Sex e Sáb: 14:00h às 00:00h',
     styles: ['NEIPA', 'Sour', 'Session Stout', 'Saison'],
@@ -374,14 +374,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/309741b2-0948-46dd-a062-d5a3a14e8501/08N.png?format=500w',
     instagramUrl: 'https://www.instagram.com/hoptripcraftbeer/',
     facebookUrl: 'https://www.facebook.com/hoptripcraftbeer',
-    latitude: 41.1842,
-    longitude: -8.6942,
+    latitude: 41.1809308,
+    longitude: -9.302481,
     hasApplePay: true
   },
   {
     id: 'cantinho-cafe',
     name: 'Cantinho café (Castelo Rodrigo)',
-    zone: BarZone.NORTE,
+    zone: BarZone.FIGUEIRA_DE_CASTELO_RODRIGO,
     address: 'R. Sinagoga 1, 6440-031 Figueira de Castelo Rodrigo',
     workingHours: 'Todos os dias das 12:00-22:30h. Terça-feira: Encerrado',
     styles: ['Lager', 'IPA', 'Stout', 'Amber Ale'],
@@ -391,14 +391,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/17394e60-b9bb-4655-839d-94919cf34deb/09N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/cantinhocafe.cr/',
     facebookUrl: 'https://www.facebook.com/cantinhocafe.cr/',
-    latitude: 40.8762,
-    longitude: -6.9642,
+    latitude: 37.0982979,
+    longitude: -18.4250966,
     hasApplePay: true
   },
   {
     id: 'maldita-brewpub',
     name: 'Maldita BrewPub (Aveiro)',
-    zone: BarZone.NORTE,
+    zone: BarZone.AVEIRO,
     address: 'Arco do Comércio 5, 3800-213 Aveiro',
     workingHours: 'Ter a Qui: 12:00-15:00, 18:00-22:00 | Sex/Sáb: 12:00-15:00, 18:00-01:00 | Dom: 12:00-15:00',
     styles: ['Maldita Pilsener', 'Maldita IPA', 'Maldita Stout', 'Maldita Barleywine'],
@@ -408,14 +408,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/d568af2d-6127-4357-8374-e8c3a5e35a88/10N.png?format=500w',
     instagramUrl: 'https://www.instagram.com/cerveja_maldita/',
     facebookUrl: 'https://www.facebook.com/CervejaMaldita',
-    latitude: 40.6414,
-    longitude: -8.6534,
+    latitude: 40.231595,
+    longitude: -18.0345764,
     hasApplePay: true
   },
   {
     id: 'vadia-brewpub',
     name: 'Vadia Brewpub (Oliveira de Azeméis)',
-    zone: BarZone.NORTE,
+    zone: BarZone.OLIVEIRA_DE_AZEMEIS,
     address: 'Travessa Comend. Artur José Gomes Barbosa 576, 3720-005 Oliveira de Azeméis',
     workingHours: 'Sex: 18:00–02:00 | Sáb: 18:00–03:00 | Dom: 14:30–23:30',
     styles: ['Vadia Lager', 'Vadia Trigo', 'Vadia Rubra', 'Vadia Preta'],
@@ -425,14 +425,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/ca64614b-cfc5-4c6a-a4fc-6eda918dafc5/11N.png?format=500w',
     instagramUrl: 'https://www.instagram.com/vadiabrewpub/',
     facebookUrl: 'https://www.facebook.com/CervejaVadia',
-    latitude: 40.8414,
-    longitude: -8.4812,
+    latitude: 40.1151208,
+    longitude: -13.7255423,
     hasApplePay: true
   },
   {
     id: 'doze-marias',
     name: '12 Marias (Fermelã)',
-    zone: BarZone.NORTE,
+    zone: BarZone.FERMELA,
     address: 'E, N109 74, 3865-127 Fermelã',
     workingHours: 'Todas as Sextas-feiras: 16:00h – 22:00h',
     styles: ['Lager', 'IPA', 'Black Beer'],
@@ -442,14 +442,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/d7c4447f-b871-424b-a8f9-88010fd88851/12N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/12marias_cervejasartesanais/',
     facebookUrl: 'https://www.facebook.com/12mariascervejasartesanais/',
-    latitude: 40.7182,
-    longitude: -8.5714,
+    latitude: 40.6432682,
+    longitude: -9.2602503,
     hasApplePay: true
   },
   {
     id: 'monja-penafiel',
     name: 'Monja (Penafiel)',
-    zone: BarZone.NORTE,
+    zone: BarZone.PENAFIEL,
     address: 'Largo Nossa Sra. Ajuda 30, 4560-502 Penafiel',
     workingHours: 'Ter a Qui: 16:00-00:00h | Sex e Sáb: 16:00-02:00h | Seg: Encerrado',
     styles: ['Blond Ale', 'Lager', 'IPA', 'Belgian'],
@@ -459,14 +459,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/9fd3c7d8-c098-4ebe-9947-389f7fc7ba22/13N.png?format=500w',
     instagramUrl: 'https://www.instagram.com/monjapenafiel/',
     facebookUrl: 'https://www.facebook.com/monjadepenafiel',
-    latitude: 41.2014,
-    longitude: -8.2832,
+    latitude: 41.2063364,
+    longitude: -8.8922874,
     hasApplePay: true
   },
   {
     id: 'letraria-braga-garden',
     name: 'Letraria (Braga)',
-    zone: BarZone.NORTE,
+    zone: BarZone.BRAGA,
     address: 'R. Dom Gonçalo Pereira 35, 4700-426 Braga',
     workingHours: 'Recomendado verificar no local.',
     styles: ['Letra A', 'Letra B', 'Letra C', 'Letra D', 'Letra F', 'Letra G'],
@@ -476,14 +476,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/5b29a638-c5d1-4aad-9e1c-9201e2601e42/14N.png?format=500w',
     instagramUrl: 'https://www.instagram.com/letrariabraga/',
     facebookUrl: 'https://www.facebook.com/LetrariaBraga',
-    latitude: 41.5492,
-    longitude: -8.4273,
+    latitude: 41.5494346,
+    longitude: -9.0371445,
     hasApplePay: true
   },
   {
     id: 'lovecraft-feira',
     name: 'Lovecraft Public House Feira',
-    zone: BarZone.NORTE,
+    zone: BarZone.SANTA_MARIA_DA_FEIRA,
     address: 'Rua das Fogaceiras 21, 4520-200 Santa Maria da Feira',
     workingHours: 'Segunda a Sábado 15:00h às 01:00h',
     styles: ['Imperial Stout', 'NEIPA', 'Sour', 'Gluten Free'],
@@ -493,14 +493,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/0aa11711-9295-4c51-a12b-ab7978e89363/15N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/lovecraftfeira/',
     facebookUrl: 'https://www.facebook.com/lovecraftbeers/?locale=pt_PT',
-    latitude: 40.9242,
-    longitude: -8.5412,
+    latitude: 40.9257534,
+    longitude: -9.151358,
     hasApplePay: true
   },
   {
     id: 'letraria-ponte-lima',
     name: 'Letraria Craft Beer & Vinyl (Ponte de Lima)',
-    zone: BarZone.NORTE,
+    zone: BarZone.PONTE_DE_LIMA,
     address: 'R. Beato Francisco Pacheco 69, 4990-117 Pte. de Lima',
     workingHours: 'Seg, Qua a Sáb: 12:00h–15:30h e 18:00h–23:00h',
     styles: ['Letra Pilsner', 'Letra Weiss', 'Letra IPA', 'Letra Stout'],
@@ -510,14 +510,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/5c898508-e42b-427f-9f44-477c2e9b8ca4/16N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/letrariapontedelima/',
     facebookUrl: 'https://www.facebook.com/LetrariaPontedeLima/',
-    latitude: 41.7682,
-    longitude: -8.5812,
+    latitude: 41.7683965,
+    longitude: -8.5862343,
     hasApplePay: true
   },
   {
     id: 'prost-guimaraes',
     name: 'Prost! (Guimarães)',
-    zone: BarZone.NORTE,
+    zone: BarZone.GUIMARAES,
     address: 'Praça de São Tiago 11, 4800-445 Guimarães',
     workingHours: 'Seg: 14:00-00:00 | Qua a Sáb: 14:00-02:00 | Dom: 15:00-00:00 | Ter: Fechado',
     styles: ['Lager', 'NEIPA', 'Sour', 'Quadrupel'],
@@ -527,14 +527,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/086e437c-9d97-4387-af13-37ece0c29ba8/17N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/prost_guimaraes/',
     facebookUrl: 'https://www.facebook.com/p/PROST-100086242280709/?locale=pt_BR',
-    latitude: 41.4422,
-    longitude: -8.2912,
+    latitude: 35.5239262,
+    longitude: -29.4270742,
     hasApplePay: true
   },
   {
     id: 'beberico-sra-hora',
     name: 'Beberico (Senhora da Hora)',
-    zone: BarZone.NORTE,
+    zone: BarZone.SENHORA_DA_HORA,
     address: 'Parque Dr. João Gomes Laranjo 132, 4460-330 Sra. da Hora',
     workingHours: 'Terça a Sábado 17:00h-22:30h',
     styles: ['IPA', 'Stout', 'Sour', 'Lager'],
@@ -544,14 +544,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/c00eee66-dbea-4baa-b515-aabb2cadadcf/18N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/beberico.pt/',
     facebookUrl: 'https://www.facebook.com/beberico.pt/',
-    latitude: 41.1854,
-    longitude: -8.6522,
+    latitude: 41.1866184,
+    longitude: -8.6655937,
     hasApplePay: true
   },
   {
     id: 'jagora-gaia',
     name: 'J\'Agora (V.N. Gaia)',
-    zone: BarZone.NORTE,
+    zone: BarZone.ACORES,
     address: 'R. Moçambique 32, 4430-145 Vila Nova de Gaia',
     workingHours: 'Ter a Qui 16:00-0:00h | Sex e Sáb 16:00-2:00h | Dom 16:00-22:00h',
     styles: ['IPA', 'Stout', 'Lager'],
@@ -561,14 +561,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/a4a90f27-9bd6-4cb6-8fb5-bb33a88a9096/19N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/jagora_cervejaria/',
     facebookUrl: 'https://www.facebook.com/profile.php?id=100091128831850&locale=pt_PT',
-    latitude: 41.1254,
-    longitude: -8.6112,
+    latitude: 41.1234194,
+    longitude: -8.6078992,
     hasApplePay: true
   },
   {
     id: 'surviaria-amarante',
     name: 'Surviaria (Amarante)',
-    zone: BarZone.NORTE,
+    zone: BarZone.AMARANTE,
     address: 'Largo Conselheiro António Cândido, 4600-029 Amarante',
     workingHours: 'Ter a Qui 12:00-01:00 | Sex: 12:00–02:00 | Sáb: 12:00–03:00 | Dom: 15:30–00:00',
     styles: ['IPA', 'Imperial Stout', 'Lager', 'Fruited Sour'],
@@ -578,14 +578,14 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/71d168fe-8e35-4335-aa41-02c6e983e28d/20N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/surviaria.craftbeershop/',
     facebookUrl: 'https://www.facebook.com/Surviaria',
-    latitude: 41.2682,
-    longitude: -8.0812,
+    latitude: 41.2682937,
+    longitude: -8.0771978,
     hasApplePay: true
   },
   {
     id: 'marrafa-jesufrei',
     name: 'Marrafa (Jesufrei)',
-    zone: BarZone.NORTE,
+    zone: BarZone.JESUFREI,
     address: 'R. Padre Domingos Alves Pereira 20, 4770-160 Jesufrei',
     workingHours: 'Ter a Qui 15:40-21:30 | Sex/Sáb 15:30-23:00 | Dom/Seg: Fechado',
     styles: ['Lager', 'Brown Ale', 'Honey Ale'],
@@ -595,8 +595,8 @@ export const BARS_B: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/406b3847-1772-4a17-9b75-9cdc8d9baa91/21N.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/cervejamarrafa',
     facebookUrl: 'https://www.facebook.com/CervejaArtesanalMarrafa/',
-    latitude: 41.3814,
-    longitude: -8.4682,
+    latitude: 41.4595667,
+    longitude: -8.5124325,
     hasApplePay: true
   }
 ];

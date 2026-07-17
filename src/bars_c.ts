@@ -5,7 +5,7 @@ export const BARS_C: Bar[] = [
   {
     id: 'epicura-coimbra',
     name: 'Epicura Craft Beer House (Coimbra)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.COIMBRA,
     address: 'Av. João das Regras 46, 3040-256 Santa Clara',
     workingHours: 'Ter a Qui: 16:00-00:00 | Sex/Sáb: 16:00-02:00 | Dom: 15:00-20:00',
     styles: ['Lager', 'NEIPA', 'Sour', 'Stout'],
@@ -15,14 +15,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/9faca1f0-1981-4396-8201-c0ce82b73c8e/01C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/cervejaepicura/',
     facebookUrl: 'https://www.facebook.com/cervejaepicura/?locale=pt_PT',
-    latitude: 40.2014,
-    longitude: -8.4312,
+    latitude: 40.231595,
+    longitude: -18.0345764,
     hasApplePay: true
   },
   {
     id: 'praxis-coimbra',
     name: 'Cerveja Praxis (Coimbra)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.COIMBRA,
     address: 'Rua António Gonçalves 28/29 Santa Clara, 3040-375 Coimbra',
     workingHours: 'Diariamente: 11:00h às 23:00h',
     styles: ['Praxis Pilsener', 'Praxis Weiss', 'Praxis Dunkel', 'Praxis Ambar'],
@@ -32,14 +32,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/155d5a5c-d7a9-4270-8f4b-4338feedff5a/02C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/restaurantepraxis/',
     facebookUrl: 'https://www.facebook.com/restaurantepraxis',
-    latitude: 40.1989,
-    longitude: -8.4287,
+    latitude: 40.231595,
+    longitude: -18.0345764,
     hasApplePay: true
   },
   {
     id: 'tough-love-aveiro',
     name: 'Tough Love Tap Room (Aveiro)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.AVEIRO,
     address: 'R. Guilherme Gomes Fernandes 5, 3800-197 Aveiro',
     workingHours: 'Consultar horários no site oficial / redes sociais.',
     styles: ['IPA', 'NEIPA', 'Sour', 'Imperial Stout'],
@@ -49,14 +49,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/54e28eff-2c03-4352-8761-791e9b25773f/03C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/toughloveaveiro/',
     facebookUrl: 'https://www.facebook.com/Toughlovetaproomaveiro/?locale=pt_PT',
-    latitude: 40.6441,
-    longitude: -8.6514,
+    latitude: 40.6432682,
+    longitude: -9.2602503,
     hasApplePay: true
   },
   {
     id: 'letraria-obidos',
     name: 'Letraria Óbidos (Óbidos)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.OBIDOS,
     address: 'R. Padre Nuno Tavares, 2510-001 Óbidos',
     workingHours: 'Quarta a Domingo: 17:00h às 00:00h',
     styles: ['Letra A', 'Letra B', 'Letra C', 'Letra D', 'Letra F'],
@@ -66,14 +66,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/34cc982d-1b1b-4660-8177-6944ae0df1b9/04C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/letraria_obidos/',
     facebookUrl: 'https://www.facebook.com/letrariaobidos/',
-    latitude: 39.3614,
-    longitude: -9.1578,
+    latitude: 40.1151208,
+    longitude: -13.7255423,
     hasApplePay: true
   },
   {
     id: 'five-e-meio-ericeira',
     name: '5 e Meio Taproom (Ericeira)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.ERICEIRA,
     address: 'R. do Ericeira N14, 2655-271 Ericeira',
     workingHours: 'Seg a Sex: 17:00h às 22:30h (Verificar fim de semana)',
     styles: ['Lager', 'Weizen', 'IPA', 'Belgian Stout'],
@@ -82,14 +82,14 @@ export const BARS_C: Bar[] = [
     reviewsCount: 110,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/4bf0fc96-83e5-427e-9308-3f89a067bd04/05C.jpeg?format=750w',
     instagramUrl: 'https://www.instagram.com/5emeiocerveja/',
-    latitude: 38.9642,
-    longitude: -9.4182,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
     id: 'emporio-ericeira',
     name: 'O Empório.pt (Ericeira)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.ERICEIRA,
     address: 'R. de Santo António 12B, 2655-360 Ericeira',
     workingHours: 'Consultar horários no local.',
     styles: ['Lager', 'NEIPA', 'Sour', 'Porter'],
@@ -98,14 +98,14 @@ export const BARS_C: Bar[] = [
     reviewsCount: 84,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/063e17d2-6b7a-4152-b6d8-baf67d0f48e1/06C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/oemporio.pt/',
-    latitude: 38.9622,
-    longitude: -9.4154,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
     id: 'mean-sardine-ericeira',
     name: 'Mean Sardine Craft Beer (Fábrica) (Ericeira)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.ERICEIRA,
     address: 'At 58 Surf Building, Av. São Sebastião 36b, 2655-483 Ericeira',
     workingHours: 'Seg a Sex: 09:00h às 17:00h (Fábrica)',
     styles: ['Zagaia', 'Amura', 'Voragem', 'Tarrafa'],
@@ -115,14 +115,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/e82f9739-9574-491a-b920-150dcf86eebf/07C.png?format=500w',
     instagramUrl: 'https://www.instagram.com/meansardine/',
     facebookUrl: 'https://www.facebook.com/MeanSardine/?locale=pt_PT',
-    latitude: 38.9682,
-    longitude: -9.4214,
+    latitude: 38.9810732,
+    longitude: -9.4202006,
     hasApplePay: true
   },
   {
     id: 'parreirinha-ericeira',
     name: 'Cervejaria Parreirinha (Ericeira)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.ERICEIRA,
     address: 'R. Alves Crespo 2, 2655-228 Ericeira',
     workingHours: 'Diariamente: 12:00h às 23:59h',
     styles: ['Lager', 'Pilsner', 'IPA'],
@@ -131,14 +131,14 @@ export const BARS_C: Bar[] = [
     reviewsCount: 167,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/50d0896d-9ce9-4438-9859-c6a6fa6c0187/08C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/parreirinha_ericeira/',
-    latitude: 38.9614,
-    longitude: -9.4124,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
     id: 'hopsin-colares',
     name: 'Hopsin BrewPub (Colares)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.COLARES,
     address: 'Av. do Atlântico 1, 2705-231 Colares',
     workingHours: 'Consultar horários no site oficial.',
     styles: ['Pilsner', 'IPA', 'Irish Stout'],
@@ -148,14 +148,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/809bd575-453f-468e-b0f0-cb6b29c4460f/09C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/hopsin_colares/',
     facebookUrl: 'https://www.facebook.com/HopSinCraftbeer/?locale=pt_PT',
-    latitude: 38.8014,
-    longitude: -9.4482,
+    latitude: 38.9939066,
+    longitude: -9.8505184,
     hasApplePay: true
   },
   {
     id: 'villa-craft-sintra',
     name: 'Villa Craft Beer (Sintra)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.SINTRA,
     address: 'Calçada Rio do Porto, 2710-616 Sintra',
     workingHours: 'Seg a Sáb: 11:00h às 20:00h',
     styles: ['Lager', 'IPA', 'Stout'],
@@ -165,14 +165,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/0666be43-be79-479c-8ddb-f9c8f3270eed/10C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/villacraft_beerbread/',
     facebookUrl: 'https://www.facebook.com/p/Villa-Craft-BeerBread-100056135636949/',
-    latitude: 38.8012,
-    longitude: -9.3912,
+    latitude: 38.830703,
+    longitude: -9.5634142,
     hasApplePay: true
   },
   {
     id: 'beer-cascais',
     name: 'Beer Cascais (Cascais)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.CASCAIS,
     address: 'Mercado da Vila, R. Padre Moisés da Silva loja 41, 2754-529 Cascais',
     workingHours: 'Qua: 10:00-21:00 | Ter/Qui: 12:00-21:00 | Sex/Sáb: 12:00-00:00',
     styles: ['Lager', 'IPA', 'Sour', 'Stout'],
@@ -181,14 +181,14 @@ export const BARS_C: Bar[] = [
     reviewsCount: 122,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/d51ce8bb-244d-4bc3-b370-b505d30753b9/11C.jpg?format=500w',
     facebookUrl: 'https://www.facebook.com/BeerCascais/?locale=pt_PT',
-    latitude: 38.6982,
-    longitude: -9.4214,
+    latitude: 38.6984785,
+    longitude: -19.1767006,
     hasApplePay: true
   },
   {
     id: 'namedida-cascais',
     name: 'Na Medida Beer Tap House (Cascais)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.CASCAIS,
     address: 'R. Freitas Reis 24E, 2750-357 Cascais',
     workingHours: 'Ter a Sáb: 17:30h às 23:00h | Dom: 17:30h às 22:30h',
     styles: ['NEIPA', 'Sour', 'Stout', 'Lager'],
@@ -197,14 +197,14 @@ export const BARS_C: Bar[] = [
     reviewsCount: 154,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/4f4dd16d-373c-4376-82cc-9e4f50bacaa3/12C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/namedidabeer/',
-    latitude: 38.6942,
-    longitude: -9.4182,
+    latitude: 38.6984785,
+    longitude: -19.1767006,
     hasApplePay: true
   },
   {
     id: 'crafty-cellar-cascais',
     name: 'The Crafty Cellar (Cascais)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.CASCAIS,
     address: 'Tv. Visc. da Luz 12, 2750-414 Cascais',
     workingHours: 'Diariamente: 12:00h às 02:00h',
     styles: ['Lager', 'Pilsner', 'IPA', 'Belgian Stout'],
@@ -213,14 +213,14 @@ export const BARS_C: Bar[] = [
     reviewsCount: 130,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/05c3211e-183f-4d2b-8044-bfdacfc82a5f/13C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/craftycellar/',
-    latitude: 38.6914,
-    longitude: -9.4154,
+    latitude: 38.6984785,
+    longitude: -19.1767006,
     hasApplePay: true
   },
   {
     id: 'crows-bar-cascais',
     name: 'Crow’s Bar (Cascais)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.CASCAIS,
     address: 'Tv. da Misericórdia 1, 2750-435 Cascais',
     workingHours: 'Diariamente: 12:00h/15:00h à 01:30h',
     styles: ['Lager', 'IPA', 'Wheat Beer'],
@@ -230,14 +230,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/0cb0f280-59ef-44cf-b63f-63143bde303d/14C.jpg?format=750w',
     instagramUrl: 'https://www.instagram.com/crowsbarcascais/?hl=pt',
     facebookUrl: 'https://www.facebook.com/crowsbarcascais/?locale=pt_BR',
-    latitude: 38.6962,
-    longitude: -9.4242,
+    latitude: 38.6987386,
+    longitude: -9.421974,
     hasApplePay: true
   },
   {
     id: 'cerveja-acor',
     name: 'Cerveja Açor (Arganil)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.ARGANIL,
     address: 'Estrada nacional 17, n 620, 3300-364 Ramal Pombeiro',
     workingHours: 'Consultar horários no site oficial.',
     styles: ['Açor Blond', 'Açor Stout', 'Açor IPA'],
@@ -247,14 +247,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/e1db7c98-c2d9-4e6e-9abf-44b493685b18/15C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/cervejaacor/',
     facebookUrl: 'https://www.facebook.com/cervejaacor/?locale=pt_PT',
-    latitude: 40.2198,
-    longitude: -8.0542,
+    latitude: 37.0982979,
+    longitude: -18.4250966,
     hasApplePay: true
   },
   {
     id: 'cerveja-boazona',
     name: 'Cerveja Boazona (Vila Nova de Poiares)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.VILA_NOVA_DE_POIARES,
     address: 'Estrada Nacional N 2 801, Ventosa, 3350-029 Vila Nova de Poiares',
     workingHours: 'Consultar horários no site oficial.',
     styles: ['Lager', 'Amber Ale', 'Imperial Stout', 'Sours'],
@@ -264,14 +264,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/7cdfe01c-0e1f-464c-a57c-d4eb24f2fb89/16C.jpeg?format=500w',
     instagramUrl: 'https://www.instagram.com/cervejaartesanalboazona/',
     facebookUrl: 'https://www.facebook.com/boazona.cerveja.artesanal/?locale=pt_PT',
-    latitude: 40.2124,
-    longitude: -8.2578,
+    latitude: 37.0982979,
+    longitude: -18.4250966,
     hasApplePay: true
   },
   {
     id: 'taverna-lusitana',
     name: 'Taverna Lusitana (Monsanto)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.MONSANTO,
     address: 'R. do Castelo n19, 6060-091 Monsanto',
     workingHours: 'Seg: 10:00-16:00 | Ter, Qua, Sex, Sáb: 10:00-21:00 | Dom: 10:00-17:00 | Qui: Fechado',
     styles: ['Lager', 'Traditional Ale'],
@@ -280,14 +280,14 @@ export const BARS_C: Bar[] = [
     reviewsCount: 110,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/a11ce241-1572-47fc-92cf-7f6f1844f615/17C.jpg?format=500w',
     facebookUrl: 'https://www.facebook.com/p/Taverna-Lusitana-Fornvm-dv-Viriato-100057496267273/',
-    latitude: 40.0382,
-    longitude: -7.1142,
+    latitude: 40.231595,
+    longitude: -18.0345764,
     hasApplePay: true
   },
   {
     id: 'musa-da-praia',
     name: 'MUSA da Praia (Colares)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.COLARES,
     address: 'Antiga Colonia de Ferias da CP, Av. do Atlântico S/N, 2705-288 Colares',
     workingHours: 'Diariamente: 12:00h às 22:00h',
     styles: ['Born in the IPA', 'Musa Lager', 'Sours'],
@@ -297,14 +297,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/01d33f49-be97-435e-9664-f46c369b59f5/04L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/cervejamusa/',
     facebookUrl: 'https://www.facebook.com/musaaldeiadapraia/',
-    latitude: 38.8032,
-    longitude: -9.4642,
+    latitude: 38.818637,
+    longitude: -10.0746734,
     hasApplePay: true
   },
   {
     id: 'andsome-beer',
     name: 'Andsome Beer (Lourinhã)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.LOURINHA,
     address: 'R. da Misericórdia 22, 2530-137 Lourinhã',
     workingHours: 'Encerrado Domingo e Quarta-feira. Restantes dias 17:00-22:00h',
     styles: ['Experimental Stout', 'Session IPA', 'Lager'],
@@ -314,14 +314,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/f5d44a67-1622-46eb-83e5-72b45e44e147/19C.png?format=500w',
     instagramUrl: 'https://www.instagram.com/andsomebeer/',
     facebookUrl: 'https://www.facebook.com/andsomebrewing/',
-    latitude: 39.2482,
-    longitude: -9.3142,
+    latitude: 39.2426474,
+    longitude: -9.3164026,
     hasApplePay: true
   },
   {
     id: 'bah-craft-beer',
     name: 'BAH Craft Beer (Cascais)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.CASCAIS,
     address: 'Tv. Afonso Sanches, R. Afonso Sanches 6D, 2750-427 Cascais',
     workingHours: 'Terça a Domingo 16:00-22:00 | Segunda-feira Fechado',
     styles: ['BAH! IPA', 'BAH! Lager', 'BAH! Sour'],
@@ -331,14 +331,14 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/5d9e2770-e67c-4d25-9d90-895af197d217/20C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/bahcraftbeer/',
     facebookUrl: 'https://www.facebook.com/bahcraftbeer',
-    latitude: 38.6974,
-    longitude: -9.4273,
+    latitude: 38.6973839,
+    longitude: -9.4210311,
     hasApplePay: true
   },
   {
     id: 'malaica-caldas',
     name: 'Malaica (Caldas da Rainha)',
-    zone: BarZone.CENTRO,
+    zone: BarZone.CALDAS_DA_RAINHA,
     address: 'R. Eng. Cancela Abreu 7, 2500-197 Caldas da Rainha',
     workingHours: 'Quarta a Sábado 18:00-2:00',
     styles: ['Lager', 'NEIPA', 'Stout'],
@@ -348,8 +348,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/ac9e22a2-71b6-49cc-b49a-a12e4cf44459/21C.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/malaicasocialclub/',
     facebookUrl: 'https://www.facebook.com/malaicasocialclub',
-    latitude: 39.4042,
-    longitude: -9.1312,
+    latitude: 39.4075503,
+    longitude: -9.1383124,
     hasApplePay: true
   },
 
@@ -367,8 +367,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/749031e8-a7bd-4e46-ad6c-3285eae77070/01L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/doiscorvos.marvila/',
     facebookUrl: 'https://www.facebook.com/doiscorvoscerveja',
-    latitude: 38.7302,
-    longitude: -9.1012,
+    latitude: 38.8288143,
+    longitude: -10.0901276,
     hasApplePay: true
   },
   {
@@ -384,8 +384,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/36ea54f8-1386-4b30-a7c9-37bec6c9be5a/02L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/doiscorvos.intendente/',
     facebookUrl: 'https://www.facebook.com/doiscorvoscerveja',
-    latitude: 38.7224,
-    longitude: -9.1332,
+    latitude: 37.0982979,
+    longitude: -18.4250966,
     hasApplePay: true
   },
   {
@@ -401,8 +401,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/e7bb51cc-526d-40ed-86d4-059749cfdc47/03L.png?format=500w',
     instagramUrl: 'https://www.instagram.com/musademarvila/',
     facebookUrl: 'https://www.facebook.com/musademarvila/',
-    latitude: 38.7317,
-    longitude: -9.1023,
+    latitude: 38.8288143,
+    longitude: -10.0901276,
     hasApplePay: true
   },
   {
@@ -418,8 +418,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/01d33f49-be97-435e-9664-f46c369b59f5/04L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/musadabica/',
     facebookUrl: 'https://www.facebook.com/musadabica/',
-    latitude: 38.7104,
-    longitude: -9.1462,
+    latitude: 38.818637,
+    longitude: -10.0746734,
     hasApplePay: true
   },
   {
@@ -435,8 +435,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/3517f080-2f8d-48cf-993d-5afebacd468e/05L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/fermentagebrewpub/',
     facebookUrl: 'https://www.facebook.com/fermentage/',
-    latitude: 38.7294,
-    longitude: -9.1028,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
@@ -451,8 +451,8 @@ export const BARS_C: Bar[] = [
     reviewsCount: 167,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/c7dec055-21d2-48c0-b888-d8c7c99923aa/06L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/pravda.pt/',
-    latitude: 38.7312,
-    longitude: -9.1018,
+    latitude: 38.8288143,
+    longitude: -10.0901276,
     hasApplePay: true
   },
   {
@@ -468,8 +468,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/5cdc2da9-2a8e-4a5d-bb5d-7c695d2e7ec3/07L.png?format=500w',
     instagramUrl: 'https://www.instagram.com/lxbeer_lxbrewery/',
     facebookUrl: 'https://www.facebook.com/LXBrewery/',
-    latitude: 38.7412,
-    longitude: -9.1362,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
@@ -485,8 +485,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/b0fdc6be-ee44-4d7e-a6ef-f59dddf9d54c/08L.jpg?format=1500w',
     instagramUrl: 'https://www.instagram.com/oficinadacerveja_brew_lab/',
     facebookUrl: 'https://www.facebook.com/oficinadacerveja.pt/',
-    latitude: 38.7324,
-    longitude: -9.1382,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
@@ -502,8 +502,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/a72644de-8b3a-4793-b300-42773868a0ab/09L.png?format=500w',
     instagramUrl: 'https://www.instagram.com/oitavagraca/',
     facebookUrl: 'https://www.facebook.com/oitavagraca/',
-    latitude: 38.7184,
-    longitude: -9.1302,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -519,8 +519,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/724060bd-27b1-49f5-99ea-30ff6249b2e7/10L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/duque.brewpub/',
     facebookUrl: 'https://www.facebook.com/restauranteduquelisboa/',
-    latitude: 38.7138,
-    longitude: -9.1412,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -536,8 +536,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/f6099815-4782-4c93-91a1-79738aba5208/11L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/cervejacanil/',
     facebookUrl: 'https://web.facebook.com/profile.php?id=61578643094916',
-    latitude: 38.7124,
-    longitude: -9.1382,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -553,8 +553,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/6d11ab92-4031-4b7b-b589-bbaed8063ec6/12L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/canilmarques/',
     facebookUrl: 'https://www.facebook.com/cervejacanil',
-    latitude: 38.7224,
-    longitude: -9.1454,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -570,8 +570,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/2ba21229-6a28-43b9-b7cc-be935d3d059a/13L.jpg?format=750w',
     instagramUrl: 'https://www.instagram.com/cervetecalisboa/',
     facebookUrl: 'https://www.facebook.com/cervetecalisboa/',
-    latitude: 38.7382,
-    longitude: -9.1412,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -587,8 +587,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/99643eda-7897-4c58-8503-6d031eaa2bc8/14L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/artesanalisbottleshop/',
     facebookUrl: 'https://www.facebook.com/artesanalisbottleshop/',
-    latitude: 38.7442,
-    longitude: -9.1392,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
@@ -604,8 +604,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/3f33fcea-71d6-490c-a0ba-ebde3e878143/15L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/flordelupulobar/',
     facebookUrl: 'https://www.facebook.com/flordelupulobar',
-    latitude: 38.7254,
-    longitude: -9.1342,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
@@ -621,8 +621,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/1f4ab8e1-6fbb-4e1c-9b29-a3002160b49d/16L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/sputnik.lisboa/',
     facebookUrl: 'https://www.facebook.com/SputnikCraftBar/',
-    latitude: 38.7242,
-    longitude: -9.1322,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
@@ -638,8 +638,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/2f9a0378-08a1-48fb-b810-f6114444a772/17L.jpg?format=750w',
     instagramUrl: 'https://www.instagram.com/the.beer.station/',
     facebookUrl: 'https://www.facebook.com/p/The-Beer-Station-100063524715171/',
-    latitude: 38.7132,
-    longitude: -9.1422,
+    latitude: 38.7139252,
+    longitude: -9.1436207,
     hasApplePay: true
   },
   {
@@ -655,8 +655,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/844834ad-d292-487c-80eb-40cc8627390c/18L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/sailors_bar/',
     facebookUrl: 'https://www.facebook.com/SailorsBarExpo/',
-    latitude: 38.7654,
-    longitude: -9.0912,
+    latitude: 38.7568242,
+    longitude: -9.0965796,
     hasApplePay: true
   },
   {
@@ -671,8 +671,8 @@ export const BARS_C: Bar[] = [
     reviewsCount: 165,
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/422ab014-6189-4e2a-93fb-111c29738df1/19L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/guldendraakvascodagama/',
-    latitude: 38.7682,
-    longitude: -9.0942,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
@@ -688,8 +688,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/0f8e46af-8dc7-4637-abef-72b2bbe4a18a/20L.jpg?format=750w',
     instagramUrl: 'https://www.instagram.com/lovecraftlisboa/',
     facebookUrl: 'https://www.facebook.com/lovecraftlisboa',
-    latitude: 38.7064,
-    longitude: -9.1812,
+    latitude: 38.7087031,
+    longitude: -9.1505321,
     hasApplePay: true
   },
   {
@@ -705,8 +705,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/9ee4f574-ddca-444c-a312-b95f5aa8c8ee/21L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/browers.beato/',
     facebookUrl: 'https://www.facebook.com/thebrowerscompany/',
-    latitude: 38.7262,
-    longitude: -9.1032,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -722,8 +722,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/d53c2287-c54f-4956-a60b-547eafcb21c2/22L.png?format=500w',
     instagramUrl: 'https://www.instagram.com/queenale.lisbon/',
     facebookUrl: 'https://www.facebook.com/queenale.lisbon/?locale=pt_BR',
-    latitude: 38.7248,
-    longitude: -9.1314,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -739,8 +739,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/422ab014-6189-4e2a-93fb-111c29738df1/19L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/guldendraaklisboa/',
     facebookUrl: 'https://www.facebook.com/guldendraaklisboa/?locale=pt_PT',
-    latitude: 38.7292,
-    longitude: -9.1432,
+    latitude: 38.7677295,
+    longitude: -18.8529999,
     hasApplePay: true
   },
   {
@@ -756,8 +756,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/81956a98-793c-4a6b-9b54-f6803914ed42/24L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/pubquimera/',
     facebookUrl: 'https://www.facebook.com/quimerabrewpub',
-    latitude: 38.7064,
-    longitude: -9.1722,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -773,8 +773,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/f6df221b-7247-4161-a3a4-483f9afdd187/25L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/amo.brewery/',
     facebookUrl: 'https://www.facebook.com/cervejaAMO/',
-    latitude: 38.7232,
-    longitude: -9.1424,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -790,8 +790,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/34bee3fe-9e3c-40dc-a537-3aed01e107d8/26L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/lispoacraftbeer/',
     facebookUrl: 'https://www.facebook.com/lispoacraftbeer/',
-    latitude: 38.7214,
-    longitude: -9.1392,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -807,8 +807,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/ff634cf5-fe01-48d0-93e2-92485de39391/27L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/outroladolisboa/',
     facebookUrl: 'https://www.facebook.com/OutroLadoLisboa/',
-    latitude: 38.7112,
-    longitude: -9.1324,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -824,8 +824,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/2b4ac405-52e7-414a-b903-168641b7b82c/28L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/brew.portugal/',
     facebookUrl: 'https://www.facebook.com/profile.php?id=61554924194530',
-    latitude: 38.7104,
-    longitude: -9.1398,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -841,8 +841,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/9982c49e-bcb9-4283-a0a2-251fbfcc4404/29L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/craftycorneralfama/',
     facebookUrl: 'https://www.facebook.com/craftycornerbeer/',
-    latitude: 38.7118,
-    longitude: -9.1308,
+    latitude: 38.731946,
+    longitude: -9.7160802,
     hasApplePay: true
   },
   {
@@ -858,8 +858,8 @@ export const BARS_C: Bar[] = [
     coverPhoto: 'https://images.squarespace-cdn.com/content/v1/61e94a43b03e8e6c92a7ab39/d287da28-6dcd-47e6-839c-347ff0a56cb9/30L.jpg?format=500w',
     instagramUrl: 'https://www.instagram.com/guldendraaklisboa/',
     facebookUrl: 'https://www.facebook.com/guldendraaklisboa/',
-    latitude: 38.7268,
-    longitude: -9.1424,
+    latitude: 38.7261109,
+    longitude: -9.1466608,
     hasApplePay: true
   }
 ];
