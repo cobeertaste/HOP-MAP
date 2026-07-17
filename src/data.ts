@@ -283,12 +283,13 @@ export const EVENTS_DATA: BeerEvent[] = [
     id: 'letra_harvest',
     title: 'Letra Harvest',
     location: 'Vila Verde',
-    date: 'Sem data',
+    date: '21 a 23 de Agosto',
     description: 'O festival anual de colheita do lúpulo da Cerveja Letra em Vila Verde. Uma celebração da terra e da cerveja fresca diretamente da origem.',
-    coverPhoto: '',
+    coverPhoto: 'https://images.squarespace-cdn.com/content/61e94a43b03e8e6c92a7ab39/2cb9b125-4801-464a-8d1b-1b5520e96f38/harvest_2026.png?content-type=image%2Fpng',
     price: 5.00,
     organizer: 'Cerveja Letra',
-    category: 'festival'
+    category: 'festival',
+    endDate: '2026-08-23'
   },
   {
     id: 'craft_craft_beer_fest',

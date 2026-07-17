@@ -10,10 +10,11 @@ import {
   Search, Bell, Shield, Fingerprint, CreditCard, Sparkles, 
   Navigation, CheckCircle, ArrowRight, Instagram, Facebook, 
   X, Compass, Filter, Share2, Flame, RefreshCcw, Smile, Check, Zap, CheckSquare, Square,
-  Camera, LogOut, Trophy, ChevronDown
+  Camera, LogOut, Trophy, ChevronDown, Plus
 } from 'lucide-react';
 
 import { BARS_DATA, EVENTS_DATA, getReviewsForBar } from './data';
+import { getBarGoogleMapsUrl } from './maps_utils';
 import { Bar, BeerEvent, UserProfile, BarZone, HopNotification, Review } from './types';
 import AppleDeviceFrame from './components/AppleDeviceFrame';
 import BiometricsConfirm from './components/BiometricsConfirm';
@@ -453,6 +454,11 @@ export default function App() {
   const [selectedStyle, setSelectedStyle] = useState<string>('All');
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [proximitySort, setProximitySort] = useState(false);
+  
+  const [loyaltySearchQuery, setLoyaltySearchQuery] = useState('');
+  const [showAllLoyaltySpots, setShowAllLoyaltySpots] = useState(false);
+  const [showAllFriends, setShowAllFriends] = useState(false);
+  const [showAllReviews, setShowAllReviews] = useState(false);
   
   // User & Gamification
   const [user, setUser] = useState<UserProfile>(() => {
@@ -1616,7 +1622,7 @@ export default function App() {
       // Award stamps and points
       const currentStamps = user.stamps[bar.id] || 0;
       const nextStamps = currentStamps + 1;
-      const willReset = nextStamps >= 5;
+      const willReset = nextStamps >= 10;
       
       let alertMsg = `Check-in efetuado! Ganhaste 1 check-in neste spot.`;
 
@@ -2061,21 +2067,19 @@ export default function App() {
     return matchesSearch && matchesZone && matchesStyle && matchesFav;
   });
 
-  // Calculate distance for all bars, and when proximitySort is active, filter by <= 5.0 km radius and sort Ascendingly from nearest to furthest
+  // Calculate distance for all bars, and when proximitySort is active, filter by <= 10.0 km radius. Always sort Ascendingly from nearest to furthest
   const displayBars = React.useMemo(() => {
-    if (proximitySort) {
-      return [...filteredBars]
-        .map(bar => ({
-          ...bar,
-          distance: getDistanceInKm(userLocation.latitude, userLocation.longitude, bar.latitude, bar.longitude)
-        }))
-        .filter(bar => bar.distance <= 5.0)
-        .sort((a, b) => a.distance - b.distance);
-    }
-    return filteredBars.map(bar => ({
+    const barsWithDistance = filteredBars.map(bar => ({
       ...bar,
       distance: getDistanceInKm(userLocation.latitude, userLocation.longitude, bar.latitude, bar.longitude)
     }));
+
+    if (proximitySort) {
+      return barsWithDistance
+        .filter(bar => bar.distance <= 10.0)
+        .sort((a, b) => a.distance - b.distance);
+    }
+    return [...barsWithDistance].sort((a, b) => a.distance - b.distance);
   }, [filteredBars, proximitySort, userLocation]);
 
   if (!isFirebaseConfigured) {
@@ -2515,7 +2519,7 @@ export default function App() {
                       <div className="flex items-center space-x-2 min-w-0">
                         <MapPin className={`w-3.5 h-3.5 shrink-0 ${selectedZone !== 'All' ? 'text-amber-500' : 'text-neutral-500'}`} />
                         <span className="truncate">
-                          {selectedZone === 'All' ? 'Todas as Zonas' : selectedZone}
+                          {selectedZone === 'All' ? 'Localizar por zona' : selectedZone}
                         </span>
                       </div>
                       <div className="flex items-center space-x-1.5 shrink-0 ml-2">
@@ -2600,7 +2604,7 @@ export default function App() {
                             >
                               <div className="flex items-center space-x-2">
                                 <MapPin className={`w-3.5 h-3.5 ${selectedZone === 'All' ? 'text-amber-500' : 'text-neutral-500'}`} />
-                                <span>Todas as Zonas</span>
+                                <span>Localizar por zona</span>
                               </div>
                               <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
                                 selectedZone === 'All'
@@ -2801,12 +2805,12 @@ export default function App() {
                           <div className={`flex items-center justify-between border-t pt-2.5 mt-1 text-[10px] font-semibold ${darkMode ? 'border-white/5' : 'border-neutral-200'}`}>
                             <span className="text-neutral-500">🕒 {bar.workingHours.split(',')[0]} • 📍 {bar.distance.toFixed(1)} km</span>
                             <button 
-                              onClick={() => { setSelectedBar(bar); setActiveTab('map'); }}
-                              className="text-amber-500 font-bold flex items-center space-x-1 hover:text-amber-400 transition"
+                              onClick={() => { window.open(getBarGoogleMapsUrl(bar.id, bar.address), '_blank'); }}
+                              className="w-6 h-6 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 flex items-center justify-center transition cursor-pointer"
                               id={`btn-viewmap-${bar.id}`}
+                              title="Abrir no Google Maps"
                             >
-                              <Navigation className="w-3 h-3 rotate-45 text-amber-500 fill-current" />
-                              <span>Ver Rota</span>
+                              <Navigation className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>
@@ -2956,24 +2960,22 @@ export default function App() {
                 <div className="space-y-4">
                   {(() => {
                     const sortedEvents = [...events].sort((a, b) => {
-                      const isEndedA = a.endDate ? new Date(a.endDate + 'T23:59:59') < new Date() : false;
-                      const isEndedB = b.endDate ? new Date(b.endDate + 'T23:59:59') < new Date() : false;
+                      const now = new Date().getTime();
+                      const isEndedA = a.endDate ? new Date(a.endDate + 'T23:59:59').getTime() < now : false;
+                      const isEndedB = b.endDate ? new Date(b.endDate + 'T23:59:59').getTime() < now : false;
 
                       if (isEndedA !== isEndedB) {
                         return isEndedA ? 1 : -1;
                       }
 
                       if (!isEndedA && !isEndedB) {
-                        const hasDateA = a.date && a.date !== 'Sem data' && a.date.trim() !== '';
-                        const hasDateB = b.date && b.date !== 'Sem data' && b.date.trim() !== '';
-                        const hasImageA = !!(a.coverPhoto && a.coverPhoto.trim() !== '');
-                        const hasImageB = !!(b.coverPhoto && b.coverPhoto.trim() !== '');
+                        const timeA = a.endDate ? new Date(a.endDate).getTime() : Infinity;
+                        const timeB = b.endDate ? new Date(b.endDate).getTime() : Infinity;
+                        const diffA = Math.abs(timeA - now);
+                        const diffB = Math.abs(timeB - now);
 
-                        const isSecondaryA = !hasDateA || !hasImageA;
-                        const isSecondaryB = !hasDateB || !hasImageB;
-
-                        if (isSecondaryA !== isSecondaryB) {
-                          return isSecondaryA ? 1 : -1;
+                        if (diffA !== diffB) {
+                          return diffA - diffB;
                         }
                       }
 
@@ -3250,115 +3252,179 @@ export default function App() {
                     </p>
                   </div>
                   
+                  {/* Search input for loyalty spots */}
+                  <div className="relative">
+                    <Search className="absolute left-3.5 top-3 w-4 h-4 text-zinc-400" />
+                    <input 
+                      type="text" 
+                      placeholder="Pesquisar spot pelo nome..."
+                      value={loyaltySearchQuery}
+                      onChange={e => setLoyaltySearchQuery(e.target.value)}
+                      className={`w-full pl-10 pr-10 py-2.5 text-xs rounded-2xl border transition-all ${
+                        darkMode 
+                          ? 'bg-white/5 border-white/10 text-white placeholder-neutral-500 focus:border-amber-500/80 focus:bg-white/10' 
+                          : 'bg-white border-neutral-200 text-neutral-900 placeholder-neutral-450 focus:border-amber-500'
+                      }`}
+                      id="input-loyalty-search"
+                    />
+                    {loyaltySearchQuery && (
+                      <button 
+                        type="button"
+                        onClick={() => setLoyaltySearchQuery('')}
+                        className="absolute right-3.5 top-3 text-neutral-500 hover:text-white"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  
                   <div className="space-y-3">
                     {(() => {
-                      const sortedBars = [...bars].sort((a, b) => {
+                      const filtered = bars.filter(b => 
+                        b.name.toLowerCase().includes(loyaltySearchQuery.toLowerCase())
+                      );
+                      const sortedBars = [...filtered].sort((a, b) => {
                         const distA = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, a.latitude, a.longitude);
                         const distB = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, b.latitude, b.longitude);
                         return distA - distB;
                       });
-                      return sortedBars.map(bar => {
-                        const userStamps = user.stamps[bar.id] || 0;
-                        const distM = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, bar.latitude, bar.longitude);
-                        const isNear = distM <= 50;
-                        return (
-                        <div 
-                          key={bar.id}
-                          className={`border rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 ${
-                            darkMode ? 'bg-white/5 border-white/10 hover:border-white/20' : 'bg-white border-neutral-200 hover:border-neutral-350 shadow-xs'
-                          }`}
-                        >
-                          <div className={`flex justify-between items-center p-1 rounded-xl -m-1 mb-2 ${darkMode ? 'bg-white/2' : 'bg-neutral-50'}`}>
-                            <div className="pl-1">
-                              <h5 className={`text-[11px] font-extrabold leading-tight font-display ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{bar.name}</h5>
-                              <span className={`text-[8px] font-mono font-bold uppercase tracking-wider block mt-1 ${isNear ? 'text-emerald-500 animate-pulse' : 'text-neutral-500'}`}>
-                                {isNear ? `Estás no local (${Math.round(distM)}m)` : `Distância: ${Math.round(distM)}m`}
-                              </span>
-                            </div>
-                            <button
-                              onClick={() => initiateCheckin(bar)}
-                              className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[9px] px-3 py-1.5 rounded-xl transition shadow-md font-display shrink-0 cursor-pointer"
-                              id={`btn-checkin-${bar.id}`}
-                            >
-                              Check-In + Selo
-                            </button>
-                          </div>
-
-                          {/* Stamp Holes display (iOS native stamp visual) */}
-                          <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-2">
-                            <div className="flex space-x-2">
-                              {[...Array(5)].map((_, i) => {
-                                const isFilled = i < userStamps || (animatingStampBarId === bar.id && newlyAddedStampIndex === i);
-                                const isAnimatingThis = animatingStampBarId === bar.id && newlyAddedStampIndex === i;
-                                return (
-                                  <div 
-                                    key={i} 
-                                    className={`relative w-7.5 h-7.5 rounded-full flex items-center justify-center border transition-all duration-300 ${
-                                      isFilled 
-                                        ? 'bg-amber-500/25 border-amber-500/60 text-amber-400 scale-105 shadow-inner' 
-                                        : 'bg-black/30 border-white/10 text-neutral-600'
-                                    } ${isAnimatingThis ? 'shadow-[0_0_15px_rgba(245,158,11,0.6)] border-amber-400 z-10' : ''}`}
-                                  >
-                                    {isAnimatingThis ? (
-                                      <motion.div
-                                        initial={{ scale: 0.1, rotate: -45 }}
-                                        animate={{ scale: [1.4, 1], rotate: 0 }}
-                                        transition={{ type: 'spring', damping: 10, stiffness: 120 }}
-                                        className="w-full h-full flex items-center justify-center text-amber-400"
-                                      >
-                                        <Beer className="w-3.5 h-3.5 fill-current animate-pulse" />
-                                      </motion.div>
-                                    ) : isFilled ? (
-                                      <Beer className="w-3.5 h-3.5 fill-current animate-pulse" />
-                                    ) : (
-                                      <span className="text-[9px] font-bold font-mono">{i + 1}</span>
-                                    )}
-
-                                    {/* RENDER PARTICLE BURST OVERLAY IF ANIMATING */}
-                                    {isAnimatingThis && (
-                                      <div className="absolute inset-0 pointer-events-none overflow-visible z-50">
-                                        {PARTICLE_TEMPLATES.map((p) => (
-                                          <motion.div
-                                            key={p.id}
-                                            initial={{ x: 0, y: 0, scale: 0, opacity: 1, rotate: 0 }}
-                                            animate={{ 
-                                              x: p.x, 
-                                              y: p.y, 
-                                              scale: [0, p.scale, p.scale * 0.5, 0], 
-                                              opacity: [1, 1, 0.8, 0],
-                                              rotate: p.rotate + 360
-                                            }}
-                                            transition={{ 
-                                              duration: 0.9, 
-                                              ease: "easeOut",
-                                              delay: p.delay 
-                                            }}
-                                            style={{
-                                              backgroundColor: p.color,
-                                              position: 'absolute',
-                                              left: '50%',
-                                              top: '50%',
-                                              width: p.size + 'px',
-                                              height: p.size + 'px',
-                                              borderRadius: p.id % 2 === 0 ? '50%' : '20%', // Mix of beer froths and stars
-                                              transform: 'translate(-50%, -50%)'
-                                            }}
-                                          />
-                                        ))}
-                                      </div>
-                                    )}
+                      
+                      const displayList = showAllLoyaltySpots ? sortedBars : sortedBars.slice(0, 5);
+                      
+                      return (
+                        <>
+                          {displayList.map(bar => {
+                            const userStamps = user.stamps[bar.id] || 0;
+                            const distM = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, bar.latitude, bar.longitude);
+                            const isNear = distM <= 50;
+                            return (
+                              <div 
+                                key={bar.id}
+                                className={`border rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 ${
+                                  darkMode ? 'bg-white/5 border-white/10 hover:border-white/20' : 'bg-white border-neutral-200 hover:border-neutral-350 shadow-xs'
+                                }`}
+                              >
+                                <div className={`flex justify-between items-center p-1 rounded-xl -m-1 mb-2 ${darkMode ? 'bg-white/2' : 'bg-neutral-50'}`}>
+                                  <div className="pl-1 min-w-0 flex-1 mr-2">
+                                    <h5 className={`text-[11px] font-extrabold leading-tight font-display truncate ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{bar.name}</h5>
+                                    <span className={`text-[8px] font-mono font-bold uppercase tracking-wider block mt-1 ${isNear ? 'text-emerald-500 animate-pulse' : 'text-neutral-500'}`}>
+                                      {isNear ? `Estás no local (${Math.round(distM)}m)` : `Distância: ${Math.round(distM)}m`}
+                                    </span>
                                   </div>
-                                );
-                              })}
+                                  <button
+                                    onClick={() => initiateCheckin(bar)}
+                                    className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[9px] px-3 py-1.5 rounded-xl transition shadow-md font-display shrink-0 cursor-pointer"
+                                    id={`btn-checkin-${bar.id}`}
+                                  >
+                                    Check-In + Selo
+                                  </button>
+                                </div>
+
+                                {/* Stamp Holes display (iOS native stamp visual) */}
+                                <div className="flex flex-col gap-2.5 pt-3 border-t border-white/5 mt-2">
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {[...Array(10)].map((_, i) => {
+                                      const isFilled = i < userStamps || (animatingStampBarId === bar.id && newlyAddedStampIndex === i);
+                                      const isAnimatingThis = animatingStampBarId === bar.id && newlyAddedStampIndex === i;
+                                      return (
+                                        <div 
+                                          key={i} 
+                                          className={`relative w-6.5 h-6.5 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                                            isFilled 
+                                              ? 'bg-amber-500/25 border-amber-500/60 text-amber-400 scale-105 shadow-inner' 
+                                              : 'bg-black/30 border-white/10 text-neutral-600'
+                                          } ${isAnimatingThis ? 'shadow-[0_0_15px_rgba(245,158,11,0.6)] border-amber-400 z-10' : ''}`}
+                                        >
+                                          {isAnimatingThis ? (
+                                            <motion.div
+                                              initial={{ scale: 0.1, rotate: -45 }}
+                                              animate={{ scale: [1.4, 1], rotate: 0 }}
+                                              transition={{ type: 'spring', damping: 10, stiffness: 120 }}
+                                              className="w-full h-full flex items-center justify-center text-amber-400"
+                                            >
+                                              <Beer className="w-3 h-3 fill-current animate-pulse" />
+                                            </motion.div>
+                                          ) : isFilled ? (
+                                            <Beer className="w-3 h-3 fill-current animate-pulse" />
+                                          ) : (
+                                            <span className="text-[8px] font-bold font-mono">{i + 1}</span>
+                                          )}
+
+                                          {/* RENDER PARTICLE BURST OVERLAY IF ANIMATING */}
+                                          {isAnimatingThis && (
+                                            <div className="absolute inset-0 pointer-events-none overflow-visible z-50">
+                                              {PARTICLE_TEMPLATES.map((p) => (
+                                                <motion.div
+                                                  key={p.id}
+                                                  initial={{ x: 0, y: 0, scale: 0, opacity: 1, rotate: 0 }}
+                                                  animate={{ 
+                                                    x: p.x, 
+                                                    y: p.y, 
+                                                    scale: [0, p.scale, p.scale * 0.5, 0], 
+                                                    opacity: [1, 1, 0.8, 0],
+                                                    rotate: p.rotate + 360
+                                                  }}
+                                                  transition={{ 
+                                                    duration: 0.9, 
+                                                    ease: "easeOut",
+                                                    delay: p.delay 
+                                                  }}
+                                                  style={{
+                                                    backgroundColor: p.color,
+                                                    position: 'absolute',
+                                                    left: '50%',
+                                                    top: '50%',
+                                                    width: p.size + 'px',
+                                                    height: p.size + 'px',
+                                                    borderRadius: p.id % 2 === 0 ? '50%' : '20%', // Mix of beer froths and stars
+                                                    transform: 'translate(-50%, -50%)'
+                                                  }}
+                                                />
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <div className="flex justify-between items-center text-[9px] font-bold font-mono text-neutral-400">
+                                    <span>
+                                      {10 - userStamps > 0 ? `${10 - userStamps} selos em falta para prémio` : 'Prémio pronto!'}
+                                    </span>
+                                    <span className="tracking-widest pr-0.5 animate-pulse">
+                                      {animatingStampBarId === bar.id ? "A GRAVAR..." : `${userStamps}/10 SELOS`}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {sortedBars.length === 0 && (
+                            <div className="text-center py-6 text-xs text-neutral-500">
+                              Nenhum spot encontrado para "{loyaltySearchQuery}"
                             </div>
-                            <span className="text-[9px] font-bold tracking-widest text-neutral-400 font-mono pr-0.5 animate-pulse">
-                              {animatingStampBarId === bar.id ? "A GRAVAR..." : `${userStamps}/5 SELOS`}
-                            </span>
-                          </div>
-                        </div>
+                          )}
+
+                          {sortedBars.length > 5 && (
+                            <div className="pt-2 text-center">
+                              <button
+                                type="button"
+                                onClick={() => setShowAllLoyaltySpots(!showAllLoyaltySpots)}
+                                className={`text-xs font-bold px-4 py-2 rounded-xl border transition-all cursor-pointer ${
+                                  darkMode
+                                    ? 'bg-white/5 border-white/10 hover:bg-white/10 text-amber-500'
+                                    : 'bg-white border-neutral-200 hover:bg-neutral-50 text-amber-500 shadow-xs'
+                                }`}
+                                id="btn-loyalty-toggle-all"
+                              >
+                                {showAllLoyaltySpots ? 'Ver menos' : 'Ver todos'}
+                              </button>
+                            </div>
+                          )}
+                        </>
                       );
-                    });
-                  })()}
+                    })()}
                   </div>
                 </div>
               </motion.div>
@@ -3586,37 +3652,59 @@ export default function App() {
                         <p className="text-zinc-500 text-[8px] mt-0.5">Pesquisa por nome acima para criar a tua comunidade cervejeira!</p>
                       </div>
                     ) : (
-                      <div className="space-y-1.5 max-h-[220px] overflow-y-auto">
-                        {friendsDetails.map(friend => {
-                          const details = getLevelDetails(friend.points);
-                          return (
-                            <div 
-                              key={friend.id} 
-                              className="flex items-center justify-between p-2 rounded-xl bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-100 dark:border-zinc-900/60"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <span className="text-lg select-none">{details.badge}</span>
-                                <div className="text-left">
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-[10px] font-black text-zinc-800 dark:text-zinc-100">{friend.username}</span>
-                                    <span className="text-[8px] font-mono text-amber-500">({friend.points} HOPS)</span>
+                      <>
+                        <div className="space-y-1.5 max-h-[220px] overflow-y-auto">
+                          {(() => {
+                            const sortedFriends = [...friendsDetails].reverse();
+                            const displayedFriends = showAllFriends ? sortedFriends : sortedFriends.slice(0, 5);
+                            return displayedFriends.map(friend => {
+                              const details = getLevelDetails(friend.points);
+                              return (
+                                <div 
+                                  key={friend.id} 
+                                  className="flex items-center justify-between p-2 rounded-xl bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-100 dark:border-zinc-900/60"
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg select-none">{details.badge}</span>
+                                    <div className="text-left">
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-[10px] font-black text-zinc-800 dark:text-zinc-100">{friend.username}</span>
+                                        <span className="text-[8px] font-mono text-amber-500">({friend.points} HOPS)</span>
+                                      </div>
+                                      <div className="text-[8px] text-zinc-400 font-sans italic">"{details.title}"</div>
+                                    </div>
                                   </div>
-                                  <div className="text-[8px] text-zinc-400 font-sans italic">"{details.title}"</div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveFriend(friend.id, friend.username)}
+                                    className="flex items-center gap-1.5 px-2.5 py-1 text-[8px] font-black text-red-500 hover:text-white hover:bg-red-500/20 rounded-lg border border-red-500/20 hover:border-red-500 transition active:scale-95 cursor-pointer"
+                                    title="Remover Amigo"
+                                  >
+                                    <X className="w-2.5 h-2.5 font-bold" />
+                                    <span>REMOVER</span>
+                                  </button>
                                 </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveFriend(friend.id, friend.username)}
-                                className="flex items-center gap-1.5 px-2.5 py-1 text-[8px] font-black text-red-500 hover:text-white hover:bg-red-500/20 rounded-lg border border-red-500/20 hover:border-red-500 transition active:scale-95 cursor-pointer"
-                                title="Remover Amigo"
-                              >
-                                <X className="w-2.5 h-2.5 font-bold" />
-                                <span>REMOVER</span>
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
+                              );
+                            });
+                          })()}
+                        </div>
+                        {friendsDetails.length > 5 && (
+                          <div className="text-center pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setShowAllFriends(!showAllFriends)}
+                              className={`text-[9px] font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                                darkMode
+                                  ? 'bg-white/5 border-white/10 hover:bg-white/10 text-amber-500'
+                                  : 'bg-white border-neutral-200 hover:bg-neutral-50 text-amber-500 shadow-xs'
+                              }`}
+                              id="btn-toggle-all-friends"
+                            >
+                              {showAllFriends ? 'Ver menos' : 'Ver todos'}
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -3634,43 +3722,64 @@ export default function App() {
                         <p className="text-neutral-500 text-[10px] leading-relaxed">Ainda não submeteste nenhuma avaliação. Avalia os teus spots favoritos!</p>
                       </div>
                     ) : (
-                      ratingsHistory.map(item => (
-                        <div 
-                          key={item.id} 
-                          className={`p-3.5 rounded-2xl border transition-all duration-200 ${
-                            darkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-xs'
-                          }`}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="text-[8px] font-bold uppercase tracking-widest text-amber-500 font-mono">
-                                {item.barName}
-                              </span>
-                              <div className="flex items-center text-amber-500 space-x-0.5 mt-0.5">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star 
-                                    key={i} 
-                                    className={`w-3 h-3 ${i < item.stars ? 'fill-current text-amber-500' : 'text-neutral-600'}`} 
-                                  />
-                                ))}
+                      <>
+                        {(() => {
+                          const displayedReviews = showAllReviews ? ratingsHistory : ratingsHistory.slice(0, 5);
+                          return displayedReviews.map(item => (
+                            <div 
+                              key={item.id} 
+                              className={`p-3.5 rounded-2xl border transition-all duration-200 ${
+                                darkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-xs'
+                              }`}
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <span className="text-[8px] font-bold uppercase tracking-widest text-amber-500 font-mono">
+                                    {item.barName}
+                                  </span>
+                                  <div className="flex items-center text-amber-500 space-x-0.5 mt-0.5">
+                                    {[...Array(5)].map((_, i) => (
+                                      <Star 
+                                        key={i} 
+                                        className={`w-3 h-3 ${i < item.stars ? 'fill-current text-amber-500' : 'text-neutral-600'}`} 
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                                <span className="text-[8px] text-zinc-500 font-mono">
+                                  {item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-PT') : ''}
+                                </span>
                               </div>
+                              
+                              <p className={`text-[10px] italic leading-relaxed mt-1.5 ${darkMode ? 'text-zinc-300' : 'text-zinc-650'}`}>
+                                "{item.texto_rating}"
+                              </p>
+                              
+                              {item.tipo_cerveja && (
+                                <div className="text-[8px] text-neutral-500 font-bold uppercase tracking-wider font-mono mt-1">
+                                  Estilo: {item.tipo_cerveja}
+                                </div>
+                              )}
                             </div>
-                            <span className="text-[8px] text-zinc-500 font-mono">
-                              {item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-PT') : ''}
-                            </span>
+                          ));
+                        })()}
+                        {ratingsHistory.length > 5 && (
+                          <div className="text-center pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setShowAllReviews(!showAllReviews)}
+                              className={`text-[9px] font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                                darkMode
+                                  ? 'bg-white/5 border-white/10 hover:bg-white/10 text-amber-500'
+                                  : 'bg-white border-neutral-200 hover:bg-neutral-50 text-amber-500 shadow-xs'
+                              }`}
+                              id="btn-toggle-all-reviews"
+                            >
+                              {showAllReviews ? 'Ver menos' : 'Ver mais'}
+                            </button>
                           </div>
-                          
-                          <p className={`text-[10px] italic leading-relaxed mt-1.5 ${darkMode ? 'text-zinc-300' : 'text-zinc-650'}`}>
-                            "{item.texto_rating}"
-                          </p>
-                          
-                          {item.tipo_cerveja && (
-                            <div className="text-[8px] text-neutral-500 font-bold uppercase tracking-wider font-mono mt-1">
-                              Estilo: {item.tipo_cerveja}
-                            </div>
-                          )}
-                        </div>
-                      ))
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -3770,7 +3879,7 @@ export default function App() {
                 darkMode ? 'bg-neutral-900/60 border-white/10 text-white' : 'bg-white/80 border-zinc-200 text-zinc-900'
               }`}>
                 <button 
-                  onClick={() => setSelectedBar(null)}
+                  onClick={() => { setSelectedBar(null); setActiveTab('explore'); }}
                   className="flex items-center gap-1 text-xs font-bold text-amber-500 hover:text-amber-400 transition cursor-pointer"
                   id="btn-bar-detail-back"
                 >
@@ -3794,7 +3903,7 @@ export default function App() {
                     className="w-full h-full object-cover" 
                   />
                   <button 
-                    onClick={() => setSelectedBar(null)}
+                    onClick={() => { setSelectedBar(null); setActiveTab('explore'); }}
                     className="absolute top-3 right-3 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition shadow-md"
                     id="btn-bar-detail-close"
                   >

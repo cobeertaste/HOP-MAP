@@ -551,7 +551,7 @@ export const BARS_B: Bar[] = [
   {
     id: 'jagora-gaia',
     name: 'J\'Agora (V.N. Gaia)',
-    zone: BarZone.ACORES,
+    zone: BarZone.VN_GAIA,
     address: 'R. Moçambique 32, 4430-145 Vila Nova de Gaia',
     workingHours: 'Ter a Qui 16:00-0:00h | Sex e Sáb 16:00-2:00h | Dom 16:00-22:00h',
     styles: ['IPA', 'Stout', 'Lager'],
