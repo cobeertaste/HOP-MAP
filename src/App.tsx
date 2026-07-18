@@ -432,6 +432,8 @@ export default function App() {
   const [isGpsWithin50m, setIsGpsWithin50m] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'explore' | 'map' | 'events' | 'loyalty' | 'profile'>('explore');
   const [userLocation, setUserLocation] = useState({ latitude: 41.1500, longitude: -8.6200 }); // Defaults to Porto center
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+  const [gpsError, setGpsError] = useState<string | null>(null);
   
   // App Core State
   const [bars, setBars] = useState<Bar[]>(() =>
@@ -1422,6 +1424,115 @@ export default function App() {
     return () => unsubscribe();
   }, [isLocalAuthFallback]);
 
+  // Real-time GPS location tracking when logged in
+  useEffect(() => {
+    if (!user.isLoggedIn) {
+      setGpsAccuracy(null);
+      setGpsError(null);
+      return;
+    }
+
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setGpsError('O teu telemóvel/navegador não suporta geolocalização.');
+      return;
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const preciseLat = position.coords.latitude;
+        const preciseLng = position.coords.longitude;
+        const accuracy = position.coords.accuracy;
+
+        setUserLocation({
+          latitude: preciseLat,
+          longitude: preciseLng
+        });
+        setGpsAccuracy(accuracy);
+        setGpsError(null);
+      },
+      (error) => {
+        let errorMsg = `Não foi possível obter a tua localização em tempo real: ${error.message}`;
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMsg = 'Para fazeres check-in, por favor ativa o GPS nas definições do teu navegador/telemóvel.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errorMsg = 'A informação do GPS em tempo real está indisponível de momento.';
+        } else if (error.code === error.TIMEOUT) {
+          errorMsg = 'O tempo limite do GPS expirou ao tentar obter a localização em tempo real.';
+        }
+        setGpsError(errorMsg);
+        triggerSelfPush(
+          'Erro de GPS ❌',
+          errorMsg,
+          'system'
+        );
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+
+    // Clean up to stop GPS watch immediately on logout or unmount
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [user.isLoggedIn]);
+
+  // Manual GPS Refresh ensuring real-time non-cached reading
+  const handleManualGpsRefresh = () => {
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      triggerSelfPush(
+        'A obter GPS... 🛰️',
+        'A ler coordenadas do GPS nativo com precisão máxima...',
+        'system'
+      );
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const preciseLat = position.coords.latitude;
+          const preciseLng = position.coords.longitude;
+          const accuracy = position.coords.accuracy;
+
+          setUserLocation({
+            latitude: preciseLat,
+            longitude: preciseLng
+          });
+          setGpsAccuracy(accuracy);
+          setGpsError(null);
+
+          triggerSelfPush(
+            'GPS Sincronizado! 📡',
+            'Coordenadas atualizadas com sucesso em tempo real.',
+            'system'
+          );
+        },
+        (error) => {
+          let errorMsg = `Não foi possível obter a tua localização: ${error.message}`;
+          if (error.code === error.PERMISSION_DENIED) {
+            errorMsg = 'Para fazeres check-in, por favor ativa o GPS nas definições do teu navegador/telemóvel.';
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            errorMsg = 'A informação do GPS está indisponível de momento.';
+          } else if (error.code === error.TIMEOUT) {
+            errorMsg = 'O tempo limite do GPS expirou. Tenta novamente num local com melhor sinal.';
+          }
+          setGpsError(errorMsg);
+          triggerSelfPush(
+            'Erro de GPS ❌',
+            errorMsg,
+            'system'
+          );
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      triggerSelfPush(
+        'GPS Indisponível ❌',
+        'O teu telemóvel/navegador não suporta geolocalização.',
+        'system'
+      );
+    }
+  };
+
 
 
   // Sync user changes back to localStorage cache to guarantee extreme offline robustness
@@ -2259,6 +2370,44 @@ export default function App() {
               </button>
             </div>
           </header>
+        )}
+
+        {/* Real-time GPS Location Status Bar */}
+        {user.isLoggedIn && activeTab === 'profile' && (
+          <div className="bg-amber-500/10 border-b-2 border-black/40 px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 z-10 text-[9.5px] select-none font-mono text-zinc-300">
+            <div className="flex items-center space-x-2">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${gpsError ? 'bg-rose-400' : 'bg-emerald-400'} opacity-75`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${gpsError ? 'bg-rose-500' : 'bg-emerald-500'}`}></span>
+              </span>
+              {gpsError ? (
+                <span className="text-rose-400 font-medium">
+                  Erro de GPS: {gpsError}
+                </span>
+              ) : (
+                <span>
+                  A tua localização atual: <strong className="text-white">{userLocation.latitude.toFixed(6)}</strong>, <strong className="text-white">{userLocation.longitude.toFixed(6)}</strong>
+                </span>
+              )}
+            </div>
+            <div className="flex items-center space-x-3 self-end sm:self-auto">
+              {!gpsError && (
+                gpsAccuracy !== null ? (
+                  <span>(Precisão: +/- <strong className="text-[#FFCA00]">{gpsAccuracy.toFixed(1)}</strong> metros)</span>
+                ) : (
+                  <span className="animate-pulse text-amber-500 font-bold">(Precisão: +/- -- metros)</span>
+                )
+              )}
+              <button
+                onClick={handleManualGpsRefresh}
+                className="flex items-center space-x-1.5 bg-[#FFCA00] text-black px-2.5 py-1 rounded-md font-sans text-[9px] font-bold uppercase tracking-wider shadow-md hover:bg-amber-400 active:scale-95 transition cursor-pointer"
+                title="Atualizar GPS instantaneamente sem cache"
+              >
+                <RefreshCcw className="w-2.5 h-2.5" />
+                <span>Atualizar</span>
+              </button>
+            </div>
+          </div>
         )}
 
         {/* --- MAIN PAGE CHANGER AREA --- */}
