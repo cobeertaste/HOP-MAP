@@ -2191,7 +2191,12 @@ export default function App() {
             >
               <PixelPacman size={20} className="animate-pulse shrink-0" />
               <div className="flex flex-col">
-                <h1 className="text-xs sm:text-sm font-bold tracking-wider font-press-start text-[#FFCA00]">HOP-MAP</h1>
+                <h1 
+                  className="text-xs sm:text-sm font-bold tracking-wider font-press-start text-[#FFCA00]"
+                  style={{ textShadow: '1.5px 1.5px 0px #000000, 3px 3px 0px #b45309' }}
+                >
+                  HOP MAP
+                </h1>
                 <span className="text-[7px] text-zinc-400 font-bold uppercase tracking-wider font-mono">by Cobeer Taste</span>
               </div>
             </button>

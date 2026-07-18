@@ -387,7 +387,7 @@ export const EVENTS_DATA: BeerEvent[] = [
     location: 'Constância',
     date: '22 a 23 de Agosto de 2026',
     description: 'Cerveja artesanal e convívio descontraído na pitoresca vila ribeirinha de Constância.',
-    coverPhoto: '',
+    coverPhoto: 'https://images.squarespace-cdn.com/content/61e94a43b03e8e6c92a7ab39/e32539ae-fd7c-4cb9-bd57-1d2ad5555264/festival+craft+constancia.png?content-type=image%2Fpng',
     price: 5.00,
     organizer: 'Constância Craft',
     category: 'festival',
