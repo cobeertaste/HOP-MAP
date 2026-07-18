@@ -1608,105 +1608,151 @@ export default function App() {
       return;
     }
 
-    const exactDistance = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, bar.latitude, bar.longitude);
-    const isWithinRange = exactDistance <= 50;
-    if (!isWithinRange) {
+    if (typeof window !== 'undefined' && navigator.geolocation) {
       triggerSelfPush(
-        'Fora do Raio de Check-in!',
-        `Estás demasiado longe deste local para fazer check-in. Deves encontrar-te a menos de 50 metros do spot (atualmente estás a ${Math.round(exactDistance)} metros).`,
+        'A obter GPS... 🛰️',
+        'A ler coordenadas do GPS nativo com precisão máxima para o check-in...',
         'system'
       );
-      return;
-    }
-    setBiometricsReason(`Para validar o check-in seguro em ${bar.name}`);
-    setBiometricsType('checkin');
-    setBiometricsCallback(() => async () => {
-      // Award stamps and points
-      const currentStamps = user.stamps[bar.id] || 0;
-      const nextStamps = currentStamps + 1;
-      const willReset = nextStamps >= 10;
-      
-      let alertMsg = `Check-in efetuado! Ganhaste 1 check-in neste spot.`;
 
-      if (willReset) {
-        alertMsg = `Check-in efetuado! Ganhaste 1 check-in neste spot. Card preenchido! Ganhaste +1 ponto HOP e 1 Cerveja Grátis neste bar! 🎉`;
-      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const preciseLat = position.coords.latitude;
+          const preciseLng = position.coords.longitude;
 
-      // Save the updated points to the user document in Firestore if using cloud auth
-      if (!isLocalAuthFallback && auth.currentUser) {
-        try {
-          const newPoints = (user.points || 0) + 1;
-          await setDoc(doc(db, 'users', user.id), { points: newPoints }, { merge: true });
-        } catch (uerr) {
-          if (isPermissionError(uerr)) {
-            handleFirestoreError(uerr, OperationType.WRITE, `users/${user.id}`);
+          // Atualizar o estado global da localização com as coordenadas reais lidas pelo GPS
+          setUserLocation({
+            latitude: preciseLat,
+            longitude: preciseLng
+          });
+
+          const exactDistance = getHaversineDistanceInMeters(preciseLat, preciseLng, bar.latitude, bar.longitude);
+          const isWithinRange = exactDistance <= 50;
+
+          if (!isWithinRange) {
+            triggerSelfPush(
+              'Fora do Raio de Check-in!',
+              `Estás demasiado longe deste local para fazer check-in. Deves encontrar-te a menos de 50 metros do spot (atualmente estás a ${Math.round(exactDistance)} metros com GPS preciso).`,
+              'system'
+            );
+            return;
           }
-          console.error('Error updating user points in Firestore:', uerr);
-        }
-      }
 
-      // Save/Increment spot's TAPS in Firestore and update state
-      const currentBarTaps = bar.taps || getDeterministicBaseTaps(bar.id);
-      const newBarTaps = currentBarTaps + 1;
+          // Se estiver dentro do raio de 50 metros, avançar com o fluxo seguro de biometria
+          setBiometricsReason(`Para validar o check-in seguro em ${bar.name}`);
+          setBiometricsType('checkin');
+          setBiometricsCallback(() => async () => {
+            // Award stamps and points
+            const currentStamps = user.stamps[bar.id] || 0;
+            const nextStamps = currentStamps + 1;
+            const willReset = nextStamps >= 10;
+            
+            let alertMsg = `Check-in efetuado! Ganhaste 1 check-in neste spot.`;
 
-      if (!isLocalAuthFallback && auth.currentUser) {
-        try {
-          await setDoc(doc(db, 'spots_taps', bar.id), { taps: newBarTaps }, { merge: true });
-        } catch (terr) {
-          console.error('Error updating spot taps in Firestore:', terr);
-        }
-      }
-      localStorage.setItem(`spot_taps_${bar.id}`, String(newBarTaps));
-      setBars(prevBars => prevBars.map(b => b.id === bar.id ? { ...b, taps: newBarTaps } : b));
+            if (willReset) {
+              alertMsg = `Check-in efetuado! Ganhaste 1 check-in neste spot. Card preenchido! Ganhaste +1 ponto HOP e 1 Cerveja Grátis neste bar! 🎉`;
+            }
 
-      setUser(prev => {
-        const nextStampsRecord = { ...prev.stamps };
-        if (willReset) {
-          nextStampsRecord[bar.id] = 0;
-        } else {
-          nextStampsRecord[bar.id] = nextStamps;
-        }
+            // Save the updated points to the user document in Firestore if using cloud auth
+            if (!isLocalAuthFallback && auth.currentUser) {
+              try {
+                const newPoints = (user.points || 0) + 1;
+                await setDoc(doc(db, 'users', user.id), { points: newPoints }, { merge: true });
+              } catch (uerr) {
+                if (isPermissionError(uerr)) {
+                  handleFirestoreError(uerr, OperationType.WRITE, `users/${user.id}`);
+                }
+                console.error('Error updating user points in Firestore:', uerr);
+              }
+            }
 
-        const nextCheckedIn = prev.checkedInBars.includes(bar.id)
-          ? prev.checkedInBars
-          : [...prev.checkedInBars, bar.id];
+            // Save/Increment spot's TAPS in Firestore and update state
+            const currentBarTaps = bar.taps || getDeterministicBaseTaps(bar.id);
+            const newBarTaps = currentBarTaps + 1;
 
-        const nextLastCheckinDates = {
-          ...(prev.lastCheckinDates || {}),
-          [bar.id]: todayStr
-        };
+            if (!isLocalAuthFallback && auth.currentUser) {
+              try {
+                await setDoc(doc(db, 'spots_taps', bar.id), { taps: newBarTaps }, { merge: true });
+              } catch (terr) {
+                console.error('Error updating spot taps in Firestore:', terr);
+              }
+            }
+            localStorage.setItem(`spot_taps_${bar.id}`, String(newBarTaps));
+            setBars(prevBars => prevBars.map(b => b.id === bar.id ? { ...b, taps: newBarTaps } : b));
 
-        return {
-          ...prev,
-          points: (prev.points || 0) + 1,
-          stamps: nextStampsRecord,
-          checkedInBars: nextCheckedIn,
-          lastCheckinDates: nextLastCheckinDates
-        };
-      });
+            setUser(prev => {
+              const nextStampsRecord = { ...prev.stamps };
+              if (willReset) {
+                nextStampsRecord[bar.id] = 0;
+              } else {
+                nextStampsRecord[bar.id] = nextStamps;
+              }
 
-      // Particle/Stamping Feedback trigger
-      setAnimatingStampBarId(bar.id);
-      setNewlyAddedStampIndex(willReset ? 4 : currentStamps);
-      setActiveTab('loyalty');
-      setSelectedBar(null); // Close detailed drawer to reveal Loyalty tab clearly
+              const nextCheckedIn = prev.checkedInBars.includes(bar.id)
+                ? prev.checkedInBars
+                : [...prev.checkedInBars, bar.id];
 
-      // Play synthesized audio chimings
-      if (willReset) {
-        playRewardChime();
-      } else {
-        playStampSound();
-      }
+              const nextLastCheckinDates = {
+                ...(prev.lastCheckinDates || {}),
+                [bar.id]: todayStr
+              };
 
-      // Auto clear animation states after three seconds
-      setTimeout(() => {
-        setAnimatingStampBarId(null);
-        setNewlyAddedStampIndex(null);
-      }, 3000);
+              return {
+                ...prev,
+                points: (prev.points || 0) + 1,
+                stamps: nextStampsRecord,
+                checkedInBars: nextCheckedIn,
+                lastCheckinDates: nextLastCheckinDates
+              };
+            });
 
-      triggerSelfPush('Check-in Realizado!', alertMsg, 'loyalty');
-      setBiometricsType(null);
-    });
+            // Particle/Stamping Feedback trigger
+            setAnimatingStampBarId(bar.id);
+            setNewlyAddedStampIndex(willReset ? 4 : currentStamps);
+            setActiveTab('loyalty');
+            setSelectedBar(null); // Close detailed drawer to reveal Loyalty tab clearly
+
+            // Play synthesized audio chimings
+            if (willReset) {
+              playRewardChime();
+            } else {
+              playStampSound();
+            }
+
+            // Auto clear animation states after three seconds
+            setTimeout(() => {
+              setAnimatingStampBarId(null);
+              setNewlyAddedStampIndex(null);
+            }, 3000);
+
+            triggerSelfPush('Check-in Realizado!', alertMsg, 'loyalty');
+            setBiometricsType(null);
+          });
+        },
+        (error) => {
+          let errorMsg = `Não foi possível obter a tua localização do GPS: ${error.message}`;
+          if (error.code === error.PERMISSION_DENIED) {
+            errorMsg = 'Para fazeres check-in, por favor ativa o GPS nas definições do teu navegador/telemóvel.';
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            errorMsg = 'A informação do GPS está indisponível neste momento. Tenta novamente numa área aberta.';
+          } else if (error.code === error.TIMEOUT) {
+            errorMsg = 'O tempo limite do GPS expirou. Tenta novamente num local com melhor cobertura de rede/GPS.';
+          }
+          triggerSelfPush(
+            'Erro de GPS ❌',
+            errorMsg,
+            'system'
+          );
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      triggerSelfPush(
+        'GPS Indisponível ❌',
+        'O teu telemóvel/navegador não suporta geolocalização.',
+        'system'
+      );
+    }
   };
 
   // Determine current simulated city name based on userLocation
@@ -2905,6 +2951,11 @@ export default function App() {
                   <button
                     onClick={() => {
                       if (typeof window !== 'undefined' && navigator.geolocation) {
+                        triggerSelfPush(
+                          'A obter GPS... 🛰️',
+                          'A sincronizar coordenadas em tempo real do GPS nativo com precisão máxima...',
+                          'system'
+                        );
                         navigator.geolocation.getCurrentPosition(
                           (position) => {
                             setUserLocation({
@@ -2918,13 +2969,21 @@ export default function App() {
                             );
                           },
                           (error) => {
+                            let errorMsg = `Não foi possível obter a tua localização: ${error.message}`;
+                            if (error.code === error.PERMISSION_DENIED) {
+                              errorMsg = 'Para fazeres check-in, por favor ativa o GPS nas definições do teu navegador/telemóvel.';
+                            } else if (error.code === error.POSITION_UNAVAILABLE) {
+                              errorMsg = 'A informação do GPS está indisponível de momento.';
+                            } else if (error.code === error.TIMEOUT) {
+                              errorMsg = 'O tempo limite do GPS expirou. Tenta novamente num local com melhor sinal.';
+                            }
                             triggerSelfPush(
                               'Erro de GPS ❌',
-                              `Não foi possível obter a tua localização: ${error.message}`,
+                              errorMsg,
                               'system'
                             );
                           },
-                          { enableHighAccuracy: true, timeout: 5000 }
+                          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                         );
                       } else {
                         triggerSelfPush(
