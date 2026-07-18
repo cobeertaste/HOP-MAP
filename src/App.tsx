@@ -498,7 +498,9 @@ export default function App() {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [authError, setAuthError] = useState('');
   const [isAuthLoading, setIsAuthLoading] = useState(false);
-  const isLocalAuthFallback = false;
+  const [isLocalAuthFallback, setIsLocalAuthFallback] = useState(() => {
+    return localStorage.getItem('hop_local_auth_fallback') === 'true';
+  });
 
   // Password reset states
   const [showResetModal, setShowResetModal] = useState(false);
@@ -1422,9 +1424,60 @@ export default function App() {
     return () => unsubscribe();
   }, [isLocalAuthFallback]);
 
+  // Auto login local user on load if local auth fallback is active and has saved user
+  useEffect(() => {
+    if (isLocalAuthFallback) {
+      const savedLocalLogin = localStorage.getItem('hop_local_logged_in');
+      if (savedLocalLogin === 'true') {
+        const email = localStorage.getItem('hop_local_user_email') || 'convidado@hopmap.com';
+        const localUid = `local-user-${encodeURIComponent(email)}`;
+        const cacheKeyPrefix = `hop_user_${localUid}_`;
+        
+        const displayNameVal = localStorage.getItem(cacheKeyPrefix + 'username') || email.split('@')[0] || 'convidado';
+        let savedPoints = 12;
+        let savedFavorites = ['catraio'];
+        let savedFriends: string[] = [];
+        let savedFestivals: string[] = [];
+
+        const cachedPoints = localStorage.getItem(cacheKeyPrefix + 'points');
+        const cachedFavs = localStorage.getItem(cacheKeyPrefix + 'favorites');
+        const cachedFrs = localStorage.getItem(cacheKeyPrefix + 'friends');
+        const cachedFests = localStorage.getItem(cacheKeyPrefix + 'checkedInFestivals');
+
+        if (cachedPoints !== null) savedPoints = parseInt(cachedPoints, 10) || 0;
+        if (cachedFavs !== null) {
+          try { savedFavorites = JSON.parse(cachedFavs); } catch (e) {}
+        }
+        if (cachedFrs !== null) {
+          try { savedFriends = JSON.parse(cachedFrs); } catch (e) {}
+        }
+        if (cachedFests !== null) {
+          try { savedFestivals = JSON.parse(cachedFests); } catch (e) {}
+        }
+
+        setUser({
+          id: localUid,
+          email: email,
+          username: displayNameVal,
+          avatarUrl: getLevelDetails(savedPoints).avatarUrl,
+          points: savedPoints,
+          level: getLevelDetails(savedPoints).title,
+          stamps: { 'catraio': 2, 'cerveteca': 1 },
+          favorites: savedFavorites,
+          friends: savedFriends,
+          purchasedEventTickets: [],
+          biometricsEnabled: true,
+          isLoggedIn: true,
+          checkedInBars: [],
+          checkedInFestivals: savedFestivals
+        });
+      }
+    }
+  }, [isLocalAuthFallback]);
+
   // Sync user changes back to localStorage cache to guarantee extreme offline robustness
   useEffect(() => {
-    if (user.isLoggedIn && user.id && !user.id.startsWith('local-user-')) {
+    if (user.isLoggedIn && user.id) {
       const cacheKeyPrefix = `hop_user_${user.id}_`;
       localStorage.setItem(cacheKeyPrefix + 'points', String(user.points || 0));
       localStorage.setItem(cacheKeyPrefix + 'favorites', JSON.stringify(user.favorites || []));
@@ -2312,8 +2365,78 @@ export default function App() {
                 onClick={async () => {
                   setAuthError('');
                   try {
+                    if (isLocalAuthFallback) {
+                      if (!loginEmail || !loginPassword) {
+                        setAuthError('Por favor, preenche todos os campos obrigatórios.');
+                        return;
+                      }
+                      if (loginPassword.length < 6) {
+                        setAuthError('A palavra-passe deve conter pelo menos 6 caracteres.');
+                        return;
+                      }
+                      setIsAuthLoading(true);
+                      await new Promise(resolve => setTimeout(resolve, 800));
+                      
+                      const displayNameVal = loginName.trim() || loginEmail.split('@')[0] || 'utilizador';
+                      const localUid = `local-user-${encodeURIComponent(loginEmail)}`;
+                      
+                      const cacheKeyPrefix = `hop_user_${localUid}_`;
+                      let savedPoints = 12;
+                      let savedFavorites = ['catraio'];
+                      let savedFriends: string[] = [];
+                      let savedFestivals: string[] = [];
+
+                      localStorage.setItem(cacheKeyPrefix + 'username', displayNameVal);
+                      localStorage.setItem(cacheKeyPrefix + 'email', loginEmail);
+                      localStorage.setItem('hop_local_logged_in', 'true');
+                      localStorage.setItem('hop_local_user_email', loginEmail);
+
+                      const cachedPoints = localStorage.getItem(cacheKeyPrefix + 'points');
+                      const cachedFavs = localStorage.getItem(cacheKeyPrefix + 'favorites');
+                      const cachedFrs = localStorage.getItem(cacheKeyPrefix + 'friends');
+                      const cachedFests = localStorage.getItem(cacheKeyPrefix + 'checkedInFestivals');
+
+                      if (cachedPoints !== null) savedPoints = parseInt(cachedPoints, 10) || 0;
+                      if (cachedFavs !== null) {
+                        try { savedFavorites = JSON.parse(cachedFavs); } catch (e) {}
+                      }
+                      if (cachedFrs !== null) {
+                        try { savedFriends = JSON.parse(cachedFrs); } catch (e) {}
+                      }
+                      if (cachedFests !== null) {
+                        try { savedFestivals = JSON.parse(cachedFests); } catch (e) {}
+                      }
+
+                      setUser({
+                        id: localUid,
+                        email: loginEmail,
+                        username: displayNameVal,
+                        avatarUrl: getLevelDetails(savedPoints).avatarUrl,
+                        points: savedPoints,
+                        level: getLevelDetails(savedPoints).title,
+                        stamps: { 'catraio': 2, 'cerveteca': 1 },
+                        favorites: savedFavorites,
+                        friends: savedFriends,
+                        purchasedEventTickets: [],
+                        biometricsEnabled: true,
+                        isLoggedIn: true,
+                        checkedInBars: [],
+                        checkedInFestivals: savedFestivals
+                      });
+
+                      triggerSelfPush(
+                        isRegisterMode ? 'Conta Criada! 🍻' : 'Sessão Iniciada! 🍻',
+                        isRegisterMode ? `Olá ${displayNameVal}, bem-vindo ao teu roteiro Hop Map!` : `Bem-vindo de volta ao teu roteiro Hop Map!`,
+                        'system'
+                      );
+                      setIsAuthLoading(false);
+                      return;
+                    }
+
                     if (!isFirebaseConfigured) {
-                      setAuthError('O Firebase não está configurado. Por favor, ativa o Firebase no ecrã do AI Studio.');
+                      setAuthError('O Firebase não está configurado. Ativámos o Modo Demo Local automático para poderes testar a aplicação.');
+                      setIsLocalAuthFallback(true);
+                      localStorage.setItem('hop_local_auth_fallback', 'true');
                       return;
                     }
                     if (isRegisterMode) {
@@ -2418,6 +2541,48 @@ export default function App() {
                   >
                     Esqueci-me da palavra-passe
                   </button>
+                )}
+              </div>
+
+              {/* Local Demo Mode Selector */}
+              <div className="pt-3 border-t border-zinc-500/10 flex flex-col items-center gap-1.5">
+                <span className="text-[8px] text-zinc-400 uppercase tracking-widest font-semibold">Método de Ligação</span>
+                <div className="flex gap-1.5 p-0.5 bg-black/25 rounded-lg border border-white/5 w-full">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLocalAuthFallback(false);
+                      localStorage.setItem('hop_local_auth_fallback', 'false');
+                      setAuthError('');
+                    }}
+                    className={`flex-1 py-1 text-[8.5px] font-bold rounded-md transition-all cursor-pointer ${
+                      !isLocalAuthFallback 
+                        ? 'bg-amber-500 text-black shadow-sm' 
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    Cloud (Firebase)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLocalAuthFallback(true);
+                      localStorage.setItem('hop_local_auth_fallback', 'true');
+                      setAuthError('');
+                    }}
+                    className={`flex-1 py-1 text-[8.5px] font-bold rounded-md transition-all cursor-pointer ${
+                      isLocalAuthFallback 
+                        ? 'bg-amber-500 text-black shadow-sm' 
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    Local (Demo/Offline)
+                  </button>
+                </div>
+                {isLocalAuthFallback && (
+                  <p className="text-[7.5px] text-amber-500/80 font-medium leading-relaxed mt-0.5 text-center">
+                    💡 Perfeito para testar no Netlify! Os dados serão guardados localmente no navegador.
+                  </p>
                 )}
               </div>
             </div>
@@ -3488,7 +3653,12 @@ export default function App() {
                   <button
                     onClick={async () => {
                       try {
-                        await signOut(auth);
+                        if (isLocalAuthFallback) {
+                          localStorage.removeItem('hop_local_logged_in');
+                          setUser(prev => ({ ...prev, isLoggedIn: false }));
+                        } else {
+                          await signOut(auth);
+                        }
                         triggerSelfPush('Sessão Terminada 🍻', 'Fizeste log-off com sucesso do teu roteiro Hop Map.', 'system');
                       } catch (err: any) {
                         console.error('Error signing out:', err);
