@@ -116,6 +116,7 @@ export interface UserProfile {
   isLoggedIn: boolean;
   checkedInBars: string[]; // barId[]
   lastCheckinDates?: Record<string, string>; // barId -> 'YYYY-MM-DD'
+  tenStampsDates?: Record<string, string>; // barId -> 'YYYY-MM-DD'
   checkedInFestivals?: string[]; // festivalId[]
 }
 

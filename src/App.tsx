@@ -10,7 +10,7 @@ import {
   Search, Bell, Shield, Fingerprint, CreditCard, Sparkles, 
   Navigation, CheckCircle, ArrowRight, Instagram, Facebook, 
   X, Compass, Filter, Share2, Flame, RefreshCcw, Smile, Check, Zap, CheckSquare, Square,
-  Camera, LogOut, Trophy, ChevronDown, Plus
+  Camera, LogOut, Trophy, ChevronDown, Plus, Lock
 } from 'lucide-react';
 
 import { BARS_DATA, EVENTS_DATA, getReviewsForBar } from './data';
@@ -466,6 +466,24 @@ export default function App() {
   const [user, setUser] = useState<UserProfile>(() => {
     const initialPoints = 12;
     const initialLevelInfo = getLevelDetails(initialPoints);
+    
+    let savedStamps = { 'catraio': 2, 'cerveteca': 1 };
+    let savedLastCheckinDates = {};
+    let savedTenStampsDates = {};
+    
+    try {
+      const cachedStamps = localStorage.getItem('hop_user_1_stamps');
+      if (cachedStamps) savedStamps = JSON.parse(cachedStamps);
+    } catch (e) {}
+    try {
+      const cachedLastCheckinDates = localStorage.getItem('hop_user_1_lastCheckinDates');
+      if (cachedLastCheckinDates) savedLastCheckinDates = JSON.parse(cachedLastCheckinDates);
+    } catch (e) {}
+    try {
+      const cachedTenStampsDates = localStorage.getItem('hop_user_1_tenStampsDates');
+      if (cachedTenStampsDates) savedTenStampsDates = JSON.parse(cachedTenStampsDates);
+    } catch (e) {}
+
     return {
       id: 'user_1',
       email: 'e-mail', // Metada User Email
@@ -473,14 +491,15 @@ export default function App() {
       avatarUrl: initialLevelInfo.avatarUrl,
       points: initialPoints,
       level: initialLevelInfo.title,
-      stamps: { 'catraio': 2, 'cerveteca': 1 },
+      stamps: savedStamps,
       favorites: ['catraio'],
       friends: [],
       purchasedEventTickets: [],
       biometricsEnabled: true,
       isLoggedIn: false,
       checkedInBars: [],
-      lastCheckinDates: {},
+      lastCheckinDates: savedLastCheckinDates,
+      tenStampsDates: savedTenStampsDates,
       checkedInFestivals: []
     };
   });
@@ -1352,6 +1371,14 @@ export default function App() {
         const cachedFrs = localStorage.getItem(cacheKeyPrefix + 'friends');
         const cachedFests = localStorage.getItem(cacheKeyPrefix + 'checkedInFestivals');
 
+        let savedStamps = { 'catraio': 2, 'cerveteca': 1 };
+        let savedLastCheckinDates = {};
+        let savedTenStampsDates = {};
+
+        const cachedStamps = localStorage.getItem(cacheKeyPrefix + 'stamps');
+        const cachedCheckins = localStorage.getItem(cacheKeyPrefix + 'lastCheckinDates');
+        const cachedTenStamps = localStorage.getItem(cacheKeyPrefix + 'tenStampsDates');
+
         if (cachedPoints !== null) savedPoints = parseInt(cachedPoints, 10) || 0;
         if (cachedFavs !== null) {
           try { savedFavorites = JSON.parse(cachedFavs); } catch (e) {}
@@ -1361,6 +1388,15 @@ export default function App() {
         }
         if (cachedFests !== null) {
           try { savedFestivals = JSON.parse(cachedFests); } catch (e) {}
+        }
+        if (cachedStamps !== null) {
+          try { savedStamps = JSON.parse(cachedStamps); } catch (e) {}
+        }
+        if (cachedCheckins !== null) {
+          try { savedLastCheckinDates = JSON.parse(cachedCheckins); } catch (e) {}
+        }
+        if (cachedTenStamps !== null) {
+          try { savedTenStampsDates = JSON.parse(cachedTenStamps); } catch (e) {}
         }
 
         try {
@@ -1412,6 +1448,9 @@ export default function App() {
           favorites: savedFavorites,
           friends: savedFriends,
           checkedInFestivals: savedFestivals,
+          stamps: savedStamps,
+          lastCheckinDates: savedLastCheckinDates,
+          tenStampsDates: savedTenStampsDates,
           isLoggedIn: true
         }));
       } else {
@@ -1542,8 +1581,15 @@ export default function App() {
       localStorage.setItem(cacheKeyPrefix + 'points', String(user.points || 0));
       localStorage.setItem(cacheKeyPrefix + 'favorites', JSON.stringify(user.favorites || []));
       localStorage.setItem(cacheKeyPrefix + 'friends', JSON.stringify(user.friends || []));
+      localStorage.setItem(cacheKeyPrefix + 'stamps', JSON.stringify(user.stamps || {}));
+      localStorage.setItem(cacheKeyPrefix + 'lastCheckinDates', JSON.stringify(user.lastCheckinDates || {}));
+      localStorage.setItem(cacheKeyPrefix + 'tenStampsDates', JSON.stringify(user.tenStampsDates || {}));
+    } else {
+      localStorage.setItem('hop_user_1_stamps', JSON.stringify(user.stamps || {}));
+      localStorage.setItem('hop_user_1_lastCheckinDates', JSON.stringify(user.lastCheckinDates || {}));
+      localStorage.setItem('hop_user_1_tenStampsDates', JSON.stringify(user.tenStampsDates || {}));
     }
-  }, [user.id, user.points, user.favorites, user.friends, user.isLoggedIn]);
+  }, [user.id, user.points, user.favorites, user.friends, user.stamps, user.lastCheckinDates, user.tenStampsDates, user.isLoggedIn]);
 
   // Auto layout triggers & alerts
   useEffect(() => {
@@ -1701,6 +1747,20 @@ export default function App() {
     }
   };
 
+  const isSpotStampsBlocked = (barId: string) => {
+    const stamps = user.stamps[barId] || 0;
+    if (stamps < 10) return false;
+    
+    const todayLocal = new Date();
+    const year = todayLocal.getFullYear();
+    const month = String(todayLocal.getMonth() + 1).padStart(2, '0');
+    const day = String(todayLocal.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+    
+    const tenStampDate = user.tenStampsDates ? user.tenStampsDates[barId] : undefined;
+    return tenStampDate !== todayStr;
+  };
+
   // Check in at bar (Guaranteed Gamificação)
   const initiateCheckin = (bar: Bar) => {
     const todayLocal = new Date();
@@ -1708,6 +1768,15 @@ export default function App() {
     const month = String(todayLocal.getMonth() + 1).padStart(2, '0');
     const day = String(todayLocal.getDate()).padStart(2, '0');
     const todayStr = `${year}-${month}-${day}`;
+
+    if (isSpotStampsBlocked(bar.id)) {
+      triggerSelfPush(
+        'Check-in Bloqueado! ❌',
+        `Já atingiste o limite de 10 selos para o spot ${bar.name}. O teu prémio expirou e o check-in está bloqueado!`,
+        'system'
+      );
+      return;
+    }
 
     const lastCheckinDate = user.lastCheckinDates ? user.lastCheckinDates[bar.id] : undefined;
     if (lastCheckinDate === todayStr) {
@@ -1756,11 +1825,11 @@ export default function App() {
             // Award stamps and points
             const currentStamps = user.stamps[bar.id] || 0;
             const nextStamps = currentStamps + 1;
-            const willReset = nextStamps >= 10;
+            const isTenthStamp = nextStamps >= 10;
             
             let alertMsg = `Check-in efetuado! Ganhaste 1 check-in neste spot.`;
 
-            if (willReset) {
+            if (isTenthStamp) {
               alertMsg = `Check-in efetuado! Ganhaste 1 check-in neste spot. Card preenchido! Ganhaste +1 ponto HOP e 1 Cerveja Grátis neste bar! 🎉`;
             }
 
@@ -1793,8 +1862,11 @@ export default function App() {
 
             setUser(prev => {
               const nextStampsRecord = { ...prev.stamps };
-              if (willReset) {
-                nextStampsRecord[bar.id] = 0;
+              const nextTenStampsDates = { ...(prev.tenStampsDates || {}) };
+
+              if (isTenthStamp) {
+                nextStampsRecord[bar.id] = 10;
+                nextTenStampsDates[bar.id] = todayStr;
               } else {
                 nextStampsRecord[bar.id] = nextStamps;
               }
@@ -1812,6 +1884,7 @@ export default function App() {
                 ...prev,
                 points: (prev.points || 0) + 1,
                 stamps: nextStampsRecord,
+                tenStampsDates: nextTenStampsDates,
                 checkedInBars: nextCheckedIn,
                 lastCheckinDates: nextLastCheckinDates
               };
@@ -1819,12 +1892,12 @@ export default function App() {
 
             // Particle/Stamping Feedback trigger
             setAnimatingStampBarId(bar.id);
-            setNewlyAddedStampIndex(willReset ? 4 : currentStamps);
+            setNewlyAddedStampIndex(isTenthStamp ? 9 : currentStamps);
             setActiveTab('loyalty');
             setSelectedBar(null); // Close detailed drawer to reveal Loyalty tab clearly
 
             // Play synthesized audio chimings
-            if (willReset) {
+            if (isTenthStamp) {
               playRewardChime();
             } else {
               playStampSound();
@@ -2354,7 +2427,17 @@ export default function App() {
                 >
                   HOP MAP
                 </h1>
-                <span className="text-[7px] sm:text-[8px] text-zinc-400 font-bold uppercase tracking-wider font-mono whitespace-nowrap">by Cobeer Taste</span>
+                <a 
+                  href="https://www.cobeertaste.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  className="text-[7px] sm:text-[8px] text-zinc-400 hover:text-[#FFCA00] transition duration-150 font-bold uppercase tracking-wider font-mono whitespace-nowrap cursor-pointer hover:underline"
+                >
+                  by Cobeer Taste
+                </a>
               </div>
             </button>
 
@@ -3514,6 +3597,7 @@ export default function App() {
                             const userStamps = user.stamps[bar.id] || 0;
                             const distM = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, bar.latitude, bar.longitude);
                             const isNear = distM <= 50;
+                            const isBlocked = isSpotStampsBlocked(bar.id);
                             return (
                               <div 
                                 key={bar.id}
@@ -3524,17 +3608,27 @@ export default function App() {
                                 <div className={`flex justify-between items-center p-1 rounded-xl -m-1 mb-2 ${darkMode ? 'bg-white/2' : 'bg-neutral-50'}`}>
                                   <div className="pl-1 min-w-0 flex-1 mr-2">
                                     <h5 className={`text-[11px] font-extrabold leading-tight font-display truncate ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{bar.name}</h5>
-                                    <span className={`text-[8px] font-mono font-bold uppercase tracking-wider block mt-1 ${isNear ? 'text-emerald-500 animate-pulse' : 'text-neutral-500'}`}>
-                                      {isNear ? `Estás no local (${Math.round(distM)}m)` : `Distância: ${Math.round(distM)}m`}
+                                    <span className={`text-[8px] font-mono font-bold uppercase tracking-wider block mt-1 ${isBlocked ? 'text-red-500' : isNear ? 'text-emerald-500 animate-pulse' : 'text-neutral-500'}`}>
+                                      {isBlocked ? 'Bloqueado (10 Selos Atingidos) 🔒' : isNear ? `Estás no local (${Math.round(distM)}m)` : `Distância: ${Math.round(distM)}m`}
                                     </span>
                                   </div>
-                                  <button
-                                    onClick={() => initiateCheckin(bar)}
-                                    className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[9px] px-3 py-1.5 rounded-xl transition shadow-md font-display shrink-0 cursor-pointer"
-                                    id={`btn-checkin-${bar.id}`}
-                                  >
-                                    Check-In + Selo
-                                  </button>
+                                  {isBlocked ? (
+                                    <button
+                                      disabled
+                                      className="bg-neutral-600 text-neutral-400 font-extrabold text-[9px] px-3 py-1.5 rounded-xl transition shadow-none font-display shrink-0 cursor-not-allowed opacity-50"
+                                      id={`btn-checkin-${bar.id}`}
+                                    >
+                                      Bloqueado ❌
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => initiateCheckin(bar)}
+                                      className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[9px] px-3 py-1.5 rounded-xl transition shadow-md font-display shrink-0 cursor-pointer"
+                                      id={`btn-checkin-${bar.id}`}
+                                    >
+                                      Check-In + Selo
+                                    </button>
+                                  )}
                                 </div>
 
                                 {/* Stamp Holes display (iOS native stamp visual) */}
@@ -3547,9 +3641,11 @@ export default function App() {
                                         <div 
                                           key={i} 
                                           className={`relative w-6.5 h-6.5 rounded-full flex items-center justify-center border transition-all duration-300 ${
-                                            isFilled 
-                                              ? 'bg-amber-500/25 border-amber-500/60 text-amber-400 scale-105 shadow-inner' 
-                                              : 'bg-black/30 border-white/10 text-neutral-600'
+                                            isBlocked
+                                              ? 'bg-red-950/20 border-red-900/30 text-neutral-500 scale-95 opacity-50'
+                                              : isFilled 
+                                                ? 'bg-amber-500/25 border-amber-500/60 text-amber-400 scale-105 shadow-inner' 
+                                                : 'bg-black/30 border-white/10 text-neutral-600'
                                           } ${isAnimatingThis ? 'shadow-[0_0_15px_rgba(245,158,11,0.6)] border-amber-400 z-10' : ''}`}
                                         >
                                           {isAnimatingThis ? (
@@ -3561,6 +3657,8 @@ export default function App() {
                                             >
                                               <Beer className="w-3 h-3 fill-current animate-pulse" />
                                             </motion.div>
+                                          ) : isBlocked ? (
+                                            <Lock className="w-2.5 h-2.5 text-neutral-500 stroke-[2.5]" />
                                           ) : isFilled ? (
                                             <Beer className="w-3 h-3 fill-current animate-pulse" />
                                           ) : (
@@ -3606,10 +3704,16 @@ export default function App() {
                                   </div>
                                   <div className="flex justify-between items-center text-[9px] font-bold font-mono text-neutral-400">
                                     <span>
-                                      {10 - userStamps > 0 ? `${10 - userStamps} selos em falta para prémio` : 'Prémio pronto!'}
+                                      {isBlocked ? (
+                                        <span className="text-red-500/80">Prémio Expirado! Selos bloqueados. 🔒</span>
+                                      ) : 10 - userStamps > 0 ? (
+                                        `${10 - userStamps} selos em falta para prémio`
+                                      ) : (
+                                        <span className="text-emerald-500 animate-pulse font-bold">Prémio pronto! Válido HOJE! 🎉</span>
+                                      )}
                                     </span>
                                     <span className="tracking-widest pr-0.5 animate-pulse">
-                                      {animatingStampBarId === bar.id ? "A GRAVAR..." : `${userStamps}/10 SELOS`}
+                                      {animatingStampBarId === bar.id ? "A GRAVAR..." : isBlocked ? "BLOQUEADO" : `${userStamps}/10 SELOS`}
                                     </span>
                                   </div>
                                 </div>
@@ -4291,7 +4395,17 @@ export default function App() {
               <div className="mt-4.5 pt-4 border-t border-white/5 flex flex-col space-y-2">
                 {(() => {
                   const drawerDistanceMeters = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, selectedBar.latitude, selectedBar.longitude);
-                  return (
+                  const isBlocked = isSpotStampsBlocked(selectedBar.id);
+                  return isBlocked ? (
+                    <button 
+                      disabled
+                      className="w-full h-11 bg-neutral-600 text-neutral-400 font-extrabold text-xs rounded-xl flex items-center justify-center space-x-1.5 shadow-none font-display cursor-not-allowed opacity-50"
+                      id={`btn-checkin-drawer-${selectedBar.id}`}
+                    >
+                      <Lock className="w-4 h-4 text-neutral-400" />
+                      <span>Check-In Bloqueado (10 Selos Atingidos)</span>
+                    </button>
+                  ) : (
                     <button 
                       onClick={() => initiateCheckin(selectedBar)}
                       className="w-full h-11 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl transition-all duration-150 flex items-center justify-center space-x-1.5 shadow-lg shadow-amber-500/10 active:scale-95 font-display cursor-pointer"
