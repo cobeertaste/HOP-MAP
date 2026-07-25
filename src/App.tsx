@@ -2422,7 +2422,7 @@ export default function App() {
               <PixelPacman size={20} className="animate-pulse shrink-0" />
               <div className="flex items-baseline gap-2">
                 <h1 
-                  className="text-xs sm:text-sm font-bold tracking-wider font-press-start text-[#FFCA00]"
+                  className="text-base sm:text-lg font-bold tracking-wider font-press-start text-[#FFCA00]"
                   style={{ textShadow: '1.5px 1.5px 0px #000000, 3px 3px 0px #b45309' }}
                 >
                   HOP MAP
@@ -2442,14 +2442,16 @@ export default function App() {
             </button>
 
             <div className="flex items-center gap-3">
-              {/* Retro HOPS SCORE */}
+              {/* Retro HOPS SCORE & RANKING */}
               <button 
                 onClick={() => setShowScoreModal(true)}
-                className="flex items-center bg-black/50 border-2 border-[#FFCA00] hover:bg-[#FFCA00]/25 active:scale-95 transition-all px-2.5 py-1 rounded-md text-[8px] sm:text-[10px] font-bold tracking-widest font-press-start text-[#FFCA00] cursor-pointer select-none"
+                className="flex items-center gap-1.5 bg-black/50 border-2 border-[#FFCA00] hover:bg-[#FFCA00]/25 active:scale-95 transition-all px-2.5 py-1 rounded-md text-[7px] sm:text-[9px] font-bold tracking-widest font-press-start text-[#FFCA00] cursor-pointer select-none"
                 id="btn-hops-score-board"
                 title="Ver Tabela de Pontuações"
               >
-                PONTUAÇÃO: {user.points}
+                <span>PONTUAÇÃO: {user.points}</span>
+                <span className="text-[#FFCA00]/60">•</span>
+                <span>RANKING: {getLevelDetails(user.points).title.toUpperCase()}</span>
               </button>
             </div>
           </header>
@@ -3012,9 +3014,8 @@ export default function App() {
                   {displayBars.map(bar => {
                     const isFaved = user.favorites.includes(bar.id);
                     return (
-                      <motion.div 
+                      <div 
                         key={bar.id}
-                        layout
                         className={`rounded-2xl overflow-hidden border transition-all duration-300 flex flex-col ${
                           darkMode ? 'bg-white/5 border-white/10 hover:border-white/20 hover:shadow-lg hover:shadow-black/30' : 'bg-white border-neutral-250 shadow-xs'
                         }`}
@@ -3101,7 +3102,7 @@ export default function App() {
                             </button>
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })}
 
@@ -3444,14 +3445,22 @@ export default function App() {
                     }
                     return (
                       <>
-                        <div className="space-y-1">
-                          <h4 className="text-[10px] font-bold text-amber-500 tracking-widest uppercase font-display">PONTUAÇÃO</h4>
-                          <span className="text-2xl font-extrabold block font-display tracking-tight text-white">{user.points} HOPS</span>
-                          <span className={`text-[10px] flex items-center gap-1.5 pb-1 border-b border-white/10 font-mono ${details.isSecret ? 'animate-legendary font-black' : 'text-zinc-400'}`}>
-                            <span className="text-sm select-none">{details.badge}</span>
-                            {user.level}
-                          </span>
-                          <div className="flex items-center space-x-1.5 pt-1.5">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3 flex-wrap border-b border-white/10 pb-2">
+                            <div>
+                              <h4 className="text-[9px] font-bold text-amber-500 tracking-widest uppercase font-display">PONTUAÇÃO</h4>
+                              <span className="text-xl font-extrabold block font-display tracking-tight text-white">{user.points} HOPS</span>
+                            </div>
+                            <span className="text-white/30 text-lg font-light self-center">|</span>
+                            <div>
+                              <h4 className="text-[9px] font-bold text-amber-500 tracking-widest uppercase font-display">RANKING</h4>
+                              <span className={`text-xs flex items-center gap-1 font-mono font-bold mt-0.5 ${details.isSecret ? 'animate-legendary font-black' : 'text-amber-300'}`}>
+                                <span className="text-sm select-none">{details.badge}</span>
+                                {details.title}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-1.5 pt-0.5">
                             <Award className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                             <span className="text-[9.5px] text-zinc-300 font-medium">
                               {details.nextMeta 
@@ -3545,7 +3554,7 @@ export default function App() {
                 {/* Stamp card selection list */}
                 <div className="space-y-3.5">
                   <div className="pl-1">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-neutral-400 font-display">Cartão de Selos Cobeer</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-neutral-400 font-display">Cartão de Selos</h4>
                     <p className="text-[10px] text-neutral-500 mt-0.5">Visite spots parceiros, faça check-ins verificados e troque por cerveja grátis!</p>
                     <p className="text-[9px] text-zinc-400 italic mt-1 leading-normal">
                       Nota: Para garantir a precisão de 50 metros, utiliza um telemóvel com o GPS ativo.
@@ -3584,9 +3593,14 @@ export default function App() {
                         b.name.toLowerCase().includes(loyaltySearchQuery.toLowerCase())
                       );
                       const sortedBars = [...filtered].sort((a, b) => {
+                        const stampsA = user.stamps[a.id] || 0;
+                        const stampsB = user.stamps[b.id] || 0;
+                        if (stampsB !== stampsA) {
+                          return stampsB - stampsA; // Most stamps first
+                        }
                         const distA = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, a.latitude, a.longitude);
                         const distB = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, b.latitude, b.longitude);
-                        return distA - distB;
+                        return distA - distB; // Closest first
                       });
                       
                       const displayList = showAllLoyaltySpots ? sortedBars : sortedBars.slice(0, 5);
@@ -3776,28 +3790,35 @@ export default function App() {
                 )}
 
                 {/* User Info Header Card */}
-                <div className="bg-white border border-zinc-200 p-4.5 rounded-3xl flex items-center space-x-3 text-zinc-900 transition-all shadow-sm">
+                <div 
+                  className={`p-4.5 rounded-3xl flex items-center space-x-3 border transition-all ${
+                    darkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-neutral-200 text-zinc-900 shadow-sm'
+                  }`}
+                >
                   <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-3xl shrink-0 select-none">
                     {getLevelDetails(user.points).badge}
                   </div>
                   <div className="flex-1 min-w-0 text-left">
                     <div className="flex items-center space-x-2">
-                      <h4 className="text-sm font-extrabold truncate font-display text-black">{user.username}</h4>
-                      <span className="px-2 py-0.2 rounded-full text-[8px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/25 uppercase tracking-widest font-mono">PRO</span>
+                      <h4 className={`text-sm font-extrabold truncate font-display ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{user.username}</h4>
                     </div>
-                    <p className="text-[10px] text-zinc-500 truncate mt-0.5">{user.email}</p>
+                    <p className={`text-[10px] truncate mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>{user.email}</p>
                     {(() => {
                       const details = getLevelDetails(user.points);
                       return (
-                        <div className="flex flex-col gap-1 mt-1.5 text-[10px] font-bold text-amber-600">
-                          <div className="flex items-center space-x-1">
-                            <Award className="w-3.5 h-3.5 text-amber-600" />
-                            <span className={`font-mono flex items-center gap-1.5 ${details.isSecret ? 'animate-legendary font-black' : 'text-amber-600'}`}>
-                              <span className="text-sm select-none">{details.badge}</span>
-                              {details.title} ({user.points} HOPS)
-                            </span>
+                        <div className="flex flex-col gap-1 mt-1.5 text-[10px] font-bold text-amber-500">
+                          <div className="flex items-center space-x-2 flex-wrap">
+                            <span className="font-mono text-amber-400 font-extrabold">PONTUAÇÃO: {user.points} HOPS</span>
+                            <span className="text-zinc-500 font-normal">•</span>
+                            <div className="flex items-center space-x-1">
+                              <Award className="w-3.5 h-3.5 text-amber-500" />
+                              <span className={`font-mono flex items-center gap-1 ${details.isSecret ? 'animate-legendary font-black' : 'text-amber-500'}`}>
+                                <span className="text-sm select-none">{details.badge}</span>
+                                RANKING: {details.title}
+                              </span>
+                            </div>
                           </div>
-                          <p className="text-[9px] text-zinc-500 font-medium normal-case font-sans italic">
+                          <p className={`text-[9px] font-medium normal-case font-sans italic ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
                             "{details.concept}"
                           </p>
                         </div>
@@ -3807,7 +3828,8 @@ export default function App() {
 
                   {/* Log-off Button right next to profile details */}
                   <button
-                    onClick={async () => {
+                    onClick={async (e) => {
+                      e.stopPropagation();
                       try {
                         await signOut(auth);
                         triggerSelfPush('Sessão Terminada 🍻', 'Fizeste log-off com sucesso do teu roteiro Hop Map.', 'system');
@@ -3815,7 +3837,11 @@ export default function App() {
                         console.error('Error signing out:', err);
                       }
                     }}
-                    className="p-2.5 rounded-xl bg-zinc-100 border border-zinc-200 hover:bg-red-50 hover:border-red-200 text-zinc-600 hover:text-red-600 transition cursor-pointer flex items-center justify-center shrink-0"
+                    className={`p-2.5 rounded-xl border transition cursor-pointer flex items-center justify-center shrink-0 ${
+                      darkMode 
+                        ? 'bg-white/5 border-white/10 hover:bg-red-500/10 hover:border-red-500/30 text-zinc-300 hover:text-red-400' 
+                        : 'bg-zinc-100 border-zinc-200 hover:bg-red-50 hover:border-red-200 text-zinc-600 hover:text-red-600'
+                    }`}
                     title="Terminar Sessão (Log-off)"
                     id="btn-log-off"
                   >
@@ -3825,17 +3851,21 @@ export default function App() {
 
                 {/* FRIENDS SEARCH & FRIENDS LIST SECTION */}
                 <div className={`p-4 rounded-3xl border transition-all ${
-                  darkMode ? 'bg-zinc-900/60 border-zinc-800 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-sm'
+                  darkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-sm'
                 } space-y-4`}>
                   
                   {/* Header */}
-                  <div className="flex items-center justify-between border-b border-zinc-200/50 dark:border-zinc-800 pb-3">
+                  <div className={`flex items-center justify-between border-b pb-3 ${
+                    darkMode ? 'border-white/10' : 'border-zinc-200/50'
+                  }`}>
                     <div className="flex items-center space-x-2">
                       <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-500">
                         <Users className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold uppercase tracking-widest font-display text-black dark:text-white">Os meus Amigos</h4>
+                        <h4 className={`text-xs font-bold uppercase tracking-widest font-display ${
+                          darkMode ? 'text-white' : 'text-zinc-950'
+                        }`}>Os meus Amigos</h4>
                         <p className="text-[9px] text-zinc-400 font-sans">Encontra e adiciona outros amantes de cerveja</p>
                       </div>
                     </div>
@@ -3853,10 +3883,12 @@ export default function App() {
                       </div>
                       <div className="space-y-1.5">
                         {pendingRequests.map(req => (
-                          <div key={req.id} className="flex items-center justify-between bg-black/10 dark:bg-black/20 p-2 rounded-xl border border-amber-500/10">
+                          <div key={req.id} className={`flex items-center justify-between p-2 rounded-xl border ${
+                            darkMode ? 'bg-black/20 border-amber-500/20' : 'bg-amber-50/50 border-amber-500/20'
+                          }`}>
                             <div className="text-left">
-                              <span className="text-[9px] font-black text-zinc-800 dark:text-zinc-100">{req.senderName}</span>
-                              <span className="text-[8px] font-mono text-zinc-500 block">({req.senderPoints} HOPS)</span>
+                              <span className={`text-[9px] font-black ${darkMode ? 'text-zinc-100' : 'text-zinc-800'}`}>{req.senderName}</span>
+                              <span className="text-[8px] font-mono text-zinc-400 block">({req.senderPoints} HOPS)</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                               <button
@@ -3869,7 +3901,9 @@ export default function App() {
                               <button
                                 type="button"
                                 onClick={() => handleDeclineRequest(req.id)}
-                                className="px-2 py-1 text-[8px] font-bold font-sans bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-850 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg transition active:scale-95 cursor-pointer"
+                                className={`px-2 py-1 text-[8px] font-bold font-sans rounded-lg transition active:scale-95 cursor-pointer ${
+                                  darkMode ? 'bg-white/10 hover:bg-white/20 text-zinc-300' : 'bg-zinc-200 hover:bg-zinc-300 text-zinc-700'
+                                }`}
                               >
                                 Recusar
                               </button>
@@ -3893,7 +3927,7 @@ export default function App() {
                           placeholder="Pesquisa por nome de utilizador..."
                           className={`w-full pl-8 pr-3 py-2 text-[10px] rounded-xl outline-none border transition-all ${
                             darkMode 
-                              ? 'bg-zinc-950 border-zinc-800 text-white focus:border-amber-500/40' 
+                              ? 'bg-black/30 border-white/10 text-white focus:border-amber-500/40' 
                               : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-amber-500'
                           }`}
                         />
@@ -3913,16 +3947,20 @@ export default function App() {
 
                     {/* Friend Search Results */}
                     {friendSearchResults.length > 0 && (
-                      <div className="mt-2.5 bg-zinc-50 dark:bg-zinc-950/60 rounded-2xl p-2 border border-zinc-200/50 dark:border-zinc-900 space-y-1.5 max-h-[160px] overflow-y-auto">
+                      <div className={`mt-2.5 rounded-2xl p-2 border space-y-1.5 max-h-[160px] overflow-y-auto ${
+                        darkMode ? 'bg-black/40 border-white/10' : 'bg-zinc-50 border-zinc-200/50'
+                      }`}>
                         {friendSearchResults.map(res => {
                           const isAlreadyFriend = (user.friends || []).includes(res.id);
                           const isSentPending = sentPendingRequests.includes(res.id);
                           return (
-                            <div key={res.id} className="flex items-center justify-between p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 rounded-lg transition">
+                            <div key={res.id} className={`flex items-center justify-between p-1.5 rounded-lg transition ${
+                              darkMode ? 'hover:bg-white/5' : 'hover:bg-zinc-100'
+                            }`}>
                               <div className="flex items-center space-x-2">
                                 <span className="text-sm select-none">{getLevelDetails(res.points).badge}</span>
                                 <div className="text-left">
-                                  <div className="text-[10px] font-bold text-zinc-800 dark:text-zinc-200">{res.username}</div>
+                                  <div className={`text-[10px] font-bold ${darkMode ? 'text-zinc-200' : 'text-zinc-800'}`}>{res.username}</div>
                                   <div className="text-[8px] text-zinc-400 font-mono font-medium">{res.points} HOPS</div>
                                 </div>
                               </div>
@@ -3943,7 +3981,7 @@ export default function App() {
                                 <button
                                   type="button"
                                   onClick={() => handleAddFriend(res.id, res.username)}
-                                  className="px-2 py-1 text-[8px] font-extrabold text-amber-600 bg-amber-500/10 border border-amber-500/25 rounded-lg hover:bg-amber-500/20 transition cursor-pointer flex items-center gap-1"
+                                  className="px-2 py-1 text-[8px] font-extrabold text-amber-500 bg-amber-500/10 border border-amber-500/25 rounded-lg hover:bg-amber-500/20 transition cursor-pointer flex items-center gap-1"
                                 >
                                   <User className="w-2.5 h-2.5" />
                                   <span>Adicionar</span>
@@ -3968,7 +4006,9 @@ export default function App() {
                         <p className="text-[9px] text-zinc-400 mt-1">A carregar amigos...</p>
                       </div>
                     ) : friendsDetails.length === 0 ? (
-                      <div className="bg-zinc-50 dark:bg-zinc-950/40 border border-dashed border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl text-center">
+                      <div className={`border border-dashed p-4 rounded-2xl text-center ${
+                        darkMode ? 'bg-black/30 border-white/10' : 'bg-zinc-50 border-zinc-200'
+                      }`}>
                         <p className="text-zinc-400 text-[10px] leading-relaxed">Não tens amigos adicionados.</p>
                         <p className="text-zinc-500 text-[8px] mt-0.5">Pesquisa por nome acima para criar a tua comunidade cervejeira!</p>
                       </div>
@@ -3983,13 +4023,15 @@ export default function App() {
                               return (
                                 <div 
                                   key={friend.id} 
-                                  className="flex items-center justify-between p-2 rounded-xl bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-100 dark:border-zinc-900/60"
+                                  className={`flex items-center justify-between p-2 rounded-xl border ${
+                                    darkMode ? 'bg-white/5 border-white/10' : 'bg-zinc-50 border-zinc-200/70'
+                                  }`}
                                 >
                                   <div className="flex items-center space-x-2">
                                     <span className="text-lg select-none">{details.badge}</span>
                                     <div className="text-left">
                                       <div className="flex items-center gap-1">
-                                        <span className="text-[10px] font-black text-zinc-800 dark:text-zinc-100">{friend.username}</span>
+                                        <span className={`text-[10px] font-black ${darkMode ? 'text-zinc-100' : 'text-zinc-800'}`}>{friend.username}</span>
                                         <span className="text-[8px] font-mono text-amber-500">({friend.points} HOPS)</span>
                                       </div>
                                       <div className="text-[8px] text-zinc-400 font-sans italic">"{details.title}"</div>
@@ -4207,7 +4249,7 @@ export default function App() {
                   <ArrowRight className="w-4 h-4 rotate-180" />
                   <span>Voltar</span>
                 </button>
-                <span className="text-xs font-extrabold tracking-wider uppercase font-sans">Detalhes do Bar</span>
+                <span className="text-xs font-extrabold tracking-wider uppercase font-sans">Detalhes do Spot</span>
                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
                   <Beer className="w-4.5 h-4.5" />
                 </div>
@@ -4216,7 +4258,7 @@ export default function App() {
               {/* Scrollable Content Container */}
               <div className="flex-1 overflow-y-auto p-5 space-y-5">
                 {/* Cover Photo */}
-                <div className="relative h-44 w-full rounded-2xl overflow-hidden mb-4 shadow-inner">
+                <div className="relative h-44 w-full rounded-2xl overflow-hidden mb-2 shadow-inner">
                   <img 
                     src={selectedBar.coverPhoto} 
                     alt={selectedBar.name} 
@@ -4225,7 +4267,7 @@ export default function App() {
                   />
                   <button 
                     onClick={() => { setSelectedBar(null); setActiveTab('explore'); }}
-                    className="absolute top-3 right-3 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition shadow-md"
+                    className="absolute top-3 right-3 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition shadow-md cursor-pointer"
                     id="btn-bar-detail-close"
                   >
                     <X className="w-4 h-4" />
@@ -4233,6 +4275,37 @@ export default function App() {
                   <div className="absolute bottom-3 left-3 px-3 py-1 rounded bg-black/70 backdrop-blur-md text-[8.5px] font-bold text-amber-500 tracking-widest uppercase">
                     {selectedBar.zone}
                   </div>
+                </div>
+
+                {/* Active checkin bar button - LOGO POR BAIXO DA IMAGEM DO LOCAL */}
+                <div className="p-3.5 rounded-2xl border flex flex-col space-y-2 bg-amber-500/10 border-amber-500/25">
+                  {(() => {
+                    const drawerDistanceMeters = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, selectedBar.latitude, selectedBar.longitude);
+                    const isBlocked = isSpotStampsBlocked(selectedBar.id);
+                    return isBlocked ? (
+                      <button 
+                        disabled
+                        className="w-full h-11 bg-neutral-600 text-neutral-400 font-extrabold text-xs rounded-xl flex items-center justify-center space-x-1.5 shadow-none font-display cursor-not-allowed opacity-50"
+                        id={`btn-checkin-drawer-${selectedBar.id}`}
+                      >
+                        <Lock className="w-4 h-4 text-neutral-400" />
+                        <span>Check-In Bloqueado (10 Selos Atingidos)</span>
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => initiateCheckin(selectedBar)}
+                        className="w-full h-11 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl transition-all duration-150 flex items-center justify-center space-x-1.5 shadow-lg shadow-amber-500/10 active:scale-95 font-display cursor-pointer"
+                        id={`btn-checkin-drawer-${selectedBar.id}`}
+                      >
+                        <Fingerprint className="w-4 h-4 text-black stroke-[2.5]" />
+                        <span>Validar Check-In Seguro (${Math.round(drawerDistanceMeters)}m)</span>
+                      </button>
+                    );
+                  })()}
+
+                  <p className="text-[10px] text-zinc-400 text-center italic mt-0.5 leading-normal">
+                    Nota: Para garantir a precisão de 50 metros, utiliza um telemóvel com o GPS ativo.
+                  </p>
                 </div>
 
               {/* Title & Actions */}
@@ -4389,37 +4462,6 @@ export default function App() {
                     <span>Instagram</span>
                   </a>
                 )}
-              </div>
-
-              {/* Active checkin bar button */}
-              <div className="mt-4.5 pt-4 border-t border-white/5 flex flex-col space-y-2">
-                {(() => {
-                  const drawerDistanceMeters = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, selectedBar.latitude, selectedBar.longitude);
-                  const isBlocked = isSpotStampsBlocked(selectedBar.id);
-                  return isBlocked ? (
-                    <button 
-                      disabled
-                      className="w-full h-11 bg-neutral-600 text-neutral-400 font-extrabold text-xs rounded-xl flex items-center justify-center space-x-1.5 shadow-none font-display cursor-not-allowed opacity-50"
-                      id={`btn-checkin-drawer-${selectedBar.id}`}
-                    >
-                      <Lock className="w-4 h-4 text-neutral-400" />
-                      <span>Check-In Bloqueado (10 Selos Atingidos)</span>
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => initiateCheckin(selectedBar)}
-                      className="w-full h-11 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl transition-all duration-150 flex items-center justify-center space-x-1.5 shadow-lg shadow-amber-500/10 active:scale-95 font-display cursor-pointer"
-                      id={`btn-checkin-drawer-${selectedBar.id}`}
-                    >
-                      <Fingerprint className="w-4 h-4 text-black stroke-[2.5]" />
-                      <span>Validar Check-In Seguro (${Math.round(drawerDistanceMeters)}m)</span>
-                    </button>
-                  );
-                })()}
-
-                <p className="text-[10px] text-zinc-400 text-center italic mt-1 leading-normal">
-                  Nota: Para garantir a precisão de 50 metros, utiliza um telemóvel com o GPS ativo.
-                </p>
               </div>
 
               {/* Reviews subsection */}
