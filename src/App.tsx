@@ -546,6 +546,38 @@ export default function App() {
     website: string;
   } | null>(null);
 
+  // Share Ranking handler
+  const handleShareRanking = async () => {
+    playPacmanSound();
+    const details = getLevelDetails(user.points);
+    const shareText = `🍻 HOP MAP by COBEER TASTE 🍻\n\n` +
+      `👤 Jogador: ${user.username.toUpperCase()}\n` +
+      `⚡ Pontuação: ${user.points} HOPS\n` +
+      `🏆 Ranking: ${details.title.toUpperCase()} (${details.badge})\n\n` +
+      `Encontra os melhores spots de cerveja artesanal no HOP MAP by COBEER TASTE!\n` +
+      `https://www.cobeertaste.com`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'HOP MAP by COBEER TASTE - O meu Ranking',
+          text: shareText,
+          url: 'https://www.cobeertaste.com'
+        });
+        return;
+      } catch (err: any) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareText);
+      triggerSelfPush('Ranking Copiado! 📋', 'O teu progresso HOP MAP foi copiado para a área de transferência.', 'system');
+    } catch (e) {
+      triggerSelfPush('Ranking HOPS', `${user.username}: ${user.points} HOPS (${details.title}) - www.cobeertaste.com`, 'system');
+    }
+  };
+
   // Notifications
   const [notifications, setNotifications] = useState<HopNotification[]>([
     {
@@ -4873,12 +4905,15 @@ export default function App() {
               <div className="flex-1 border-4 border-double border-blue-600 rounded-2xl p-4 flex flex-col justify-between overflow-y-auto relative bg-black">
                 
                 {/* Header */}
-                <div className="text-center space-y-3 mt-1 shrink-0">
+                <div className="text-center space-y-2 mt-1 shrink-0">
                   <div className="text-[8px] text-[#FF0000] tracking-widest animate-pulse">
                     * TABLE OF HIGH SCORES *
                   </div>
-                  <h2 className="text-xs text-[#FFCA00] tracking-wider leading-relaxed">
-                    HOP MAP | CRAFT BEER LOVERS
+                  <h2 
+                    className="text-xs text-[#FFCA00] tracking-wider leading-relaxed font-press-start"
+                    style={{ textShadow: '1px 1px 0px #000000, 2px 2px 0px #b45309' }}
+                  >
+                    HOP MAP by COBEER TASTE
                   </h2>
                 </div>
 
@@ -5253,31 +5288,45 @@ export default function App() {
                   <div>1UP = CHECKIN</div>
                 </div>
 
-                {/* Close action */}
-                <button 
-                  onClick={() => {
-                    setShowScoreModal(false);
-                    // Play a soft synthetic retro double beep
-                    try {
-                      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-                      const osc = ctx.createOscillator();
-                      const gain = ctx.createGain();
-                      osc.type = 'square';
-                      osc.frequency.setValueAtTime(600, ctx.currentTime);
-                      osc.frequency.setValueAtTime(900, ctx.currentTime + 0.1);
-                      gain.gain.setValueAtTime(0.05, ctx.currentTime);
-                      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
-                      osc.connect(gain);
-                      gain.connect(ctx.destination);
-                      osc.start();
-                      osc.stop(ctx.currentTime + 0.25);
-                    } catch(e) {}
-                  }}
-                  className="w-full mt-3 py-2.5 bg-[#FFCA00] hover:bg-white text-black border-4 border-black rounded-xl font-bold tracking-wider hover:text-black transition-all active:scale-97 cursor-pointer text-[8px] flex items-center justify-center gap-2 shrink-0 select-none"
-                  id="btn-close-score-modal"
-                >
-                  <span>[ ABANDONAR TABELA ]</span>
-                </button>
+                {/* Bottom Actions: Share Ranking & Close */}
+                <div className="flex gap-2 mt-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleShareRanking}
+                    className="flex-1 py-2.5 bg-[#00FFFF] hover:bg-white text-black border-4 border-black rounded-xl font-bold tracking-wider transition-all active:scale-97 cursor-pointer text-[7px] sm:text-[8px] flex items-center justify-center gap-1.5 font-press-start select-none"
+                    id="btn-share-ranking-modal"
+                    title="Partilhar o teu ranking no HOP MAP by COBEER TASTE"
+                  >
+                    <Share2 className="w-3 h-3 shrink-0" />
+                    <span>PARTILHAR RANKING</span>
+                  </button>
+
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setShowScoreModal(false);
+                      // Play a soft synthetic retro double beep
+                      try {
+                        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(600, ctx.currentTime);
+                        osc.frequency.setValueAtTime(900, ctx.currentTime + 0.1);
+                        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start();
+                        osc.stop(ctx.currentTime + 0.25);
+                      } catch(e) {}
+                    }}
+                    className="flex-1 py-2.5 bg-[#FFCA00] hover:bg-white text-black border-4 border-black rounded-xl font-bold tracking-wider hover:text-black transition-all active:scale-97 cursor-pointer text-[7px] sm:text-[8px] flex items-center justify-center gap-1 shrink-0 font-press-start select-none"
+                    id="btn-close-score-modal"
+                  >
+                    <span>[ FECHAR ]</span>
+                  </button>
+                </div>
 
               </div>
             </motion.div>
@@ -5484,16 +5533,21 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className={`relative w-full max-w-[320px] rounded-[32px] p-5 border-2 border-amber-500/50 shadow-2xl z-10 text-center space-y-4 ${
+                className={`relative w-full max-w-[320px] rounded-[32px] p-5 border-2 border-[#FFCA00]/50 shadow-2xl z-10 text-center space-y-4 ${
                   darkMode ? 'bg-zinc-950 text-white' : 'bg-zinc-900 text-white'
                 }`}
               >
-                {/* Header Badge */}
+                {/* Pixelated HOP MAP Header Badge */}
                 <div className="flex justify-center items-center pt-1">
-                  <span className="px-3.5 py-1 rounded-full bg-amber-500 text-black font-press-start text-[9px] font-extrabold tracking-widest uppercase shadow-md shadow-amber-500/20 flex items-center gap-1.5">
-                    <Beer className="w-3.5 h-3.5 fill-black" />
-                    {checkinPopupModal.title}
-                  </span>
+                  <div className="flex items-center gap-2 bg-black/70 px-4 py-1.5 rounded-xl border-2 border-[#FFCA00] shadow-md">
+                    <Beer className="w-4 h-4 text-[#FFCA00] fill-[#FFCA00] animate-pulse" />
+                    <span 
+                      className="text-xs font-bold tracking-wider font-press-start text-[#FFCA00]"
+                      style={{ textShadow: '1.5px 1.5px 0px #000000, 2px 2px 0px #b45309' }}
+                    >
+                      HOP MAP
+                    </span>
+                  </div>
                 </div>
 
                 {/* Message Body */}
@@ -5544,7 +5598,7 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className={`relative w-full max-w-[320px] rounded-[32px] p-5 border-2 border-amber-500/40 shadow-2xl z-10 text-center space-y-3.5 ${
+                className={`relative w-full max-w-[320px] rounded-[32px] p-5 border-2 border-[#FFCA00]/40 shadow-2xl z-10 text-center space-y-3.5 ${
                   darkMode ? 'bg-zinc-950 text-white' : 'bg-zinc-900 text-white'
                 }`}
               >
@@ -5558,15 +5612,18 @@ export default function App() {
                 </button>
 
                 {/* Header Banner */}
-                <div className="flex flex-col items-center justify-center space-y-1 pt-1">
+                <div className="flex flex-col items-center justify-center space-y-1.5 pt-1">
                   <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 mb-0.5">
                     <Beer className="w-5 h-5 animate-pulse" />
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[8px] font-mono font-extrabold uppercase tracking-widest">
-                    Cobeer Taste
+                  <span 
+                    className="px-3 py-1 rounded-xl bg-black/70 border border-[#FFCA00] text-[9px] font-bold tracking-widest font-press-start text-[#FFCA00] uppercase"
+                    style={{ textShadow: '1px 1px 0px #000000, 2px 2px 0px #b45309' }}
+                  >
+                    HOP MAP
                   </span>
                   <h3 className="text-sm font-extrabold text-white font-display mt-0.5">
-                    Segue o Cobeer Taste! 🍻
+                    Segue Cobeer Taste! 🍻
                   </h3>
                   <p className="text-[10px] text-zinc-300 leading-relaxed font-sans px-1">
                     Junta-te à nossa comunidade e acompanha todas as novidades nas redes sociais:
@@ -5637,9 +5694,9 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowSocialModal(false)}
-                  className="w-full py-2 bg-white/5 hover:bg-white/10 text-zinc-300 font-bold text-[10px] rounded-xl border border-white/10 active:scale-98 transition duration-150 cursor-pointer mt-0.5"
+                  className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-amber-300 font-extrabold text-[10px] rounded-xl border border-white/10 active:scale-98 transition duration-150 cursor-pointer mt-0.5 font-display uppercase tracking-wider"
                 >
-                  Continuar na Aplicação
+                  Continuar HOP MAP
                 </button>
               </motion.div>
             </div>
