@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Beer, Star, MapPin, Award, Heart, Scroll, Calendar, User, Users,
   Search, Bell, Shield, Fingerprint, CreditCard, Sparkles, 
-  Navigation, CheckCircle, ArrowRight, Instagram, Facebook, 
+  Navigation, CheckCircle, ArrowRight, Instagram, Facebook, Youtube,
   X, Compass, Filter, Share2, Flame, RefreshCcw, Smile, Check, Zap, CheckSquare, Square,
   Camera, LogOut, Trophy, ChevronDown, Plus, Lock
 } from 'lucide-react';
@@ -527,6 +527,24 @@ export default function App() {
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState('');
   const [isResetLoading, setIsResetLoading] = useState(false);
+
+  // Social Media Pop-up Modal (Every 5 minutes = 300,000 ms)
+  const [showSocialModal, setShowSocialModal] = useState(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setShowSocialModal(true);
+    }, 5 * 60 * 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Check-In Success Pop-up Modal
+  const [checkinPopupModal, setCheckinPopupModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    website: string;
+  } | null>(null);
 
   // Notifications
   const [notifications, setNotifications] = useState<HopNotification[]>([
@@ -1911,6 +1929,23 @@ export default function App() {
 
             triggerSelfPush('Check-in Realizado!', alertMsg, 'loyalty');
             setBiometricsType(null);
+
+            // Pop-up modal per user prompt specifications
+            if (isTenthStamp) {
+              setCheckinPopupModal({
+                isOpen: true,
+                title: 'HOP MAP',
+                message: `Parabéns, conquistaste o ${bar.name}. Desfruta do prémio e continua o jogo.`,
+                website: 'www.cobeertaste.com'
+              });
+            } else {
+              setCheckinPopupModal({
+                isOpen: true,
+                title: 'HOP MAP',
+                message: `Parabéns, ganhaste 1 HOP por check-in no spot ${bar.name}. Desfruta da tua cerveja em ${bar.name}.`,
+                website: 'www.cobeertaste.com'
+              });
+            }
           });
         },
         (error) => {
@@ -2052,6 +2087,14 @@ export default function App() {
       `Check-in efetuado com sucesso no ${ev.title}! Ganhaste +2 HOPS.`,
       'loyalty'
     );
+
+    // Pop-up modal per user prompt specifications
+    setCheckinPopupModal({
+      isOpen: true,
+      title: 'HOP MAP',
+      message: `Parabéns, ganhaste 2 HOPS por check-in no festival ${ev.title}. Desfruta do festival e das cervejas!!`,
+      website: 'www.cobeertaste.com'
+    });
 
     // Sync to Firestore
     if (user.isLoggedIn && !user.id.startsWith('local-user-')) {
@@ -5420,6 +5463,184 @@ export default function App() {
                     </div>
                   </div>
                 )}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* --- CHECK-IN POPUP MODAL --- */}
+        <AnimatePresence>
+          {checkinPopupModal && checkinPopupModal.isOpen && (
+            <div className="absolute inset-0 z-[450] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setCheckinPopupModal(null)}
+                className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              />
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className={`relative w-full max-w-[320px] rounded-[32px] p-5 border-2 border-amber-500/50 shadow-2xl z-10 text-center space-y-4 ${
+                  darkMode ? 'bg-zinc-950 text-white' : 'bg-zinc-900 text-white'
+                }`}
+              >
+                {/* Header Badge */}
+                <div className="flex justify-center items-center pt-1">
+                  <span className="px-3.5 py-1 rounded-full bg-amber-500 text-black font-press-start text-[9px] font-extrabold tracking-widest uppercase shadow-md shadow-amber-500/20 flex items-center gap-1.5">
+                    <Beer className="w-3.5 h-3.5 fill-black" />
+                    {checkinPopupModal.title}
+                  </span>
+                </div>
+
+                {/* Message Body */}
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                  <p className="text-xs font-bold text-zinc-100 leading-relaxed font-sans">
+                    {checkinPopupModal.message}
+                  </p>
+                </div>
+
+                {/* Website Link */}
+                <div className="pt-0.5">
+                  <a 
+                    href="https://www.cobeertaste.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-amber-400 hover:text-amber-300 font-mono text-xs font-extrabold underline tracking-wider transition-colors hover:scale-105 inline-block"
+                  >
+                    {checkinPopupModal.website}
+                  </a>
+                </div>
+
+                {/* Confirm Button */}
+                <button
+                  type="button"
+                  onClick={() => setCheckinPopupModal(null)}
+                  className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 active:scale-97 transition duration-150 cursor-pointer font-display uppercase tracking-wider"
+                >
+                  Continuar 🍻
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* --- SOCIAL MEDIA POPUP MODAL (Every 5 minutes) --- */}
+        <AnimatePresence>
+          {showSocialModal && (
+            <div className="absolute inset-0 z-[440] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowSocialModal(false)}
+                className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              />
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className={`relative w-full max-w-[320px] rounded-[32px] p-5 border-2 border-amber-500/40 shadow-2xl z-10 text-center space-y-3.5 ${
+                  darkMode ? 'bg-zinc-950 text-white' : 'bg-zinc-900 text-white'
+                }`}
+              >
+                {/* Close X */}
+                <button 
+                  onClick={() => setShowSocialModal(false)}
+                  className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition cursor-pointer"
+                  title="Fechar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                {/* Header Banner */}
+                <div className="flex flex-col items-center justify-center space-y-1 pt-1">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 mb-0.5">
+                    <Beer className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[8px] font-mono font-extrabold uppercase tracking-widest">
+                    Cobeer Taste
+                  </span>
+                  <h3 className="text-sm font-extrabold text-white font-display mt-0.5">
+                    Segue o Cobeer Taste! 🍻
+                  </h3>
+                  <p className="text-[10px] text-zinc-300 leading-relaxed font-sans px-1">
+                    Junta-te à nossa comunidade e acompanha todas as novidades nas redes sociais:
+                  </p>
+                </div>
+
+                {/* Social Buttons List */}
+                <div className="space-y-2 pt-0.5">
+                  {/* INSTAGRAM */}
+                  <a
+                    href="https://www.instagram.com/cobeertaste"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-2.5 rounded-2xl bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-amber-500/20 border border-pink-500/30 hover:border-pink-500/60 transition-all hover:scale-[1.02] active:scale-98 text-white group cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <div className="p-1.5 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white shadow-md">
+                        <Instagram className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="text-left">
+                        <div className="text-[11px] font-extrabold tracking-wide font-display text-white group-hover:text-amber-300 transition-colors">INSTAGRAM</div>
+                        <div className="text-[8.5px] text-zinc-400 font-mono">@cobeertaste</div>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+                  </a>
+
+                  {/* FACEBOOK */}
+                  <a
+                    href="https://www.facebook.com/cobeertaste"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-2.5 rounded-2xl bg-blue-600/15 border border-blue-500/30 hover:border-blue-500/60 transition-all hover:scale-[1.02] active:scale-98 text-white group cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <div className="p-1.5 rounded-xl bg-blue-600 text-white shadow-md">
+                        <Facebook className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="text-left">
+                        <div className="text-[11px] font-extrabold tracking-wide font-display text-white group-hover:text-blue-300 transition-colors">FACEBOOK</div>
+                        <div className="text-[8.5px] text-zinc-400 font-mono">@cobeertaste</div>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
+                  </a>
+
+                  {/* YOUTUBE */}
+                  <a
+                    href="https://www.youtube.com/channel/UCfcPIaTVsHjlGMJpQUFOrMQ"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-2.5 rounded-2xl bg-red-600/15 border border-red-500/30 hover:border-red-500/60 transition-all hover:scale-[1.02] active:scale-98 text-white group cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <div className="p-1.5 rounded-xl bg-red-600 text-white shadow-md">
+                        <Youtube className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="text-left">
+                        <div className="text-[11px] font-extrabold tracking-wide font-display text-white group-hover:text-red-300 transition-colors">YOUTUBE</div>
+                        <div className="text-[8.5px] text-zinc-400 font-mono">Cobeer Taste Channel</div>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all" />
+                  </a>
+                </div>
+
+                {/* Dismiss Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowSocialModal(false)}
+                  className="w-full py-2 bg-white/5 hover:bg-white/10 text-zinc-300 font-bold text-[10px] rounded-xl border border-white/10 active:scale-98 transition duration-150 cursor-pointer mt-0.5"
+                >
+                  Continuar na Aplicação
+                </button>
               </motion.div>
             </div>
           )}

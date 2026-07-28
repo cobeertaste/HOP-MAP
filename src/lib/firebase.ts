@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { initializeAuth, inMemoryPersistence, getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, disableNetwork, getFirestore, Firestore } from "firebase/firestore";
 // @ts-ignore
 import firebaseConfigFile from "../../firebase-applet-config.json";
 
@@ -61,9 +61,20 @@ if (isFirebaseConfigured) {
 }
 
 export const auth = authInstance;
-export const db = databaseId ? getFirestore(app, databaseId) : getFirestore(app);
+
+let dbInstance: Firestore;
+try {
+  dbInstance = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+  }, databaseId || undefined);
+} catch (e) {
+  dbInstance = databaseId ? getFirestore(app, databaseId) : getFirestore(app);
+}
+
+export const db = dbInstance;
 
 if (!isFirebaseConfigured) {
+  disableNetwork(db).catch(() => {});
   console.warn("Firebase API Key is missing. Please configure your .env file with the appropriate VITE_FIREBASE_* keys, or run the Firebase setup again.");
 }
 
