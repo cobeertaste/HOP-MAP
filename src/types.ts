@@ -118,6 +118,7 @@ export interface UserProfile {
   lastCheckinDates?: Record<string, string>; // barId -> 'YYYY-MM-DD'
   tenStampsDates?: Record<string, string>; // barId -> 'YYYY-MM-DD'
   checkedInFestivals?: string[]; // festivalId[]
+  user_language?: 'PT' | 'EN';
 }
 
 export interface HopNotification {

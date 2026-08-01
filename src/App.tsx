@@ -10,8 +10,10 @@ import {
   Search, Bell, Shield, Fingerprint, CreditCard, Sparkles, 
   Navigation, CheckCircle, ArrowRight, Instagram, Facebook, Youtube,
   X, Compass, Filter, Share2, Flame, RefreshCcw, Smile, Check, Zap, CheckSquare, Square,
-  Camera, LogOut, Trophy, ChevronDown, Plus, Lock
+  Camera, LogOut, Trophy, ChevronDown, Plus, Lock, Globe, Languages
 } from 'lucide-react';
+
+import { t, Language } from './lib/i18n';
 
 import { BARS_DATA, EVENTS_DATA, getReviewsForBar } from './data';
 import { getBarGoogleMapsUrl } from './maps_utils';
@@ -500,9 +502,44 @@ export default function App() {
       checkedInBars: [],
       lastCheckinDates: savedLastCheckinDates,
       tenStampsDates: savedTenStampsDates,
-      checkedInFestivals: []
+      checkedInFestivals: [],
+      user_language: (localStorage.getItem('hop_app_language') as Language) || 'PT'
     };
   });
+
+  // i18n Internationalization Language State (PT default)
+  const [lang, setLang] = useState<Language>(() => {
+    try {
+      const saved = localStorage.getItem('hop_app_language');
+      if (saved === 'PT' || saved === 'EN') return saved as Language;
+    } catch (e) {}
+    return 'PT';
+  });
+
+  const handleLanguageChange = async (newLang: Language) => {
+    setLang(newLang);
+    try {
+      localStorage.setItem('hop_app_language', newLang);
+    } catch (e) {}
+
+    setUser(prev => ({ ...prev, user_language: newLang }));
+
+    if (user.isLoggedIn && !user.id.startsWith('local-user-')) {
+      try {
+        await setDoc(doc(db, 'users', user.id), {
+          user_language: newLang
+        }, { merge: true });
+      } catch (e) {
+        console.warn('Could not save user_language to Firestore:', e);
+      }
+    }
+
+    triggerSelfPush(
+      newLang === 'PT' ? 'Idioma Atualizado 🇵🇹' : 'Language Updated 🇬🇧',
+      t('userLanguageUpdated', newLang),
+      'system'
+    );
+  };
 
   // Custom Routines / Otimização de Rota
   const [customRoute, setCustomRoute] = useState<string[]>(['catraio', 'letraria-braga']); // Default barIds
@@ -527,6 +564,9 @@ export default function App() {
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState('');
   const [isResetLoading, setIsResetLoading] = useState(false);
+
+  // GPS refresh states
+  const [isGpsRefreshing, setIsGpsRefreshing] = useState(false);
 
   // Social Media Pop-up Modal (Every 5 minutes = 300,000 ms)
   const [showSocialModal, setShowSocialModal] = useState(false);
@@ -1428,6 +1468,13 @@ export default function App() {
         const cachedStamps = localStorage.getItem(cacheKeyPrefix + 'stamps');
         const cachedCheckins = localStorage.getItem(cacheKeyPrefix + 'lastCheckinDates');
         const cachedTenStamps = localStorage.getItem(cacheKeyPrefix + 'tenStampsDates');
+        const cachedLang = localStorage.getItem(cacheKeyPrefix + 'user_language');
+
+        let userLangVal: Language = lang;
+        if (cachedLang === 'PT' || cachedLang === 'EN') {
+          userLangVal = cachedLang as Language;
+          setLang(userLangVal);
+        }
 
         if (cachedPoints !== null) savedPoints = parseInt(cachedPoints, 10) || 0;
         if (cachedFavs !== null) {
@@ -1464,6 +1511,12 @@ export default function App() {
             if (Array.isArray(data.checkedInFestivals)) {
               savedFestivals = data.checkedInFestivals;
             }
+            if (data.user_language === 'PT' || data.user_language === 'EN') {
+              userLangVal = data.user_language as Language;
+              setLang(userLangVal);
+              localStorage.setItem('hop_app_language', userLangVal);
+              localStorage.setItem(cacheKeyPrefix + 'user_language', userLangVal);
+            }
             // Update cache with fresh data from server
             localStorage.setItem(cacheKeyPrefix + 'points', String(savedPoints));
             localStorage.setItem(cacheKeyPrefix + 'favorites', JSON.stringify(savedFavorites));
@@ -1479,6 +1532,7 @@ export default function App() {
               favorites: savedFavorites,
               friends: savedFriends,
               checkedInFestivals: savedFestivals,
+              user_language: userLangVal,
               createdAt: new Date().toISOString()
             }, { merge: true });
           }
@@ -1501,6 +1555,7 @@ export default function App() {
           stamps: savedStamps,
           lastCheckinDates: savedLastCheckinDates,
           tenStampsDates: savedTenStampsDates,
+          user_language: userLangVal,
           isLoggedIn: true
         }));
       } else {
@@ -1571,6 +1626,7 @@ export default function App() {
   // Manual GPS Refresh ensuring real-time non-cached reading
   const handleManualGpsRefresh = () => {
     if (typeof window !== 'undefined' && navigator.geolocation) {
+      setIsGpsRefreshing(true);
       triggerSelfPush(
         'A obter GPS... 🛰️',
         'A ler coordenadas do GPS nativo com precisão máxima...',
@@ -1588,6 +1644,7 @@ export default function App() {
           });
           setGpsAccuracy(accuracy);
           setGpsError(null);
+          setIsGpsRefreshing(false);
 
           triggerSelfPush(
             'GPS Sincronizado! 📡',
@@ -1605,6 +1662,7 @@ export default function App() {
             errorMsg = 'O tempo limite do GPS expirou. Tenta novamente num local com melhor sinal.';
           }
           setGpsError(errorMsg);
+          setIsGpsRefreshing(false);
           triggerSelfPush(
             'Erro de GPS ❌',
             errorMsg,
@@ -2560,25 +2618,51 @@ export default function App() {
               )}
               <button
                 onClick={handleManualGpsRefresh}
-                className="flex items-center space-x-1.5 bg-[#FFCA00] text-black px-2.5 py-1 rounded-md font-sans text-[9px] font-bold uppercase tracking-wider shadow-md hover:bg-amber-400 active:scale-95 transition cursor-pointer"
-                title="Atualizar GPS instantaneamente sem cache"
+                className="flex items-center space-x-1.5 bg-[#FFCA00] text-black px-2.5 py-1 rounded-md font-sans text-[9px] font-bold uppercase hover:bg-amber-400 transition-all cursor-pointer shadow-sm active:scale-95"
+                id="btn-refresh-gps"
+                title="Atualizar Coordenadas GPS"
               >
-                <RefreshCcw className="w-2.5 h-2.5" />
+                <RefreshCcw className={`w-3 h-3 ${isGpsRefreshing ? 'animate-spin' : ''}`} />
                 <span>Atualizar</span>
               </button>
             </div>
           </div>
         )}
 
-        {/* --- MAIN PAGE CHANGER AREA --- */}
         {!user.isLoggedIn ? (
           <motion.div
             key="login-screen"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="flex-1 overflow-y-auto flex flex-col justify-center items-center p-6 text-center select-none"
+            className="flex-1 overflow-y-auto flex flex-col justify-center items-center p-6 text-center select-none relative"
           >
+            {/* Discrete Language Toggle PT / EN at Top Corner */}
+            <div className="absolute top-4 right-4 z-30 flex items-center space-x-1 bg-black/60 border border-white/20 rounded-full p-1 backdrop-blur-md shadow-lg">
+              <button
+                type="button"
+                onClick={() => handleLanguageChange('PT')}
+                className={`px-2.5 py-1 text-[9px] font-bold rounded-full transition-all cursor-pointer ${
+                  lang === 'PT' ? 'bg-amber-500 text-black shadow-sm font-black' : 'text-zinc-400 hover:text-white'
+                }`}
+                id="btn-login-lang-pt"
+                title="Português"
+              >
+                PT 🇵🇹
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLanguageChange('EN')}
+                className={`px-2.5 py-1 text-[9px] font-bold rounded-full transition-all cursor-pointer ${
+                  lang === 'EN' ? 'bg-amber-500 text-black shadow-sm font-black' : 'text-zinc-400 hover:text-white'
+                }`}
+                id="btn-login-lang-en"
+                title="English"
+              >
+                EN 🇬🇧
+              </button>
+            </div>
+
             {/* Logo */}
             <div className="mb-6 shrink-0">
               <PixelLogo size={180} />
@@ -2593,17 +2677,17 @@ export default function App() {
               darkMode ? 'bg-black/30 backdrop-blur-md border-white/10 text-white' : 'bg-white border-zinc-200 text-zinc-950'
             }`}>
               <h2 className="text-xs font-bold uppercase tracking-wider text-amber-500">
-                {isRegisterMode ? 'Criar Conta' : 'Iniciar Sessão'}
+                {isRegisterMode ? t('registerTab', lang) : t('loginTab', lang)}
               </h2>
               
               <div className="space-y-3 text-left">
                 {/* Optional Username Input when registering */}
                 {isRegisterMode && (
                   <div className="space-y-1">
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 pl-1">Utilizador</label>
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 pl-1">{t('nameLabel', lang)}</label>
                     <input
                       type="text"
-                      placeholder="O teu nome..."
+                      placeholder={t('namePlaceholder', lang)}
                       value={loginName}
                       onChange={e => setLoginName(e.target.value)}
                       className={`w-full px-4 py-2 text-xs rounded-xl border transition-all outline-none ${
@@ -2615,10 +2699,10 @@ export default function App() {
 
                 {/* Email Input */}
                 <div className="space-y-1">
-                  <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 pl-1">E-Mail</label>
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 pl-1">{t('emailLabel', lang)}</label>
                   <input
                     type="email"
-                    placeholder="email@exemplo.com"
+                    placeholder={t('emailPlaceholder', lang)}
                     value={loginEmail}
                     onChange={e => setLoginEmail(e.target.value)}
                     className={`w-full px-4 py-2 text-xs rounded-xl border transition-all outline-none ${
@@ -2630,8 +2714,8 @@ export default function App() {
                 {/* Password Input */}
                 <div className="space-y-1">
                   <div className="flex justify-between items-center pr-1">
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 pl-1">Palavra-passe</label>
-                    <span className="text-[8px] text-zinc-500 font-medium">(mín. 6 caracteres)</span>
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 pl-1">{t('passwordLabel', lang)}</label>
+                    <span className="text-[8px] text-zinc-500 font-medium">{lang === 'PT' ? '(mín. 6 caracteres)' : '(min. 6 chars)'}</span>
                   </div>
                   <input
                     type="password"
@@ -2675,16 +2759,16 @@ export default function App() {
                   setAuthError('');
                   try {
                     if (!isFirebaseConfigured) {
-                      setAuthError('O Firebase não está configurado. Por favor, ativa o Firebase no ecrã do AI Studio.');
+                      setAuthError(t('firebaseNotConfigured', lang));
                       return;
                     }
                     if (isRegisterMode) {
                       if (!loginEmail || !loginPassword) {
-                        setAuthError('Por favor, preenche todos os campos obrigatórios.');
+                        setAuthError(t('fillRequiredFields', lang));
                         return;
                       }
                       if (loginPassword.length < 6) {
-                        setAuthError('A palavra-passe deve conter pelo menos 6 caracteres.');
+                        setAuthError(t('passMinLength', lang));
                         return;
                       }
                       setIsAuthLoading(true);
@@ -2693,12 +2777,13 @@ export default function App() {
                       if (userCredential.user) {
                         await updateProfile(userCredential.user, { displayName: displayNameVal });
                         
-                        // Add newly registered user to firestore collection 'users'
+                        // Add newly registered user to firestore collection 'users' with user_language preference
                         try {
                           await setDoc(doc(db, 'users', userCredential.user.uid), {
                             uid: userCredential.user.uid,
                             email: loginEmail.trim(),
                             username: displayNameVal,
+                            user_language: lang,
                             createdAt: new Date().toISOString()
                           });
                         } catch (uerr) {
@@ -2709,40 +2794,40 @@ export default function App() {
                         }
                       }
                       triggerSelfPush(
-                        'Conta Criada! 🍻',
-                        `Olá ${displayNameVal}, bem-vindo ao teu roteiro Hop Map!`,
+                        t('accountCreatedTitle', lang),
+                        lang === 'PT' ? `Olá ${displayNameVal}, bem-vindo ao teu roteiro Hop Map!` : `Hello ${displayNameVal}, welcome to your Hop Map guide!`,
                         'system'
                       );
                     } else {
                       if (!loginEmail || !loginPassword) {
-                        setAuthError('Por favor, introduz o e-mail e a palavra-passe.');
+                        setAuthError(t('enterEmailPass', lang));
                         return;
                       }
                       if (loginPassword.length < 6) {
-                        setAuthError('A palavra-passe deve conter pelo menos 6 caracteres.');
+                        setAuthError(t('passMinLength', lang));
                         return;
                       }
                       setIsAuthLoading(true);
                       await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
                       triggerSelfPush(
-                        'Sessão Iniciada! 🍻',
-                        `Bem-vindo de volta ao teu roteiro Hop Map!`,
+                        t('welcomeBackTitle', lang),
+                        t('welcomeBackMsg', lang),
                         'system'
                       );
                     }
                   } catch (err: any) {
                     console.error('Auth error:', err);
-                    let PortugueseError = err.message || 'Ocorreu um erro na autenticação.';
+                    let PortugueseError = err.message || (lang === 'PT' ? 'Ocorreu um erro na autenticação.' : 'An authentication error occurred.');
                     if (err.code === 'auth/invalid-email') {
-                      PortugueseError = 'E-mail inválido.';
+                      PortugueseError = lang === 'PT' ? 'E-mail inválido.' : 'Invalid email address.';
                     } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-                      PortugueseError = 'Credenciais incorretas.';
+                      PortugueseError = lang === 'PT' ? 'Credenciais incorretas.' : 'Incorrect credentials.';
                     } else if (err.code === 'auth/email-already-in-use') {
-                      PortugueseError = 'Este e-mail já está em uso.';
+                      PortugueseError = lang === 'PT' ? 'Este e-mail já está em uso.' : 'Email is already in use.';
                     } else if (err.code === 'auth/weak-password' || (err.message && err.message.toLowerCase().includes('password'))) {
-                      PortugueseError = 'A palavra-passe deve conter pelo menos 6 caracteres.';
+                      PortugueseError = t('passMinLength', lang);
                     } else if (err.code === 'auth/operation-not-allowed') {
-                      PortugueseError = 'O método E-mail/Palavra-passe não está ativo na consola Firebase.';
+                      PortugueseError = lang === 'PT' ? 'O método E-mail/Palavra-passe não está ativo na consola Firebase.' : 'Email/Password sign-in method is not enabled in Firebase Console.';
                     } else {
                       PortugueseError = PortugueseError.replace(/^Firebase:\s*/, '');
                     }
@@ -2753,7 +2838,7 @@ export default function App() {
                 }}
                 className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs rounded-xl shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 active:scale-98 transition duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isAuthLoading ? 'A carregar...' : (isRegisterMode ? 'Registar' : 'Entrar')}
+                {isAuthLoading ? (lang === 'PT' ? 'A carregar...' : 'Loading...') : (isRegisterMode ? t('registerTab', lang) : t('loginTab', lang))}
               </button>
 
               {/* Register Toggle Link */}
@@ -2765,7 +2850,9 @@ export default function App() {
                   }}
                   className="text-[10px] text-amber-500 hover:text-amber-400 font-bold underline cursor-pointer"
                 >
-                  {isRegisterMode ? 'Já tens conta? Entrar' : 'Não tens conta? Criar conta'}
+                  {isRegisterMode 
+                    ? (lang === 'PT' ? 'Já tens conta? Entrar' : 'Already have an account? Login') 
+                    : (lang === 'PT' ? 'Não tens conta? Criar conta' : 'No account? Create account')}
                 </button>
 
                 {!isRegisterMode && (
@@ -2778,11 +2865,10 @@ export default function App() {
                     }}
                     className="text-[10px] text-zinc-400 hover:text-zinc-300 font-bold underline cursor-pointer mt-0.5"
                   >
-                    Esqueci-me da palavra-passe
+                    {t('forgotPassword', lang)}
                   </button>
                 )}
               </div>
-
 
             </div>
 
@@ -4222,6 +4308,46 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* Language Preference Settings Card */}
+                <div className={`p-4 rounded-2xl space-y-3 border transition-all ${
+                  darkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-xs'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h5 className="text-[11px] font-bold flex items-center font-display">
+                        <Languages className="w-4 h-4 text-amber-500 mr-2" />
+                        {t('appLanguage', lang)}
+                      </h5>
+                      <p className={`text-[9px] mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                        {lang === 'PT' ? 'Português (PT) / English (EN)' : 'Portuguese (PT) / English (EN)'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center space-x-1.5 bg-black/40 border border-white/15 rounded-xl p-1">
+                      <button
+                        type="button"
+                        onClick={() => handleLanguageChange('PT')}
+                        className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                          lang === 'PT' ? 'bg-amber-500 text-black font-black shadow-md' : 'text-zinc-400 hover:text-white'
+                        }`}
+                        id="btn-profile-lang-pt"
+                      >
+                        PT 🇵🇹
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleLanguageChange('EN')}
+                        className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                          lang === 'EN' ? 'bg-amber-500 text-black font-black shadow-md' : 'text-zinc-400 hover:text-white'
+                        }`}
+                        id="btn-profile-lang-en"
+                      >
+                        EN 🇬🇧
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Biometrics Settings */}
                 <div className={`p-4 rounded-2xl space-y-3 border transition-all ${
                   darkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-xs'
@@ -4834,7 +4960,9 @@ export default function App() {
               <div className={`p-1 rounded-md transition-all ${activeTab === 'explore' ? 'scale-110' : 'opacity-65'}`}>
                 <PixelIcon name="compass" size={20} overrideColor={activeTab === 'explore' ? "#FFCA00" : "#FFFFFF"} />
               </div>
-              <span className={`text-[8px] font-press-start uppercase tracking-wider ${activeTab === 'explore' ? 'text-[#FFCA00]' : 'text-zinc-400'}`}>Explorar</span>
+              <span className={`text-[8px] font-press-start uppercase tracking-wider ${activeTab === 'explore' ? 'text-[#FFCA00]' : 'text-zinc-400'}`}>
+                {t('tabMap', lang)}
+              </span>
             </button>
 
             {/* TAB 2: MAP / ROUTING */}
@@ -4846,7 +4974,9 @@ export default function App() {
               <div className={`p-1 rounded-md transition-all ${activeTab === 'map' ? 'scale-110' : 'opacity-65'}`}>
                 <PixelIcon name="map-pin" size={20} overrideColor={activeTab === 'map' ? "#FFCA00" : "#FFFFFF"} />
               </div>
-              <span className={`text-[8px] font-press-start uppercase tracking-wider ${activeTab === 'map' ? 'text-[#FFCA00]' : 'text-zinc-400'}`}>Mapa</span>
+              <span className={`text-[8px] font-press-start uppercase tracking-wider ${activeTab === 'map' ? 'text-[#FFCA00]' : 'text-zinc-400'}`}>
+                {lang === 'PT' ? 'Mapa' : 'Map'}
+              </span>
             </button>
 
             {/* TAB 3: FESTIVALS & TICKETS */}
@@ -4858,7 +4988,9 @@ export default function App() {
               <div className={`p-1 rounded-md transition-all ${activeTab === 'events' ? 'scale-110' : 'opacity-65'}`}>
                 <PixelIcon name="calendar" size={20} overrideColor={activeTab === 'events' ? "#FFCA00" : "#FFFFFF"} />
               </div>
-              <span className={`text-[8px] font-press-start uppercase tracking-wider ${activeTab === 'events' ? 'text-[#FFCA00]' : 'text-zinc-400'}`}>Festivais</span>
+              <span className={`text-[8px] font-press-start uppercase tracking-wider ${activeTab === 'events' ? 'text-[#FFCA00]' : 'text-zinc-400'}`}>
+                {t('tabFestivals', lang)}
+              </span>
             </button>
 
             {/* TAB 4: GAMIFICATION LOYALTY */}
@@ -4870,7 +5002,9 @@ export default function App() {
               <div className={`p-1 rounded-md transition-all ${activeTab === 'loyalty' ? 'scale-110' : 'opacity-65'}`}>
                 <PixelIcon name="star" size={20} overrideColor={activeTab === 'loyalty' ? "#FFCA00" : "#FFFFFF"} />
               </div>
-              <span className={`text-[8px] font-press-start uppercase tracking-wider ${activeTab === 'loyalty' ? 'text-[#FFCA00]' : 'text-zinc-400'}`}>Pontos</span>
+              <span className={`text-[8px] font-press-start uppercase tracking-wider ${activeTab === 'loyalty' ? 'text-[#FFCA00]' : 'text-zinc-400'}`}>
+                {lang === 'PT' ? 'Pontos' : 'Points'}
+              </span>
             </button>
 
             {/* TAB 5: PROFILE SETTINGS */}
@@ -4882,7 +5016,9 @@ export default function App() {
               <div className={`p-1 rounded-md transition-all ${activeTab === 'profile' ? 'scale-110' : 'opacity-65'}`}>
                 <PixelIcon name="user" size={20} overrideColor={activeTab === 'profile' ? "#FFCA00" : "#FFFFFF"} />
               </div>
-              <span className={`text-[8px] font-press-start uppercase tracking-wider ${activeTab === 'profile' ? 'text-[#FFCA00]' : 'text-zinc-400'}`}>Perfil</span>
+              <span className={`text-[8px] font-press-start uppercase tracking-wider ${activeTab === 'profile' ? 'text-[#FFCA00]' : 'text-zinc-400'}`}>
+                {t('tabProfile', lang)}
+              </span>
               {notifications.some(n => !n.isRead) && (
                 <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#FF0000] rounded-xs shadow-[0_0_4px_#FF0000]" />
               )}
@@ -4949,7 +5085,7 @@ export default function App() {
                         : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white'
                     }`}
                   >
-                    Global
+                    {t('tabGlobal', lang)}
                   </button>
                   <button
                     onClick={() => setScoreSubTab('friends')}
@@ -4959,7 +5095,7 @@ export default function App() {
                         : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white'
                     }`}
                   >
-                    Amigos
+                    {t('tabFriends', lang)}
                   </button>
                   <button
                     onClick={() => setScoreSubTab('tiers')}
@@ -4969,7 +5105,7 @@ export default function App() {
                         : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white'
                     }`}
                   >
-                    Níveis
+                    {t('tabTiers', lang)}
                   </button>
                   <button
                     onClick={() => setScoreSubTab('spots')}
@@ -4989,7 +5125,7 @@ export default function App() {
                         : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white'
                     }`}
                   >
-                    Níveis Spots
+                    {t('tabSpotsTiers', lang)}
                   </button>
                 </div>
 
@@ -5298,7 +5434,7 @@ export default function App() {
                     title="Partilhar o teu ranking no HOP MAP by COBEER TASTE"
                   >
                     <Share2 className="w-3 h-3 shrink-0" />
-                    <span>PARTILHAR RANKING</span>
+                    <span>{t('shareRanking', lang)}</span>
                   </button>
 
                   <button 
@@ -5324,7 +5460,7 @@ export default function App() {
                     className="flex-1 py-2.5 bg-[#FFCA00] hover:bg-white text-black border-4 border-black rounded-xl font-bold tracking-wider hover:text-black transition-all active:scale-97 cursor-pointer text-[7px] sm:text-[8px] flex items-center justify-center gap-1 shrink-0 font-press-start select-none"
                     id="btn-close-score-modal"
                   >
-                    <span>[ FECHAR ]</span>
+                    <span>{t('closeScoreModal', lang)}</span>
                   </button>
                 </div>
 
@@ -5623,10 +5759,10 @@ export default function App() {
                     HOP MAP
                   </span>
                   <h3 className="text-sm font-extrabold text-white font-display mt-0.5">
-                    Segue Cobeer Taste! 🍻
+                    {t('followCobeerTaste', lang)} 🍻
                   </h3>
                   <p className="text-[10px] text-zinc-300 leading-relaxed font-sans px-1">
-                    Junta-te à nossa comunidade e acompanha todas as novidades nas redes sociais:
+                    {t('joinCommunity', lang)}
                   </p>
                 </div>
 
@@ -5696,7 +5832,7 @@ export default function App() {
                   onClick={() => setShowSocialModal(false)}
                   className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-amber-300 font-extrabold text-[10px] rounded-xl border border-white/10 active:scale-98 transition duration-150 cursor-pointer mt-0.5 font-display uppercase tracking-wider"
                 >
-                  Continuar HOP MAP
+                  {t('continueHopMap', lang)}
                 </button>
               </motion.div>
             </div>
