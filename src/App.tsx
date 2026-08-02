@@ -10,10 +10,10 @@ import {
   Search, Bell, Shield, Fingerprint, CreditCard, Sparkles, 
   Navigation, CheckCircle, ArrowRight, Instagram, Facebook, Youtube,
   X, Compass, Filter, Share2, Flame, RefreshCcw, Smile, Check, Zap, CheckSquare, Square,
-  Camera, LogOut, Trophy, ChevronDown, Plus, Lock, Globe, Languages
+  Camera, LogOut, Trophy, ChevronDown, Plus, Lock, Globe, Languages, History
 } from 'lucide-react';
 
-import { t, Language } from './lib/i18n';
+import { t, Language, getBarDescription, getBarWorkingHours } from './lib/i18n';
 
 import { BARS_DATA, EVENTS_DATA, getReviewsForBar } from './data';
 import { getBarGoogleMapsUrl } from './maps_utils';
@@ -463,6 +463,7 @@ export default function App() {
   const [showAllLoyaltySpots, setShowAllLoyaltySpots] = useState(false);
   const [showAllFriends, setShowAllFriends] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [showAllCheckins, setShowAllCheckins] = useState(false);
   
   // User & Gamification
   const [user, setUser] = useState<UserProfile>(() => {
@@ -472,6 +473,7 @@ export default function App() {
     let savedStamps = { 'catraio': 2, 'cerveteca': 1 };
     let savedLastCheckinDates = {};
     let savedTenStampsDates = {};
+    let savedCheckinHistory: Array<{ id: string; barId: string; barName: string; location: string; date: string; timestamp?: string }> = [];
     
     try {
       const cachedStamps = localStorage.getItem('hop_user_1_stamps');
@@ -484,6 +486,10 @@ export default function App() {
     try {
       const cachedTenStampsDates = localStorage.getItem('hop_user_1_tenStampsDates');
       if (cachedTenStampsDates) savedTenStampsDates = JSON.parse(cachedTenStampsDates);
+    } catch (e) {}
+    try {
+      const cachedCheckinHistory = localStorage.getItem('hop_user_1_checkinHistory');
+      if (cachedCheckinHistory) savedCheckinHistory = JSON.parse(cachedCheckinHistory);
     } catch (e) {}
 
     return {
@@ -502,6 +508,7 @@ export default function App() {
       checkedInBars: [],
       lastCheckinDates: savedLastCheckinDates,
       tenStampsDates: savedTenStampsDates,
+      checkinHistory: savedCheckinHistory,
       checkedInFestivals: [],
       user_language: (localStorage.getItem('hop_app_language') as Language) || 'PT'
     };
@@ -1464,10 +1471,12 @@ export default function App() {
         let savedStamps = { 'catraio': 2, 'cerveteca': 1 };
         let savedLastCheckinDates = {};
         let savedTenStampsDates = {};
+        let savedCheckinHistory = [];
 
         const cachedStamps = localStorage.getItem(cacheKeyPrefix + 'stamps');
         const cachedCheckins = localStorage.getItem(cacheKeyPrefix + 'lastCheckinDates');
         const cachedTenStamps = localStorage.getItem(cacheKeyPrefix + 'tenStampsDates');
+        const cachedHistory = localStorage.getItem(cacheKeyPrefix + 'checkinHistory');
         const cachedLang = localStorage.getItem(cacheKeyPrefix + 'user_language');
 
         let userLangVal: Language = lang;
@@ -1495,6 +1504,9 @@ export default function App() {
         if (cachedTenStamps !== null) {
           try { savedTenStampsDates = JSON.parse(cachedTenStamps); } catch (e) {}
         }
+        if (cachedHistory !== null) {
+          try { savedCheckinHistory = JSON.parse(cachedHistory); } catch (e) {}
+        }
 
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -1510,6 +1522,10 @@ export default function App() {
             }
             if (Array.isArray(data.checkedInFestivals)) {
               savedFestivals = data.checkedInFestivals;
+            }
+            if (Array.isArray(data.checkinHistory)) {
+              savedCheckinHistory = data.checkinHistory;
+              localStorage.setItem(cacheKeyPrefix + 'checkinHistory', JSON.stringify(savedCheckinHistory));
             }
             if (data.user_language === 'PT' || data.user_language === 'EN') {
               userLangVal = data.user_language as Language;
@@ -1555,6 +1571,7 @@ export default function App() {
           stamps: savedStamps,
           lastCheckinDates: savedLastCheckinDates,
           tenStampsDates: savedTenStampsDates,
+          checkinHistory: savedCheckinHistory,
           user_language: userLangVal,
           isLoggedIn: true
         }));
@@ -1692,12 +1709,14 @@ export default function App() {
       localStorage.setItem(cacheKeyPrefix + 'stamps', JSON.stringify(user.stamps || {}));
       localStorage.setItem(cacheKeyPrefix + 'lastCheckinDates', JSON.stringify(user.lastCheckinDates || {}));
       localStorage.setItem(cacheKeyPrefix + 'tenStampsDates', JSON.stringify(user.tenStampsDates || {}));
+      localStorage.setItem(cacheKeyPrefix + 'checkinHistory', JSON.stringify(user.checkinHistory || []));
     } else {
       localStorage.setItem('hop_user_1_stamps', JSON.stringify(user.stamps || {}));
       localStorage.setItem('hop_user_1_lastCheckinDates', JSON.stringify(user.lastCheckinDates || {}));
       localStorage.setItem('hop_user_1_tenStampsDates', JSON.stringify(user.tenStampsDates || {}));
+      localStorage.setItem('hop_user_1_checkinHistory', JSON.stringify(user.checkinHistory || []));
     }
-  }, [user.id, user.points, user.favorites, user.friends, user.stamps, user.lastCheckinDates, user.tenStampsDates, user.isLoggedIn]);
+  }, [user.id, user.points, user.favorites, user.friends, user.stamps, user.lastCheckinDates, user.tenStampsDates, user.checkinHistory, user.isLoggedIn]);
 
   // Auto layout triggers & alerts
   useEffect(() => {
@@ -1808,6 +1827,75 @@ export default function App() {
 
   // Helper styles extracted
   const stylesList = Array.from(new Set(BARS_DATA.flatMap(b => b.styles)));
+
+  // Chronological list of checkins for the Profile tab
+  const checkinList = React.useMemo(() => {
+    if (user.checkinHistory && user.checkinHistory.length > 0) {
+      return user.checkinHistory;
+    }
+    const synthesized: Array<{ id: string; barId: string; barName: string; location: string; date: string }> = [];
+    const entries = Object.entries(user.lastCheckinDates || {});
+    if (entries.length > 0) {
+      (Object.entries(user.lastCheckinDates || {}) as Array<[string, string]>).forEach(([bId, dateStr]) => {
+        const spot = bars.find(b => b.id === bId);
+        if (spot) {
+          synthesized.push({
+            id: `hist_${bId}_${dateStr}`,
+            barId: spot.id,
+            barName: spot.name,
+            location: spot.zone,
+            date: dateStr
+          });
+        }
+      });
+    } else if (user.checkedInBars && user.checkedInBars.length > 0) {
+      user.checkedInBars.forEach(bId => {
+        const spot = bars.find(b => b.id === bId);
+        if (spot) {
+          synthesized.push({
+            id: `hist_${bId}`,
+            barId: spot.id,
+            barName: spot.name,
+            location: spot.zone,
+            date: '2026-08-01'
+          });
+        }
+      });
+    } else {
+      if (user.stamps['catraio']) {
+        const cat = bars.find(b => b.id === 'catraio');
+        if (cat) {
+          synthesized.push({
+            id: 'hist_init_catraio_1',
+            barId: cat.id,
+            barName: cat.name,
+            location: cat.zone,
+            date: '2026-08-01'
+          });
+          synthesized.push({
+            id: 'hist_init_catraio_2',
+            barId: cat.id,
+            barName: cat.name,
+            location: cat.zone,
+            date: '2026-07-28'
+          });
+        }
+      }
+      if (user.stamps['cerveteca']) {
+        const cer = bars.find(b => b.id === 'cerveteca');
+        if (cer) {
+          synthesized.push({
+            id: 'hist_init_cerveteca_1',
+            barId: cer.id,
+            barName: cer.name,
+            location: cer.zone,
+            date: '2026-07-25'
+          });
+        }
+      }
+    }
+    return synthesized.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [user.checkinHistory, user.lastCheckinDates, user.checkedInBars, user.stamps, bars]);
 
   // Simulated push trigger
   const triggerSelfPush = (title: string, body: string, type: HopNotification['type']) => {
@@ -1988,13 +2076,25 @@ export default function App() {
                 [bar.id]: todayStr
               };
 
+              const newCheckinLog = {
+                id: `checkin_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+                barId: bar.id,
+                barName: bar.name,
+                location: bar.zone,
+                date: todayStr,
+                timestamp: new Date().toISOString()
+              };
+
+              const nextCheckinHistory = [newCheckinLog, ...(prev.checkinHistory || [])];
+
               return {
                 ...prev,
                 points: (prev.points || 0) + 1,
                 stamps: nextStampsRecord,
                 tenStampsDates: nextTenStampsDates,
                 checkedInBars: nextCheckedIn,
-                lastCheckinDates: nextLastCheckinDates
+                lastCheckinDates: nextLastCheckinDates,
+                checkinHistory: nextCheckinHistory
               };
             });
 
@@ -3219,7 +3319,7 @@ export default function App() {
                               <h3 className="font-bold text-sm tracking-tight font-display line-clamp-1 hover:text-amber-500 transition-colors">{bar.name}</h3>
                             </div>
                             <p className={`text-[10px] mt-1 line-clamp-2 leading-relaxed ${darkMode ? 'text-neutral-400' : 'text-neutral-500'}`}>
-                              {bar.description}
+                              {getBarDescription(bar, lang)}
                             </p>
                             
                             {/* TAPS indicator */}
@@ -3252,7 +3352,7 @@ export default function App() {
 
                           {/* Distance & Info quick action row */}
                           <div className={`flex items-center justify-between border-t pt-2.5 mt-1 text-[10px] font-semibold ${darkMode ? 'border-white/5' : 'border-neutral-200'}`}>
-                            <span className="text-neutral-500">🕒 {bar.workingHours.split(',')[0]} • 📍 {bar.distance.toFixed(1)} km</span>
+                            <span className="text-neutral-500">🕒 {getBarWorkingHours(bar, lang).split('\n')[0].split(',')[0]} • 📍 {bar.distance.toFixed(1)} km</span>
                             <button 
                               onClick={() => { window.open(getBarGoogleMapsUrl(bar.id, bar.address), '_blank'); }}
                               className="w-6 h-6 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 flex items-center justify-center transition cursor-pointer"
@@ -4234,6 +4334,103 @@ export default function App() {
 
                 </div>
 
+                {/* Histórico de Check-ins */}
+                <div>
+                  <div className="flex items-center justify-between pl-1 mb-1.5">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-neutral-400 font-display flex items-center gap-1.5">
+                      <History className="w-3.5 h-3.5 text-amber-500" />
+                      {t('checkinHistoryTitle', lang)}
+                    </h4>
+                    {checkinList.length > 0 && (
+                      <span className="text-[9px] font-bold font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                        {checkinList.length} {t('totalCheckinsLabel', lang)}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className={`text-[9px] pl-1 mb-2.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                    {t('checkinHistorySubtitle', lang)}
+                  </p>
+
+                  <div className="space-y-2">
+                    {checkinList.length === 0 ? (
+                      <div className="bg-white/2 border border-dashed border-white/10 p-4 rounded-xl text-center">
+                        <Compass className="w-6 h-6 text-amber-500/50 mx-auto mb-1.5" />
+                        <p className="text-neutral-400 font-bold text-[10px]">{t('noCheckinsYet', lang)}</p>
+                        <p className="text-neutral-500 text-[9px] mt-0.5">{t('noCheckinsSub', lang)}</p>
+                      </div>
+                    ) : (
+                      <>
+                        {(() => {
+                          const displayedCheckins = showAllCheckins ? checkinList : checkinList.slice(0, 5);
+                          return displayedCheckins.map(item => {
+                            const barObj = bars.find(b => b.id === item.barId);
+                            return (
+                              <div 
+                                key={item.id} 
+                                className={`p-3.5 rounded-2xl border transition-all duration-200 ${
+                                  darkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-xs'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="text-[11px] font-extrabold text-amber-500 font-display tracking-tight">
+                                        {item.barName}
+                                      </span>
+                                      <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-black/40 text-zinc-300 border border-white/10">
+                                        📍 {item.location}
+                                      </span>
+                                    </div>
+
+                                    <div className="flex items-center text-[9px] text-zinc-400 font-mono gap-1">
+                                      <Calendar className="w-3 h-3 text-amber-500 shrink-0" />
+                                      <span>{t('checkinDateLabel', lang)}:</span>
+                                      <span className="font-bold text-zinc-200">{item.date}</span>
+                                    </div>
+                                  </div>
+
+                                  {barObj && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedBar(barObj);
+                                        setActiveTab('explore');
+                                      }}
+                                      className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 text-[8px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/10 hover:bg-amber-500 hover:text-black rounded-lg border border-amber-500/30 transition-all active:scale-95 cursor-pointer font-mono"
+                                      title={t('viewSpotOnMap', lang)}
+                                    >
+                                      <MapPin className="w-2.5 h-2.5" />
+                                      <span>{t('viewSpotOnMap', lang)}</span>
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+
+                        {checkinList.length > 5 && (
+                          <div className="text-center pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setShowAllCheckins(!showAllCheckins)}
+                              className={`text-[9px] font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                                darkMode
+                                  ? 'bg-white/5 border-white/10 hover:bg-white/10 text-amber-500'
+                                  : 'bg-white border-neutral-200 hover:bg-neutral-50 text-amber-500 shadow-xs'
+                              }`}
+                              id="btn-toggle-all-checkins"
+                            >
+                              {showAllCheckins ? (lang === 'PT' ? 'Ver menos' : 'Show less') : (lang === 'PT' ? 'Ver todos' : 'Show all')}
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+
                 {/* Past Reviews History Section */}
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-widest text-neutral-400 pl-1 mb-2.5 font-display flex items-center gap-1.5">
@@ -4602,14 +4799,14 @@ export default function App() {
 
               {/* Main Info */}
               <p className={`text-[10.5px] leading-relaxed mt-3.5 pt-3.5 border-t border-white/5 ${darkMode ? 'text-neutral-400' : 'text-neutral-700'}`}>
-                {selectedBar.description}
+                {getBarDescription(selectedBar, lang)}
               </p>
 
               {/* Working Hours box */}
               <div className="mt-4 bg-white/5 p-3.5 rounded-xl border border-white/5 flex items-center justify-between text-[10px]">
                 <div>
-                  <span className="text-zinc-400 block font-bold uppercase tracking-widest text-[8px] font-display">Horários de Funcionamento</span>
-                  <span className={`font-semibold mt-0.5 block ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{selectedBar.workingHours}</span>
+                  <span className="text-zinc-400 block font-bold uppercase tracking-widest text-[8px] font-display">{t('workingHours', lang)}</span>
+                  <span className={`font-semibold mt-0.5 block whitespace-pre-line ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{getBarWorkingHours(selectedBar, lang)}</span>
                 </div>
                 <span className="text-[9px] text-green-500 font-bold uppercase tracking-wider font-mono">Aberto agora</span>
               </div>

@@ -66,8 +66,12 @@ export interface Bar {
   zone: BarZone;
   address: string;
   workingHours: string;
+  workingHoursPT?: string;
+  workingHoursEN?: string;
   styles: string[];
   description: string;
+  descriptionPT?: string;
+  descriptionEN?: string;
   rating: number;
   reviewsCount: number;
   reviews?: Review[];
@@ -117,6 +121,7 @@ export interface UserProfile {
   checkedInBars: string[]; // barId[]
   lastCheckinDates?: Record<string, string>; // barId -> 'YYYY-MM-DD'
   tenStampsDates?: Record<string, string>; // barId -> 'YYYY-MM-DD'
+  checkinHistory?: Array<{ id: string; barId: string; barName: string; location: string; date: string; timestamp?: string }>;
   checkedInFestivals?: string[]; // festivalId[]
   user_language?: 'PT' | 'EN';
 }

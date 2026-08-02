@@ -1,8 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { initializeAuth, inMemoryPersistence, getAuth } from "firebase/auth";
 import { initializeFirestore, disableNetwork, getFirestore, Firestore } from "firebase/firestore";
-// @ts-ignore
-import firebaseConfigFile from "../../firebase-applet-config.json";
+// Safely check for optional firebase-applet-config.json if present
+const configFiles = import.meta.glob<{ default: any }>("../../firebase-applet-config.json", { eager: true, import: "default" });
+const firebaseConfigFile = (configFiles["../../firebase-applet-config.json"] || {}) as any;
 
 // Prioritize environment variables (VITE_FIREBASE_*) and fall back to the JSON config file.
 const configBase = (firebaseConfigFile || {}) as any;

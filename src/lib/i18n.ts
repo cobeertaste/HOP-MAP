@@ -114,6 +114,13 @@ export const translations = {
 
     // Profile & Settings
     profileTitle: 'Perfil do Cervejeiro',
+    checkinHistoryTitle: 'Histórico de Check-ins',
+    checkinHistorySubtitle: 'Recorda os teus percursos e visitas aos spots de cerveja artesanal',
+    noCheckinsYet: 'Ainda não fizeste nenhum check-in em spots.',
+    noCheckinsSub: 'Visita um spot no mapa e faz o teu primeiro check-in a menos de 50m!',
+    checkinDateLabel: 'Data da visita',
+    totalCheckinsLabel: 'Total de Visitas',
+    viewSpotOnMap: 'Ver no mapa',
     biometricsConfirm: 'Confirmação Biométrica (Face ID / Touch ID)',
     logoutButton: 'Terminar Sessão',
     loginRequiredNotice: 'Inicia sessão para acederes ao teu perfil completo, selos e histórico.',
@@ -242,6 +249,13 @@ export const translations = {
 
     // Profile & Settings
     profileTitle: 'Brewer Profile',
+    checkinHistoryTitle: 'Check-in History',
+    checkinHistorySubtitle: 'Recall your craft beer journeys and spot visits',
+    noCheckinsYet: 'You haven\'t checked in to any spots yet.',
+    noCheckinsSub: 'Visit a spot on the map and complete your first check-in within 50m!',
+    checkinDateLabel: 'Visit date',
+    totalCheckinsLabel: 'Total Visits',
+    viewSpotOnMap: 'View on map',
     biometricsConfirm: 'Biometric Confirmation (Face ID / Touch ID)',
     logoutButton: 'Log Out',
     loginRequiredNotice: 'Log in to access your full profile, stamps, and history.',
@@ -271,3 +285,24 @@ export function t(key: keyof typeof translations['PT'], lang: Language = 'PT'): 
   const dict = translations[lang] || translations.PT;
   return dict[key] || translations.PT[key] || key;
 }
+
+export function getBarDescription(bar: { description: string; descriptionPT?: string; descriptionEN?: string }, lang: Language = 'PT'): string {
+  if (lang === 'EN' && bar.descriptionEN) {
+    return bar.descriptionEN;
+  }
+  if (lang === 'PT' && bar.descriptionPT) {
+    return bar.descriptionPT;
+  }
+  return bar.description;
+}
+
+export function getBarWorkingHours(bar: { workingHours: string; workingHoursPT?: string; workingHoursEN?: string }, lang: Language = 'PT'): string {
+  if (lang === 'EN' && bar.workingHoursEN) {
+    return bar.workingHoursEN;
+  }
+  if (lang === 'PT' && bar.workingHoursPT) {
+    return bar.workingHoursPT;
+  }
+  return bar.workingHours;
+}
+
