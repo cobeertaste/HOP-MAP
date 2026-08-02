@@ -10,7 +10,7 @@ import {
   Search, Bell, Shield, Fingerprint, CreditCard, Sparkles, 
   Navigation, CheckCircle, ArrowRight, Instagram, Facebook, Youtube,
   X, Compass, Filter, Share2, Flame, RefreshCcw, Smile, Check, Zap, CheckSquare, Square,
-  Camera, LogOut, Trophy, ChevronDown, Plus, Lock, Globe, Languages, History
+  Camera, LogOut, Trophy, ChevronDown, ChevronUp, Plus, Lock, Globe, Languages, History
 } from 'lucide-react';
 
 import { t, Language, getBarDescription, getBarWorkingHours } from './lib/i18n';
@@ -23,6 +23,7 @@ import BiometricsConfirm from './components/BiometricsConfirm';
 import ApplePaySheet from './components/ApplePaySheet';
 import MapInteractive from './components/MapInteractive';
 import { PixelIcon, PixelPacman, PixelLogo, HopMapLogo } from './components/PixelIcons';
+import PixelCheckinAnimation from './components/PixelCheckinAnimation';
 
 import { auth, db, isFirebaseConfigured } from './lib/firebase';
 import { 
@@ -437,6 +438,30 @@ export default function App() {
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
   
+  // Check-In Pixel Confetti Animation States
+  const [animatingCheckinBarId, setAnimatingCheckinBarId] = useState<string | null>(null);
+  const [animatingCheckinEventId, setAnimatingCheckinEventId] = useState<string | null>(null);
+
+  // Scroll to Top state & ref
+  const mainScrollRef = React.useRef<HTMLDivElement>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const handleMainScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scrollTop = e.currentTarget.scrollTop;
+    if (scrollTop > 180) {
+      setShowScrollTop(true);
+    } else {
+      setShowScrollTop(false);
+    }
+  };
+
+  useEffect(() => {
+    setShowScrollTop(false);
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
+
   // App Core State
   const [bars, setBars] = useState<Bar[]>(() =>
     BARS_DATA.map(bar => ({
@@ -2014,6 +2039,10 @@ export default function App() {
             return;
           }
 
+          // Trigger pixel confetti animation on Check-in button
+          setAnimatingCheckinBarId(bar.id);
+          setTimeout(() => setAnimatingCheckinBarId(null), 3000);
+
           // Se estiver dentro do raio de 50 metros, avançar com o fluxo seguro de biometria
           setBiometricsReason(`Para validar o check-in seguro em ${bar.name}`);
           setBiometricsType('checkin');
@@ -2098,8 +2127,9 @@ export default function App() {
               };
             });
 
-            // Particle/Stamping Feedback trigger
+            // Particle/Stamping & Confetti Feedback trigger
             setAnimatingStampBarId(bar.id);
+            setAnimatingCheckinBarId(bar.id);
             setNewlyAddedStampIndex(isTenthStamp ? 9 : currentStamps);
             setActiveTab('loyalty');
             setSelectedBar(null); // Close detailed drawer to reveal Loyalty tab clearly
@@ -2114,6 +2144,7 @@ export default function App() {
             // Auto clear animation states after three seconds
             setTimeout(() => {
               setAnimatingStampBarId(null);
+              setAnimatingCheckinBarId(null);
               setNewlyAddedStampIndex(null);
             }, 3000);
 
@@ -2254,7 +2285,10 @@ export default function App() {
       return;
     }
 
-    // Success! Award 2 HOPS
+    // Success! Trigger pixel confetti animation and award 2 HOPS
+    setAnimatingCheckinEventId(eventId);
+    setTimeout(() => setAnimatingCheckinEventId(null), 3500);
+
     const newCheckedInFestivals = [...(user.checkedInFestivals || []), eventId];
     const newPoints = (user.points || 0) + 2;
     const levelInfo = getLevelDetails(newPoints);
@@ -2977,7 +3011,7 @@ export default function App() {
             </p>
           </motion.div>
         ) : (
-          <main className="flex-1 overflow-y-auto z-10 select-none pb-4">
+          <main ref={mainScrollRef} onScroll={handleMainScroll} className="flex-1 overflow-y-auto z-10 select-none pb-4 relative">
           <AnimatePresence mode="wait">
             
             {/* VIEW A: EXPLORE LIST */}
@@ -3069,7 +3103,7 @@ export default function App() {
                       <div className="flex items-center space-x-2 min-w-0">
                         <MapPin className={`w-3.5 h-3.5 shrink-0 ${selectedZone !== 'All' ? 'text-amber-500' : 'text-neutral-500'}`} />
                         <span className="truncate">
-                          {selectedZone === 'All' ? 'Localizar por zona' : selectedZone}
+                          {selectedZone === 'All' ? 'Procurar por localidade' : selectedZone}
                         </span>
                       </div>
                       <div className="flex items-center space-x-1.5 shrink-0 ml-2">
@@ -3114,7 +3148,7 @@ export default function App() {
                               <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-neutral-400" />
                               <input
                                 type="text"
-                                placeholder="Pesquisar zona..."
+                                placeholder="Pesquisar localidade..."
                                 value={zoneSearchQuery}
                                 onChange={(e) => setZoneSearchQuery(e.target.value)}
                                 className={`w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border focus:outline-none transition-all ${
@@ -3154,7 +3188,7 @@ export default function App() {
                             >
                               <div className="flex items-center space-x-2">
                                 <MapPin className={`w-3.5 h-3.5 ${selectedZone === 'All' ? 'text-amber-500' : 'text-neutral-500'}`} />
-                                <span>Localizar por zona</span>
+                                <span>Procurar por localidade</span>
                               </div>
                               <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
                                 selectedZone === 'All'
@@ -3198,7 +3232,7 @@ export default function App() {
                             {/* No results state */}
                             {activeZones.filter(zone => zone.toLowerCase().includes(zoneSearchQuery.toLowerCase())).length === 0 && (
                               <div className={`p-4 text-center text-xs ${darkMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
-                                Nenhuma zona encontrada
+                                Nenhuma localidade encontrada
                               </div>
                             )}
                           </div>
@@ -3214,12 +3248,13 @@ export default function App() {
                 }`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <div className="p-1 rounded-lg bg-amber-500/10 text-amber-500">
+                      <div className="p-1 rounded-lg bg-amber-500/10 text-amber-500 shrink-0">
                         <MapPin className="w-3.5 h-3.5 animate-pulse" />
                       </div>
-                      <div>
-                        <h4 className="text-[10px] font-bold font-display uppercase tracking-wider">Geofence 50m Hop Map</h4>
-                        <p className={`text-[8.5px] ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Selo e Check-In só a &lt;50m do spot</p>
+                      <div className="flex items-center space-x-2 flex-wrap">
+                        <h4 className="text-[10px] font-bold font-display uppercase tracking-wider whitespace-nowrap">GEOFENCE HOP MAP</h4>
+                        <span className="text-zinc-400 font-bold hidden sm:inline">•</span>
+                        <p className={`text-[8.5px] ${darkMode ? 'text-zinc-400' : 'text-zinc-500'} whitespace-nowrap`}>Selo e Check-in só a &lt;50m do spot</p>
                       </div>
                     </div>
                     
@@ -3660,16 +3695,17 @@ export default function App() {
                                         <span>Estás a <strong className="text-zinc-400">{formatDistance(distanceInMeters)}</strong> de {ev.location}</span>
                                       )}
                                     </span>
-                                    <button
+                                    <PixelCheckinAnimation
+                                      isActive={animatingCheckinEventId === ev.id}
                                       onClick={() => handleFestivalCheckin(ev.id)}
-                                      className={`font-extrabold text-[9px] px-3.5 py-1.5 rounded-xl transition-all font-display shadow-md active:scale-95 ${
+                                      className={`font-extrabold text-[9px] px-3.5 py-1.5 rounded-xl transition-all font-display shadow-md cursor-pointer ${
                                         isWithin200m 
                                           ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black border border-amber-400' 
                                           : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 border border-zinc-700'
                                       }`}
                                     >
                                       Efetuar Check-in
-                                    </button>
+                                    </PixelCheckinAnimation>
                                   </div>
                                 );
                               })()}
@@ -3896,13 +3932,14 @@ export default function App() {
                                       Bloqueado ❌
                                     </button>
                                   ) : (
-                                    <button
+                                    <PixelCheckinAnimation
+                                      isActive={animatingCheckinBarId === bar.id}
                                       onClick={() => initiateCheckin(bar)}
                                       className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[9px] px-3 py-1.5 rounded-xl transition shadow-md font-display shrink-0 cursor-pointer"
                                       id={`btn-checkin-${bar.id}`}
                                     >
                                       Check-In + Selo
-                                    </button>
+                                    </PixelCheckinAnimation>
                                   )}
                                 </div>
 
@@ -4620,6 +4657,30 @@ export default function App() {
             )}
 
           </AnimatePresence>
+
+          {/* FLOATING SCROLL TO TOP BUTTON (EXPLORE & EVENTS TABS) */}
+          <AnimatePresence>
+            {showScrollTop && (activeTab === 'explore' || activeTab === 'events') && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.7, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.7, y: 15 }}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.92 }}
+                onClick={() => {
+                  mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="fixed bottom-20 right-4 sm:right-6 z-50 bg-[#FFCA00] hover:bg-amber-400 text-black font-extrabold text-xs px-3.5 py-2.5 rounded-2xl shadow-xl shadow-amber-500/30 border-2 border-black flex items-center space-x-1.5 cursor-pointer font-display transition-all"
+                id="btn-scroll-to-top"
+                title={lang === 'PT' ? 'Voltar ao topo' : 'Back to top'}
+              >
+                <ChevronUp className="w-4 h-4 stroke-[3]" />
+                <span className="text-[10px] tracking-wide uppercase font-black font-press-start">
+                  {lang === 'PT' ? 'Topo' : 'Top'}
+                </span>
+              </motion.button>
+            )}
+          </AnimatePresence>
         </main>
         )}
 
@@ -4690,14 +4751,15 @@ export default function App() {
                         <span>Check-In Bloqueado (10 Selos Atingidos)</span>
                       </button>
                     ) : (
-                      <button 
+                      <PixelCheckinAnimation
+                        isActive={animatingCheckinBarId === selectedBar.id}
                         onClick={() => initiateCheckin(selectedBar)}
-                        className="w-full h-11 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl transition-all duration-150 flex items-center justify-center space-x-1.5 shadow-lg shadow-amber-500/10 active:scale-95 font-display cursor-pointer"
+                        className="w-full h-11 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl transition-all duration-150 flex items-center justify-center space-x-1.5 shadow-lg shadow-amber-500/10 cursor-pointer font-display"
                         id={`btn-checkin-drawer-${selectedBar.id}`}
                       >
                         <Fingerprint className="w-4 h-4 text-black stroke-[2.5]" />
-                        <span>Validar Check-In Seguro (${Math.round(drawerDistanceMeters)}m)</span>
-                      </button>
+                        <span>Validar Check-In Seguro ({Math.round(drawerDistanceMeters)}m)</span>
+                      </PixelCheckinAnimation>
                     );
                   })()}
 

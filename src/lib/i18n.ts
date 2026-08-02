@@ -36,7 +36,7 @@ export const translations = {
     welcomeBackMsg: 'Bem-vindo de volta ao teu roteiro Hop Map!',
     
     // Navigation Tabs
-    tabMap: 'ROTEIRO',
+    tabMap: 'SPOTS',
     tabFestivals: 'FESTIVAIS',
     tabRoutes: 'ROTAS',
     tabRankings: 'HIGH SCORES',
@@ -171,7 +171,7 @@ export const translations = {
     welcomeBackMsg: 'Welcome back to your Hop Map guide!',
 
     // Navigation Tabs
-    tabMap: 'MAP',
+    tabMap: 'SPOTS',
     tabFestivals: 'FESTIVALS',
     tabRoutes: 'ROUTES',
     tabRankings: 'HIGH SCORES',

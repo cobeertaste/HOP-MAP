@@ -4,15 +4,18 @@
  */
 
 import { Bar, BeerEvent, BarZone } from './types';
-import { BARS_A } from './bars_a';
-import { BARS_B } from './bars_b';
-import { BARS_C } from './bars_c';
+import { ALL_SPOTS } from './all_spots';
 
-export const BARS_DATA: Bar[] = [
-  ...BARS_A,
-  ...BARS_B,
-  ...BARS_C
-];
+const ALL_BARS_RAW: Bar[] = ALL_SPOTS;
+
+const seenBarIds = new Set<string>();
+export const BARS_DATA: Bar[] = ALL_BARS_RAW.filter((bar) => {
+  if (!bar.id || seenBarIds.has(bar.id)) {
+    return false;
+  }
+  seenBarIds.add(bar.id);
+  return true;
+});
 
 export const EVENTS_DATA: BeerEvent[] = [
   {
