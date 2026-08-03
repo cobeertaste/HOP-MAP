@@ -5262,7 +5262,7 @@ export default function App() {
                 <PixelIcon name="star" size={20} overrideColor={activeTab === 'loyalty' ? "#FFCA00" : "#FFFFFF"} />
               </div>
               <span className={`text-[8px] font-press-start uppercase tracking-wider ${activeTab === 'loyalty' ? 'text-[#FFCA00]' : 'text-zinc-400'}`}>
-                {lang === 'PT' ? 'Pontos' : 'Points'}
+                {lang === 'PT' ? 'Check-in' : 'Check-in'}
               </span>
             </button>
 
