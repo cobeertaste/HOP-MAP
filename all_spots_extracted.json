@@ -1,0 +1,552 @@
+[
+  {
+    "id": "azores-brewing-company-acores",
+    "name": "Azores Brewing Company (Açores)",
+    "desc": "Taproom da principal cervejeira artesanal dos Açores"
+  },
+  {
+    "id": "beerstore-pt-acores",
+    "name": "Beerstore.pt (Açores)",
+    "desc": "Loja de cerveja nos Açores com foco em cervejas artesanais."
+  },
+  {
+    "id": "vulcana-cerveja-artesanal-acores",
+    "name": "Vulcana Cerveja Artesanal (Açores)",
+    "desc": "Cervejeira artesanal açoriana."
+  },
+  {
+    "id": "koriska-cerveja-artesanal-acores",
+    "name": "Koriska - Cerveja Artesanal (Açores)",
+    "desc": "Outra cervejeira artesanal activa nos Açores."
+  },
+  {
+    "id": "epicura-craft-beer-house-coimbra",
+    "name": "Epicura Craft Beer House (Coimbra)",
+    "desc": "Casa da cerveja Epicura com 12 torneiras (próprias e convidadas). Ponto de encontro em Coimbra."
+  },
+  {
+    "id": "cerveja-praxis-coimbra",
+    "name": "Cerveja Praxis (Coimbra)",
+    "desc": "Fábrica. Museu da Cerveja de Coimbra e restaurante. Degustações e harmonizações."
+  },
+  {
+    "id": "tough-love-tap-room-aveiro",
+    "name": "Tough Love Tap Room (Aveiro)",
+    "desc": "Tap room da aclamada cervejeira de Aveiro conhecida pelas suas cervejas audazes."
+  },
+  {
+    "id": "letraria-obidos-obidos",
+    "name": "Letraria Óbidos (Óbidos)",
+    "desc": "O bar da Cerveja Letra em Óbidos junto à muralha medieval."
+  },
+  {
+    "id": "5-e-meio-taproom-ericeira",
+    "name": "5 e Meio Taproom (Ericeira)",
+    "desc": "Taproom da cerveja artesanal 5 e Meio produzida no próprio local."
+  },
+  {
+    "id": "o-emporio-pt-ericeira",
+    "name": "O Empório.pt (Ericeira)",
+    "desc": "Loja e bar de cerveja artesanal com vasta seleção de garrafas nacionais e internacionais."
+  },
+  {
+    "id": "mean-sardine-craft-beer-fabrica-ericeira",
+    "name": "Mean Sardine Craft Beer (Fábrica) (Ericeira)",
+    "desc": "Fábrica da reconhecida cervejeira Mean Sardine na Ericeira"
+  },
+  {
+    "id": "cervejaria-parreirinha-ericeira",
+    "name": "Cervejaria Parreirinha (Ericeira)",
+    "desc": "59h (Rooftop com Finger Food) Restaurante com rooftop na Ericeira que inclui seleção de cervejas."
+  },
+  {
+    "id": "hopsin-brewpub-colares",
+    "name": "HopSin BrewPub (Colares)",
+    "desc": "Brewpub onde são produzidas e servidas as cervejas HopSin em colaboração com a Adega de Colares."
+  },
+  {
+    "id": "villa-craft-beer-sintra",
+    "name": "Villa Craft Beer (Sintra)",
+    "desc": "Villa Craft Beer é um ponto de referência para os amantes de cerveja artesanal em Sintra."
+  },
+  {
+    "id": "beer-cascais-cascais",
+    "name": "Beer Cascais (Cascais)",
+    "desc": "Loja e bar de cerveja artesanal em Cascais."
+  },
+  {
+    "id": "na-medida-beer-tap-house-cascais",
+    "name": "Na Medida Beer Tap House (Cascais)",
+    "desc": "Tap House em Cascais com atmosfera acolhedora e assentos ao ar livre."
+  },
+  {
+    "id": "the-crafty-cellar-cascais",
+    "name": "The Crafty Cellar (Cascais)",
+    "desc": "Bar especializado em cervejas artesanais (foco em portuguesas) no centro de Cascais."
+  },
+  {
+    "id": "crow-s-bar-cascais",
+    "name": "Crow’s Bar (Cascais)",
+    "desc": "Crow’s Bar é um ponto de referência para os amantes de cerveja artesanal em Cascais."
+  },
+  {
+    "id": "dois-corvos-taproom-marvila-lisboa",
+    "name": "Dois Corvos - Taproom Marvila (Lisboa)",
+    "desc": "O berço da Dois Corvos com 17 torneiras de cervejas frescas em rotação. Fica no \"Bairro da Cerveja\" de Marvila."
+  },
+  {
+    "id": "dois-corvos-intendente-tap-room-lisboa",
+    "name": "Dois Corvos - Intendente Tap Room (Lisboa)",
+    "desc": "Segundo espaço da Dois Corvos mais central. Mantém a frescura e qualidade das cervejas de Marvila."
+  },
+  {
+    "id": "musa-da-fabrica-lisboa",
+    "name": "MUSA da Fábrica (Lisboa)",
+    "desc": "Tap room com vista para a fábrica principal da Musa. Ambiente industrial e descontraído."
+  },
+  {
+    "id": "musa-da-bica-lisboa",
+    "name": "MUSA da Bica (Lisboa)",
+    "desc": "Espaço da Musa no Bairro da Bica conhecido pelo seu bom ambiente e seleção de cervejas à pressão."
+  },
+  {
+    "id": "fermentage-brewpub-lisboa",
+    "name": "Fermentage Brewpub (Lisboa)",
+    "desc": "Novo Brewpub no Bairro da Cerveja de Marvila. Produção própria e petiscos para acompanhar."
+  },
+  {
+    "id": "pravda-marvila-lisboa",
+    "name": "Pravda Marvila (Lisboa)",
+    "desc": "Bar da marca Pravda que nasceu na Ucrânia. Forte seleção de cervejas."
+  },
+  {
+    "id": "lx-brewery-lisboa",
+    "name": "LX Brewery (Lisboa)",
+    "desc": "LX Brewery é um ponto de referência para os amantes de cerveja artesanal em Lisboa."
+  },
+  {
+    "id": "oficina-da-cerveja-lisboa",
+    "name": "Oficina da Cerveja (Lisboa)",
+    "desc": "Espaço dedicado à divulgação e prova de cerveja artesanal em Lisboa."
+  },
+  {
+    "id": "oitava-colina-taproom-lisboa",
+    "name": "Oitava Colina Taproom (Lisboa)",
+    "desc": "Taproom da marca Oitava Colina oferece as suas cervejas frescas e vista deslumbrante."
+  },
+  {
+    "id": "duque-brewpub-lisboa",
+    "name": "Duque Brewpub (Lisboa)",
+    "desc": "Primeiro Brewpub da capital. Produz e serve cerveja artesanal portuguesa. No Chiado."
+  },
+  {
+    "id": "canil-craft-beer-bar-baixa-lisboa",
+    "name": "Canil Craft Beer Bar - Baixa (Lisboa)",
+    "desc": "/02:00h Vasta seleção de cerveja artesanal em 32 torneiras (próprias e convidadas)."
+  },
+  {
+    "id": "canil-marques-lisboa",
+    "name": "Canil Marquês (Lisboa)",
+    "desc": "Novo espaço do Canil com 36 torneiras e sistema de self-service para 20 opções portuguesas."
+  },
+  {
+    "id": "cerveteca-lisboa-lisboa",
+    "name": "Cerveteca Lisboa (Lisboa)",
+    "desc": "Cerveteca Lisboa é um ponto de referência para os amantes de cerveja artesanal em Lisboa."
+  },
+  {
+    "id": "artesanalis-bottle-shop-lisboa",
+    "name": "ArtesanaLis Bottle Shop (Lisboa)",
+    "desc": "Loja de garrafas e bar especializado em cerveja artesanal com menu de snacks vegan."
+  },
+  {
+    "id": "flor-de-lupulo-lisboa",
+    "name": "Flor de Lúpulo (Lisboa)",
+    "desc": "Bar com foco em sugestões de cervejas artesanais nacionais e estrangeiras e petiscos."
+  },
+  {
+    "id": "sputnik-craft-beer-lisboa",
+    "name": "Sputnik Craft Beer (Lisboa)",
+    "desc": "Bar em Anjos com boa seleção de cervejas e ambiente descontraído."
+  },
+  {
+    "id": "the-beer-station-lisboa",
+    "name": "The Beer Station (Lisboa)",
+    "desc": "Localização conveniente no Cais do Sodré com foco em cerveja artesanal e de pressão."
+  },
+  {
+    "id": "sailors-bar-lisboa",
+    "name": "Sailors Bar (Lisboa)",
+    "desc": "/04:00h (Fins de Semana) Bar no Parque das Nações que oferece cerveja artesanal e desporto ao vivo."
+  },
+  {
+    "id": "gulden-draak-vasco-da-gama-lisboa",
+    "name": "Gulden Draak Vasco da Gama (Lisboa)",
+    "desc": "Cervejaria da marca belga com 12 torneiras e menu de petiscos e grelhados."
+  },
+  {
+    "id": "lovecraft-portugal-lisboa",
+    "name": "LoveCraft Portugal (Lisboa)",
+    "desc": "Bar dentro do complexo Lx Factory. Hambúrgueres e cerveja artesanal."
+  },
+  {
+    "id": "browers-lisboa",
+    "name": "Browers (Lisboa)",
+    "desc": "Browers é um ponto de referência para os amantes de cerveja artesanal em Lisboa."
+  },
+  {
+    "id": "the-queen-ale-lisboa",
+    "name": "The Queen Ale (Lisboa)",
+    "desc": "The Queen Ale é um ponto de referência para os amantes de cerveja artesanal em Lisboa."
+  },
+  {
+    "id": "funchal-tap-room-madeira",
+    "name": "Funchal Tap Room (Madeira)",
+    "desc": "Funchal Tap Room é um ponto de referência para os amantes de cerveja artesanal em Madeira."
+  },
+  {
+    "id": "fuga-cidade-2014-madeira",
+    "name": "Fuga Cidade 2014 (Madeira)",
+    "desc": "s 24:00h (Verificar no local) Bar com ambiente descontraído conhecido pela seleção de cervejas e tapas."
+  },
+  {
+    "id": "beer-house-madeira",
+    "name": "Beer House (Madeira)",
+    "desc": "Local no Funchal (Madeira) com seleção de cervejas."
+  },
+  {
+    "id": "canto-do-lobo-caminha",
+    "name": "Canto do Lobo (Caminha)",
+    "desc": "Restaurante que promove a simbiose entre sabores lusitanos, cerveja artesanal e vinhos."
+  },
+  {
+    "id": "ribeiro-s-brewers-viana-do-castelo",
+    "name": "Ribeiro’s Brewers (Viana do Castelo)",
+    "desc": "50 referências internacionais e tapas."
+  },
+  {
+    "id": "letraria-de-viana-do-castelo-viana-do-castelo",
+    "name": "Letraria de Viana do Castelo (Viana do Castelo)",
+    "desc": "Letraria de Viana do Castelo é um ponto de referência para os amantes de cerveja artesanal em Viana do Castelo."
+  },
+  {
+    "id": "dona-beer-braga",
+    "name": "Dona Beer (Braga)",
+    "desc": "Bar charmoso com vasta seleção de cervejas artesanais locais e internacionais e tapas."
+  },
+  {
+    "id": "mal-amado-braga",
+    "name": "Mal Amado (Braga)",
+    "desc": "Perto da Sé"
+  },
+  {
+    "id": "craft-draft-braganca",
+    "name": "Craft & Draft (Bragança)",
+    "desc": "Considerado o \"Jerusalém das cervejas em trás os montes\". Grande variedade e seleção cuidada."
+  },
+  {
+    "id": "letraria-de-vila-verde-vila-verde",
+    "name": "Letraria de Vila Verde (Vila Verde)",
+    "desc": "Tap room da Cerveja Letra na região de Braga."
+  },
+  {
+    "id": "hop-trip-craft-beer-shop-matosinhos",
+    "name": "Hop Trip - Craft Beer Shop (Matosinhos)",
+    "desc": "Hop Trip - Craft Beer Shop é um ponto de referência para os amantes de cerveja artesanal em Matosinhos."
+  },
+  {
+    "id": "tough-love-tap-room-porto",
+    "name": "Tough Love Tap Room (Porto)",
+    "desc": "Segundo espaço da Tough Love especializado em cerveja servida diretamente do barril (cask)."
+  },
+  {
+    "id": "gulden-draak-bierhuis-porto",
+    "name": "Gulden Draak Bierhuis (Porto)",
+    "desc": "Gulden Draak Bierhuis é um ponto de referência para os amantes de cerveja artesanal em Porto."
+  },
+  {
+    "id": "baobab-craft-beer-porto",
+    "name": "BaoBab Craft Beer (Porto)",
+    "desc": "Novo local para amantes de cerveja artesanal na baixa do Porto. Foco em IPAs e cervejas internacionais."
+  },
+  {
+    "id": "cervejaria-do-carmo-porto",
+    "name": "Cervejaria do Carmo (Porto)",
+    "desc": "Ponto de encontro clássico com seleção de cervejas (incluindo artesanais) e petiscos tradicionais."
+  },
+  {
+    "id": "musa-das-virtudes-porto",
+    "name": "MUSA das Virtudes (Porto)",
+    "desc": "Tap Room da Musa com vista espetacular sobre o Douro. 15 torneiras de cerveja."
+  },
+  {
+    "id": "catraio-craft-beer-shop-bar-porto",
+    "name": "Catraio Craft Beer Shop & Bar (Porto)",
+    "desc": "Grande rotação de cervejas e um agradável jardim."
+  },
+  {
+    "id": "cerveja-nortada-porto",
+    "name": "Cerveja Nortada (Porto)",
+    "desc": "Cerveja Nortada é um ponto de referência para os amantes de cerveja artesanal em Porto."
+  },
+  {
+    "id": "armazem-da-cerveja-porto",
+    "name": "Armazem da Cerveja (Porto)",
+    "desc": "Bar especializado com excelente seleção de cerveja artesanal e incentivo a trazer a sua própria comida."
+  },
+  {
+    "id": "a-fabrica-da-picaria-brew-pub-porto",
+    "name": "A Fábrica da Picaria Brew Pub (Porto)",
+    "desc": "A Fábrica da Picaria Brew Pub é um ponto de referência para os amantes de cerveja artesanal em Porto."
+  },
+  {
+    "id": "cerveja-artesanal-levare-brewpub-porto",
+    "name": "Cerveja Artesanal Levare Brewpub (Porto)",
+    "desc": "às 23:45h (Consultar website) Espaço multifacetado: fábrica bar e restaurante no centro do Porto."
+  },
+  {
+    "id": "magnifica-beer-house-evora",
+    "name": "Magnífica Beer House (Évora)",
+    "desc": "Casa da Cerveja Magnífica com foco em cerveja artesanal do Alentejo e tapas. Évora Mercado Municipal de"
+  },
+  {
+    "id": "barona-craft-beer-house-castelo-de-vide",
+    "name": "Barona Craft Beer House (Castelo de Vide)",
+    "desc": "\\nFins de Semana: 10:00h às 02:00h Tap room da BARONA Brewing Company do Alentejo"
+  },
+  {
+    "id": "skal-artesanal-craft-beer-sports-bar-setubal",
+    "name": "Skal Artesanal - Craft Beer & Sports Bar (Setúbal)",
+    "desc": "Skal Artesanal - Craft Beer & Sports Bar é um ponto de referência para os amantes de cerveja artesanal em Setúbal."
+  },
+  {
+    "id": "capt-tap-setubal",
+    "name": "Capt. Tap (Setúbal)",
+    "desc": "Um dos taprooms mais conhecidos de Setúbal com 8 torneiras"
+  },
+  {
+    "id": "ophiussa-taproom-setubal",
+    "name": "Ophiussa Taproom (Setúbal)",
+    "desc": "Taproom da cervejeira Ophiussa."
+  },
+  {
+    "id": "lagos-beer-co-lagos",
+    "name": "Lagos Beer & Co (Lagos)",
+    "desc": "s 02:00h (Cozinha até às 22h) Bar com seleção de cervejas e menu de hambúrgueres pizzas e cocktails."
+  },
+  {
+    "id": "the-collab-bar-lagos",
+    "name": "The Collab Bar (Lagos)",
+    "desc": "."
+  },
+  {
+    "id": "mania-beer-brewery-lagos",
+    "name": "Mania Beer (Brewery) (Lagos)",
+    "desc": "Localização da cervejeira Mania em Lagos."
+  },
+  {
+    "id": "algarvian-brewing-company-portimao",
+    "name": "Algarvian Brewing Company (Portimão)",
+    "desc": "Brewpub com 12 torneiras de cerveja e fusão de pratos mexicanos criativos."
+  },
+  {
+    "id": "boheme-cervejaria-faro",
+    "name": "Boheme Cervejaria (Faro)",
+    "desc": "is (Nacional e Internacional) na capital Algarvia."
+  },
+  {
+    "id": "boheme-tavira",
+    "name": "Boheme (Tavira)",
+    "desc": "Boheme é um ponto de referência para os amantes de cerveja artesanal em Tavira."
+  },
+  {
+    "id": "nanobrew-fuzeta-fuzeta",
+    "name": "NanoBrew Fuzeta (Fuzeta)",
+    "desc": "NanoBrew Fuzeta é um ponto de referência para os amantes de cerveja artesanal em Fuzeta."
+  },
+  {
+    "id": "craft-heritage-beer-spirits-vila-vicosa",
+    "name": "Craft Heritage - Beer & Spirits (Vila Viçosa)",
+    "desc": "Nasce da paixão pela produção de cerveja artesanal e é a 1ª cervejeira/destilaria de Portugal."
+  },
+  {
+    "id": "vilhoa-craft-beer-warehouse-madeira",
+    "name": "Vilhoa Craft Beer Warehouse (Madeira)",
+    "desc": "É dedicada à importação de cervejas artesanais portuguesas e é reconhecida pela excelente seleção de cervejas craft locais e pelas joint brews exclusivas com cervejeiras do continente."
+  },
+  {
+    "id": "gulden-draak-casa-da-cerveja-lisboa",
+    "name": "Gulden Draak - Casa da Cerveja (Lisboa)",
+    "desc": "Um pub e bar com uma ampla seleção de cervejas, com destaque para as cervejas belgas (sendo a Gulden Draak a marca principal), e um menu que inclui hambúrgueres e petiscos. Possui ambiente descontraído, decoração caseira, e opções para brunch/almoço. Localizado perto de Picoas."
+  },
+  {
+    "id": "dos-santos-craft-beer-taproom-lagoa",
+    "name": "Dos Santos Craft Beer - Taproom (Lagoa)",
+    "desc": "Taproom da cervejeira com foco na Lei da Pureza Alemã."
+  },
+  {
+    "id": "cerveja-dos-diabos-porto",
+    "name": "Cerveja dos Diabos (Porto)",
+    "desc": "Cerveja dos Diabos é um ponto de referência para os amantes de cerveja artesanal em Porto."
+  },
+  {
+    "id": "cantinho-cafe-figueira-de-castelo-rodrigo",
+    "name": "Cantinho café (Figueira de Castelo Rodrigo)",
+    "desc": "Local de peregrinação para os fãs da cerveja artesanal. É conhecido pela simpatia dos anfitriões (João e Lena), que proporcionam um ambiente acolhedor e caseiro. A sua localização é em Castelo Rodrigo (Figueira de Castelo Rodrigo)."
+  },
+  {
+    "id": "cerveja-acor-arganil",
+    "name": "Cerveja Açor (Arganil)",
+    "desc": "Cerveja artesanal produzida com paixão e amizade, com o objetivo de criar receitas que surpreendam o consumidor e contribuam para o enriquecimento da cultura cervejeira. A marca procura criar valor para a produção local e regional, com foco ininterrupto na qualidade."
+  },
+  {
+    "id": "cerveja-boazona-vila-nova-de-poiares",
+    "name": "Cerveja Boazona (Vila Nova de Poiares)",
+    "desc": "Cerveja artesanal fruto da paixão pela bebida, com o desejo de proporcionar uma experiência diferente. Oferecem vários estilos, como Lager, Blond Ale, Amber Ale, Porter, IPA, Imperial Stout (em estágio de barrica de vinho do Porto), Quadrupel, Grape Ale Poiaresnse (com castas da região) e Sours de fruta."
+  },
+  {
+    "id": "maldita-brewpub-aveiro",
+    "name": "Maldita BrewPub (Aveiro)",
+    "desc": "Brewpub da marca de cerveja artesanal Maldita. Serve as cervejas da casa em torneira, acompanhadas de comida. É conhecido por apresentar culinária de influência mexicana (como tacos, nachos, enchiladas) e ser um espaço acolhedor."
+  },
+  {
+    "id": "taverna-lusitana-monsanto",
+    "name": "Taverna Lusitana (Monsanto)",
+    "desc": "Um estabelecimento (pub/bar) em Monsanto que oferece cozinha portuguesa e espanhola, com opções vegetarianas. O local tem lugares ao ar livre e aceita apenas dinheiro."
+  },
+  {
+    "id": "vadia-brewpub-oliveira-de-azemeis",
+    "name": "Vadia Brewpub (Oliveira de Azeméis)",
+    "desc": "Brewpub da Cerveja Artesanal Vadia, conhecido por ser um espaço único em Portugal que harmoniza cerveja e petiscos ao som de música. Oferece visitas guiadas à fábrica, provas de cerveja, e um menu de petiscos, incluindo hambúrgueres artesanais e tábuas de queijos. Promove também eventos como concertos e stand-up comedy."
+  },
+  {
+    "id": "letraria-downtown-porto",
+    "name": "Letraria Downtown (Porto)",
+    "desc": "Bar e restaurante focado em cerveja artesanal, servindo 22 torneiras em rotação com uma seleção de cervejas próprias da marca Letra e de convidados. É um local ideal para convívio e é conhecido pela sua oferta de petiscos e iguarias que harmonizam com a cerveja, incluindo Francesinhas e tábuas mistas. Possui um ambiente descontraído e dispõe de esplanada."
+  },
+  {
+    "id": "deuses-do-malte-v-n-gaia",
+    "name": "Deuses do Malte (V.N. Gaia)",
+    "desc": "Um ambiente rustico e intimista ideal para convívio entre apreciadores. No tap room estão 8 torneiras que são rotativas. Para acompanhar, uma seleção de excelentes iguarias para não haver fome!!"
+  },
+  {
+    "id": "12-marias-fermela",
+    "name": "12 Marias (Fermelã)",
+    "desc": "Sala de Provas nas instalações da fábrica, onde é possível degustar as cervejas artesanais da marca acompanhadas de petiscos, com música e ambiente intimista. É também o local onde se pode adquirir a variedade de packs de cerveja."
+  },
+  {
+    "id": "monja-penafiel",
+    "name": "Monja (Penafiel)",
+    "desc": "Um bar moderno no centro histórico, conhecido por servir serviço ligeiro e petiscos simples e cuidados, que são ideais para acompanhar cerveja. As especialidades incluem o \"pecaminoso pastel frito recheado de queijo derretido e tomate\", sandes, tostas e hambúrgueres."
+  },
+  {
+    "id": "letraria-braga",
+    "name": "Letraria (Braga)",
+    "desc": "O bar da Cerveja Letra em Braga, junto à Sé. Oferece 23 torneiras de cerveja artesanal (próprias e convidadas), harmonizadas com tábuas de queijos e enchidos. Possui uma biblioteca comunitária para troca de livros."
+  },
+  {
+    "id": "lovecraft-public-house-feira-santa-maria-da-feira",
+    "name": "Lovecraft Public House Feira (Santa Maria da Feira)",
+    "desc": "Bar de cerveja artesanal em Santa Maria da Feira que se foca em proporcionar um ambiente acolhedor, fazendo os clientes \"sentir em casa\". O local destaca-se pela sua oferta de cervejas artesanais variadas e por ter petiscos de alta qualidade, incluindo opções vegetarianas e vegan no seu menu, complementando a experiência cervejeira."
+  },
+  {
+    "id": "quimera-brewpub-lisboa",
+    "name": "Quimera Brewpub (Lisboa)",
+    "desc": "Um brewpub único, situado num túnel histórico do século XVIII, que era um caminho para cavalos do Palácio das Necessidades. Produz as suas próprias cervejas artesanais (Quimera Craft Beers) e serve comida, incluindo sanduíches gourmet estilo New York Deli e hambúrgueres. Oferece música ao vivo."
+  },
+  {
+    "id": "amo-brewery-lisboa",
+    "name": "AMO Brewery (Lisboa)",
+    "desc": "Uma nano-cervejaria no coração de Lisboa (Arroios/Intendente), que funciona como um espaço multicultural de convívio, conversas, e, claro, degustação das suas cervejas artesanais. É conhecida por ser um local que promove a cultura cervejeira e acolhe eventos culturais como pop-ups gastronómicos, música ao vivo e exposições de arte."
+  },
+  {
+    "id": "lispoa-craft-beer-lisboa",
+    "name": "LisPoa Craft Beer (Lisboa)",
+    "desc": "Brewpub em Arroios que permite beber a cerveja diretamente da fonte, com 10 torneiras em rotação que incluem as suas cervejas e convidadas locais. É um ponto de encontro que valoriza a cena artesanal local, arte, cultura e boa comida (pop-ups gastronómicos)."
+  },
+  {
+    "id": "outro-lado-craft-beer-lisboa",
+    "name": "Outro Lado Craft Beer (Lisboa)",
+    "desc": "Um bar especializado em cervejas artesanais nacionais e internacionais, com uma vasta oferta de cervejas de diferentes estilos, servindo também comida. Localizado em Alfama (anteriormente no Cais do Sodré)."
+  },
+  {
+    "id": "brew-portugal-lisboa",
+    "name": "BREW Portugal (Lisboa)",
+    "desc": "BREW Portugal é um ponto de referência para os amantes de cerveja artesanal em Lisboa."
+  },
+  {
+    "id": "crafty-corner-lisboa",
+    "name": "Crafty Corner (Lisboa)",
+    "desc": "Bar de cerveja artesanal, anteriormente no Cais do Sodré e agora em Alfama, que foca-se em cervejas artesanais portuguesas em rotação (cerca de 12 torneiras), mas também oferece cocktails e outras bebidas. Serve brunch, pequeno-almoço e outros pratos, com um ambiente descontraído e boa música."
+  },
+  {
+    "id": "pils-lisboa-lisboa",
+    "name": "Pils Lisboa (Lisboa)",
+    "desc": "Cozinha até 22:30 Localizado na zona histórica de Lisboa, o PILS é o destino obrigatório para quem procura a perfeição no estilo Lager e Pilsner. Ambiente moderno, industrial e acolhedor, este espaço destaca-se pela sua curadoria de cervejas leves, crocantes e extremamente bem executadas, ideais para o clima lisboeta."
+  },
+  {
+    "id": "musa-da-praia-colares",
+    "name": "MUSA da Praia (Colares)",
+    "desc": "Um bar da Cerveja Musa que se instalou numa antiga torre de água na Aldeia da Praia, em Colares (Sintra), que antigamente abastecia a colónia de férias da CP. Serve 10 cervejas Musa on tap, sumos naturais, craft soda e vinho natural. O espaço, que convida a descontrair, não tem cozinha própria, mas faz parte de um coletivo com outros food trucks e ofertas de comida."
+  },
+  {
+    "id": "letraria-craft-beer-vinyl-ponte-de-lima",
+    "name": "Letraria Craft Beer & Vinyl (Ponte de Lima)",
+    "desc": "Um espaço da Cerveja Letra que combina a degustação de mais de 150 variedades de cerveja artesanal (e petiscos como hambúrgueres e tapas) com a audição de música, incluindo vinil. Tem assentos ao ar livre."
+  },
+  {
+    "id": "prost-guimaraes",
+    "name": "Prost! (Guimarães)",
+    "desc": "Bar especializado em cerveja artesanal em Guimarães, na histórica Praça de São Tiago, com 40 torneiras de cerveja."
+  },
+  {
+    "id": "beberico-senhora-da-hora",
+    "name": "Beberico (Senhora da Hora)",
+    "desc": "Loja de cerveja artesanal e bar na Senhora da Hora (Grande Porto)."
+  },
+  {
+    "id": "j-agora-v-n-gaia",
+    "name": "J'Agora (V.N. Gaia)",
+    "desc": "Cervejaria com foco em cervejas artesanais."
+  },
+  {
+    "id": "surviaria-amarante",
+    "name": "Surviaria (Amarante)",
+    "desc": "A Surviaria é a embaixada da cerveja artesanal em Amarante. Com um ambiente acolhedor e uma seleção de torneiras que privilegia o que de melhor se produz em Portugal. É o refúgio perfeito para quem visita o interior e não abdica de um lúpulo de qualidade superior."
+  },
+  {
+    "id": "andsome-beer-lourinha",
+    "name": "Andsome Beer (Lourinhã)",
+    "desc": "Brewpub e Tap Room de pequenos produtores de cerveja de qualidade na Lourinhã. Produzem cervejas tradicionais e experimentais, com 7 torneiras em rotação e comida (tapas e petiscos) para acompanhar."
+  },
+  {
+    "id": "cerveja-h-ale-mary-madeira",
+    "name": "Cerveja H'Ale Mary (Madeira)",
+    "desc": "Um space acolhedor que pretende garantir aos seus clientes uma grande variedade de cervejas artesanais!"
+  },
+  {
+    "id": "bela-cerveja-acores",
+    "name": "Bela Cerveja (Açores)",
+    "desc": "Bela Cerveja é um ponto de referência para os amantes de cerveja artesanal em Açores."
+  },
+  {
+    "id": "marrafa-jesufrei",
+    "name": "Marrafa (Jesufrei)",
+    "desc": "Marrafa é um ponto de referência para os amantes de cerveja artesanal em Jesufrei."
+  },
+  {
+    "id": "bah-craft-beer-cascais",
+    "name": "BAH Craft Beer (Cascais)",
+    "desc": "Orgulhosamente uma cerveja independente. Uma cerveja só pode ser Bah! se quando a provamos podemos dizer: BAH! Ficou uma delícia!"
+  },
+  {
+    "id": "malaica-caldas-da-rainha",
+    "name": "Malaica (Caldas da Rainha)",
+    "desc": "A Malaica é uma casa de cerveja artesanal, um espaço social de convívio e de partilha de ideias, uma galeria para artistas locais e acima de tudo uma família."
+  },
+  {
+    "id": "o-bandido-porto",
+    "name": "O Bandido (Porto)",
+    "desc": "Culpados de servir os melhores hambúrgueres do Porto + de 40 cervejas diferentes."
+  }
+]

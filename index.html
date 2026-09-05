@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Hop-Map - Cerveja Artesanal & Taprooms em Portugal</title>
+    
+    <!-- PWA & Theme Meta Tags -->
+    <meta name="theme-color" content="#F6EFDC" />
+    <meta name="description" content="Descobre os melhores taprooms, cervejarias artesanais e bares em Portugal." />
+    <link rel="canonical" href="https://hop-map.ai.studio/" />
+
+    <!-- Google Fonts for Retro Pixel Craft Palette -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hop-map.ai.studio/" />
+    <meta property="og:title" content="HOP MAP - Cerveja Artesanal & Taprooms em Portugal" />
+    <meta property="og:description" content="Descobre os melhores taprooms, cervejarias artesanais e bares em Portugal." />
+    <meta property="og:image" content="https://hop-map.ai.studio/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="HOP MAP - Cerveja Artesanal & Taprooms em Portugal" />
+    <meta name="twitter:description" content="Descobre os melhores taprooms, cervejarias artesanais e bares em Portugal." />
+    <meta name="twitter:image" content="https://hop-map.ai.studio/og-image.png" />
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="shortcut icon" href="/favicon-96x96.png" />
+
+    <!-- Web Manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/service-worker.js?v=4")
+            .then((registration) => {
+              console.log("[PWA] Service Worker com Stale-While-Revalidate registado:", registration.scope);
+              registration.update();
+            })
+            .catch((error) => {
+              console.error("[PWA] Falha ao registar o Service Worker:", error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

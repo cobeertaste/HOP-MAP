@@ -1,0 +1,373 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+@theme {
+  --font-sans: "Space Grotesk", sans-serif;
+  --font-display: "Press Start 2P", monospace;
+  --font-press-start: "Press Start 2P", monospace;
+  --font-press: "Press Start 2P", monospace;
+  --font-silkscreen: "Silkscreen", monospace;
+  --font-label: "Silkscreen", monospace;
+  --font-grotesk: "Space Grotesk", sans-serif;
+  --font-mono: "Space Mono", monospace;
+  --font-data: "Space Mono", monospace;
+  
+  --color-cream: #F6EFDC;
+  --color-cream-2: #EFE6CC;
+  --color-teal: #12908C;
+  --color-teal-dark: #0B6C69;
+  --color-coral: #E85B41;
+  --color-mustard: #F2A93B;
+  --color-navy: #1B2036;
+  --color-navy-2: #262C48;
+
+  --color-brand-gold: #F2A93B;
+  --color-brand-teal: #12908C;
+  --color-brand-coral: #E85B41;
+  --color-brand-cream: #F6EFDC;
+  --color-brand-navy: #1B2036;
+
+  --color-amber-50: #FFFBEB;
+  --color-amber-100: #FEF3C7;
+  --color-amber-200: #FDE68A;
+  --color-amber-300: #FCD34D;
+  --color-amber-400: #F2A93B;
+  --color-amber-500: #F2A93B;
+  --color-amber-600: #D97706;
+  --color-amber-700: #B45309;
+  --color-amber-800: #92400E;
+  --color-amber-900: #78350F;
+}
+
+:root {
+  --app-height: 100dvh;
+  --touch-target-min: 44px;
+  --cream: #F6EFDC;
+  --cream-2: #EFE6CC;
+  --teal: #12908C;
+  --teal-dark: #0B6C69;
+  --coral: #E85B41;
+  --mustard: #F2A93B;
+  --navy: #1B2036;
+  --navy-2: #262C48;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #F6EFDC;
+  color: #1B2036;
+  font-family: 'Space Grotesk', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+*, ::before, ::after {
+  box-sizing: border-box;
+}
+
+/* Typography Utility Classes */
+.font-display, .font-press {
+  font-family: 'Press Start 2P', monospace;
+}
+
+.font-label, .font-silkscreen {
+  font-family: 'Silkscreen', monospace;
+}
+
+.font-body, .font-grotesk {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.font-data, .font-mono {
+  font-family: 'Space Mono', monospace;
+}
+
+/* Retro Stripe Mini */
+.stripe-mini {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.stripe-mini i {
+  width: 6px;
+  height: 20px;
+  display: block;
+}
+.stripe-mini i:nth-child(1) { background: #E85B41; }
+.stripe-mini i:nth-child(2) { background: #F2A93B; }
+.stripe-mini i:nth-child(3) { background: #12908C; }
+.stripe-mini i:nth-child(4) { background: #1B2036; }
+
+/* Retro Stamp Shadow */
+.retro-shadow {
+  box-shadow: 3px 3px 0 #1B2036;
+}
+.retro-shadow-sm {
+  box-shadow: 2px 2px 0 #1B2036;
+}
+.retro-shadow-lg {
+  box-shadow: 4px 4px 0 #1B2036;
+}
+
+/* Retro Pin Marker */
+.retro-pin {
+  width: 32px;
+  height: 32px;
+  border: 2.5px solid #1B2036;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3px 3px 0 rgba(27, 32, 54, 0.4);
+  position: relative;
+}
+.retro-pin::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 8px solid #1B2036;
+}
+
+/* Minimum 44x44px Touch Target Standard (WCAG 2.5.5 / 2.5.8) */
+.touch-min {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure inline links, small badges or icon controls within dense headers have expanded touch boundary */
+.touch-target-expand {
+  position: relative;
+}
+.touch-target-expand::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Fluid responsive typography utilities */
+.text-fluid-title {
+  font-size: clamp(1rem, 2.5vw + 0.5rem, 1.5rem);
+}
+
+.text-fluid-body {
+  font-size: clamp(0.75rem, 1vw + 0.5rem, 0.95rem);
+}
+
+/* No scrollbar utilities */
+.no-scrollbar::-webkit-scrollbar,
+.scrolls-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar,
+.scrolls-none {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Custom scrollbar styling with Teal #12908C & Navy #1B2036 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F6EFDC;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #12908C;
+  border-radius: 9999px;
+  border: 1.5px solid #1B2036;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #0B6C69;
+}
+
+/* Support Firefox and Edge */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #12908C #F6EFDC;
+}
+
+/* ==========================================================================
+   EXPLICIT RESPONSIVE BREAKPOINT MEDIA QUERIES (Mobile, Tablet, Desktop, Wide)
+   ========================================================================== */
+
+/* 1. Telemóvel Pequeno (< 480px) */
+@media screen and (max-width: 479px) {
+  .responsive-container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* 2. Telemóvel Grande / Tablet Pequeno (480px – 768px) */
+@media screen and (min-width: 480px) and (max-width: 767px) {
+  .responsive-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* 3. Tablet (768px – 1024px) */
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+  .responsive-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* 4. Portátil / Desktop (1024px – 1440px) */
+@media screen and (min-width: 1024px) and (max-width: 1439px) {
+  .responsive-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* 5. Ecrã Grande / Ultra-wide (> 1440px) */
+@media screen and (min-width: 1440px) {
+  .responsive-container {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+    max-width: 1600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Orientation helpers (Landscape mode on mobile devices) */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .landscape-compact-nav {
+    height: 3rem !important;
+  }
+  .landscape-compact-header {
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+  }
+}
+
+@keyframes hueRotate {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.animate-legendary {
+  animation: hueRotate 6s linear infinite;
+  background: linear-gradient(to right, #E85B41, #F2A93B, #12908C, #1B2036);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+}
+
+
+/* ==========================================================================
+   EXPLICIT RESPONSIVE BREAKPOINT MEDIA QUERIES (Mobile, Tablet, Desktop, Wide)
+   ========================================================================== */
+
+/* 1. Telemóvel Pequeno (< 480px) */
+@media screen and (max-width: 479px) {
+  .responsive-container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* 2. Telemóvel Grande / Tablet Pequeno (480px – 768px) */
+@media screen and (min-width: 480px) and (max-width: 767px) {
+  .responsive-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* 3. Tablet (768px – 1024px) */
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+  .responsive-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* 4. Portátil / Desktop (1024px – 1440px) */
+@media screen and (min-width: 1024px) and (max-width: 1439px) {
+  .responsive-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* 5. Ecrã Grande / Ultra-wide (> 1440px) */
+@media screen and (min-width: 1440px) {
+  .responsive-container {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+    max-width: 1600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Orientation helpers (Landscape mode on mobile devices) */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .landscape-compact-nav {
+    height: 3rem !important;
+  }
+  .landscape-compact-header {
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+  }
+}
+
+@keyframes hueRotate {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.animate-legendary {
+  animation: hueRotate 6s linear infinite;
+  background: linear-gradient(to right, #FFCA00, #ec4899, #3b82f6, #FFCA00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+}
+
