@@ -37,6 +37,83 @@ export const ALL_BADGES: Badge[] = [
     category: 'checkins',
     rarity: 'legendary'
   },
+  {
+    id: 'streak_3_days',
+    code: 'STREAK_3_DAYS',
+    icon: '⭐',
+    namePt: 'Estrela',
+    nameEn: 'Star',
+    descriptionPt: '3 dias consecutivos de check-in efetuado.',
+    descriptionEn: '3 consecutive days of check-ins completed.',
+    category: 'checkins',
+    rarity: 'common'
+  },
+  {
+    id: 'streak_5_days',
+    code: 'STREAK_5_DAYS',
+    icon: '🌟',
+    namePt: 'Superestrela',
+    nameEn: 'Superstar',
+    descriptionPt: '5 dias consecutivos de check-in efetuado.',
+    descriptionEn: '5 consecutive days of check-ins completed.',
+    category: 'checkins',
+    rarity: 'rare'
+  },
+  {
+    id: 'streak_7_days',
+    code: 'STREAK_7_DAYS',
+    icon: '🏆',
+    namePt: 'Campeão',
+    nameEn: 'Champion',
+    descriptionPt: '7 dias consecutivos de check-in efetuado.',
+    descriptionEn: '7 consecutive days of check-ins completed.',
+    category: 'checkins',
+    rarity: 'epic'
+  },
+  {
+    id: 'streak_31_days',
+    code: 'STREAK_31_DAYS',
+    icon: '💎',
+    namePt: 'Ícone',
+    nameEn: 'Icon',
+    descriptionPt: '31 dias consecutivos de check-in efetuado.',
+    descriptionEn: '31 consecutive days of check-ins completed.',
+    category: 'checkins',
+    rarity: 'epic'
+  },
+  {
+    id: 'streak_50_days',
+    code: 'STREAK_50_DAYS',
+    icon: '🏛️',
+    namePt: 'Hall da Fama',
+    nameEn: 'Hall of Fame',
+    descriptionPt: '50 dias consecutivos de check-in efetuado.',
+    descriptionEn: '50 consecutive days of check-ins completed.',
+    category: 'checkins',
+    rarity: 'legendary'
+  },
+  {
+    id: 'streak_100_days',
+    code: 'STREAK_100_DAYS',
+    icon: '⚡',
+    namePt: 'Invencível',
+    nameEn: 'Invincible',
+    descriptionPt: '100 dias consecutivos de check-in efetuado.',
+    descriptionEn: '100 consecutive days of check-ins completed.',
+    category: 'checkins',
+    rarity: 'legendary'
+  },
+  {
+    id: 'streak_365_days',
+    code: 'STREAK_365_DAYS',
+    icon: '👑',
+    namePt: 'Lenda',
+    nameEn: 'Legend',
+    descriptionPt: '365 dias consecutivos de check-in efetuado.',
+    descriptionEn: '365 consecutive days of check-ins completed.',
+    category: 'checkins',
+    rarity: 'legendary'
+  },
 
   // 2. Spots Explorer & Discovery
   {
@@ -965,6 +1042,48 @@ export function calculateUserBadges(ctx: BadgeCalculationContext): BadgeUnlockSt
   const checkedInAcoresCount = acoresBarsList.filter(b => checkedInBars.includes(b.id)).length;
   const checkedInMadeiraCount = madeiraBarsList.filter(b => checkedInBars.includes(b.id)).length;
 
+  // Consecutive days check-in streak calculation
+  const checkinDatesSet = new Set<string>();
+  history.forEach(h => {
+    if (h.date) {
+      const d = h.date.substring(0, 10);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) checkinDatesSet.add(d);
+    } else if (h.timestamp) {
+      const d = new Date(h.timestamp).toISOString().substring(0, 10);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) checkinDatesSet.add(d);
+    }
+  });
+  if (user.lastCheckinDates) {
+    Object.values(user.lastCheckinDates).forEach(dStr => {
+      if (dStr && /^\d{4}-\d{2}-\d{2}$/.test(dStr.substring(0, 10))) {
+        checkinDatesSet.add(dStr.substring(0, 10));
+      }
+    });
+  }
+  const sortedStreakDates = Array.from(checkinDatesSet).sort();
+  let maxConsecutiveStreak = 0;
+  let currentStreak = 0;
+  let prevDateTimestamp: number | null = null;
+
+  for (const dStr of sortedStreakDates) {
+    const [y, m, d] = dStr.split('-').map(Number);
+    const dateUtc = Date.UTC(y, m - 1, d);
+    if (prevDateTimestamp === null) {
+      currentStreak = 1;
+    } else {
+      const diffDays = Math.round((dateUtc - prevDateTimestamp) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        currentStreak += 1;
+      } else if (diffDays > 1) {
+        currentStreak = 1;
+      }
+    }
+    if (currentStreak > maxConsecutiveStreak) {
+      maxConsecutiveStreak = currentStreak;
+    }
+    prevDateTimestamp = dateUtc;
+  }
+
   return ALL_BADGES.map(badge => {
     let unlocked = false;
     let progressText = '';
@@ -987,6 +1106,48 @@ export function calculateUserBadges(ctx: BadgeCalculationContext): BadgeUnlockSt
         unlocked = maxSingleSpotStamps >= 100;
         progressPercent = Math.min(100, Math.round((maxSingleSpotStamps / 100) * 100));
         progressText = `${Math.min(100, maxSingleSpotStamps)}/100`;
+        break;
+
+      case 'streak_3_days':
+        unlocked = maxConsecutiveStreak >= 3;
+        progressPercent = Math.min(100, Math.round((maxConsecutiveStreak / 3) * 100));
+        progressText = `${Math.min(3, maxConsecutiveStreak)}/3 ${isPt ? 'dias' : 'days'}`;
+        break;
+
+      case 'streak_5_days':
+        unlocked = maxConsecutiveStreak >= 5;
+        progressPercent = Math.min(100, Math.round((maxConsecutiveStreak / 5) * 100));
+        progressText = `${Math.min(5, maxConsecutiveStreak)}/5 ${isPt ? 'dias' : 'days'}`;
+        break;
+
+      case 'streak_7_days':
+        unlocked = maxConsecutiveStreak >= 7;
+        progressPercent = Math.min(100, Math.round((maxConsecutiveStreak / 7) * 100));
+        progressText = `${Math.min(7, maxConsecutiveStreak)}/7 ${isPt ? 'dias' : 'days'}`;
+        break;
+
+      case 'streak_31_days':
+        unlocked = maxConsecutiveStreak >= 31;
+        progressPercent = Math.min(100, Math.round((maxConsecutiveStreak / 31) * 100));
+        progressText = `${Math.min(31, maxConsecutiveStreak)}/31 ${isPt ? 'dias' : 'days'}`;
+        break;
+
+      case 'streak_50_days':
+        unlocked = maxConsecutiveStreak >= 50;
+        progressPercent = Math.min(100, Math.round((maxConsecutiveStreak / 50) * 100));
+        progressText = `${Math.min(50, maxConsecutiveStreak)}/50 ${isPt ? 'dias' : 'days'}`;
+        break;
+
+      case 'streak_100_days':
+        unlocked = maxConsecutiveStreak >= 100;
+        progressPercent = Math.min(100, Math.round((maxConsecutiveStreak / 100) * 100));
+        progressText = `${Math.min(100, maxConsecutiveStreak)}/100 ${isPt ? 'dias' : 'days'}`;
+        break;
+
+      case 'streak_365_days':
+        unlocked = maxConsecutiveStreak >= 365;
+        progressPercent = Math.min(100, Math.round((maxConsecutiveStreak / 365) * 100));
+        progressText = `${Math.min(365, maxConsecutiveStreak)}/365 ${isPt ? 'dias' : 'days'}`;
         break;
 
       case 'hop_explorer':

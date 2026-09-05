@@ -294,6 +294,8 @@ export interface MonthlyReport {
   generatedAt: string;
   status: 'generated' | 'sent' | 'scheduled';
   sentAt?: string;
+  scheduledDispatchDate?: string; // e.g. "1 de Outubro de 2026"
+  isCompletedMonth?: boolean;
   totalCheckins: number;
   totalRewards: number;
   totalViews: number;

@@ -2921,6 +2921,13 @@ export default function App() {
     const day = String(todayLocal.getDate()).padStart(2, '0');
     const todayStr = `${year}-${month}-${day}`;
 
+    // Check if this is the first time the user checks in at this spot
+    const hasCheckedInBefore = (user.checkedInBars && user.checkedInBars.includes(bar.id)) ||
+      (user.stamps && (user.stamps[bar.id] || 0) > 0) ||
+      (user.checkinHistory && user.checkinHistory.some(ch => ch.barId === bar.id));
+    const isFirstCheckinAtSpot = !hasCheckedInBefore;
+    const firstCheckinText = lang === 'PT' ? 'NOVO LOCAL DESCOBERTO. HOP ON!' : 'NEW SPOT DISCOVERED. HOP ON!';
+
     // Award stamps and points
     const currentStamps = user.stamps[bar.id] || 0;
     const nextStamps = currentStamps + 1;
@@ -3042,20 +3049,30 @@ export default function App() {
     }, 3500);
 
     triggerSelfPush(
-      lang === 'PT' ? 'Check-in Realizado! 🍻' : 'Check-in Complete! 🍻',
-      alertMsg,
-      'loyalty'
+      isFirstCheckinAtSpot
+        ? firstCheckinText
+        : (lang === 'PT' ? 'Check-in Realizado! 🍻' : 'Check-in Complete! 🍻'),
+      isFirstCheckinAtSpot
+        ? firstCheckinText
+        : alertMsg,
+      'loyalty',
+      isFirstCheckinAtSpot ? 'NEW SPOT DISCOVERED. HOP ON!' : 'Check-in Complete! 🍻',
+      isFirstCheckinAtSpot ? 'NEW SPOT DISCOVERED. HOP ON!' : alertMsg
     );
 
     // 6. iOS System Toast Notification
     setIosToast({
       id: `toast_${Date.now()}`,
-      title: lang === 'PT' ? 'Check-in com PIN Confirmado' : 'PIN Check-in Confirmed',
+      title: isFirstCheckinAtSpot
+        ? firstCheckinText
+        : (lang === 'PT' ? 'Check-in com PIN Confirmado' : 'PIN Check-in Confirmed'),
       barName: bar.name,
       pointsEarned: 1,
-      subtitle: isTenthStamp 
-        ? (lang === 'PT' ? '10.º Selo Conquistado! 🎉' : '10th Stamp Achieved! 🎉') 
-        : (lang === 'PT' ? '1 HOP Ganho (+1 Selo)' : '1 HOP Earned (+1 Stamp)')
+      subtitle: isFirstCheckinAtSpot
+        ? firstCheckinText
+        : (isTenthStamp 
+          ? (lang === 'PT' ? '10.º Selo Conquistado! 🎉' : '10th Stamp Achieved! 🎉') 
+          : (lang === 'PT' ? '1 HOP Ganho (+1 Selo)' : '1 HOP Earned (+1 Stamp)'))
     });
 
     // 7. Notify friends if check-in sharing is enabled
@@ -3070,7 +3087,14 @@ export default function App() {
     });
 
     // 9. Pop-up modal per user prompt specifications
-    if (isTenthStamp) {
+    if (isFirstCheckinAtSpot) {
+      setCheckinPopupModal({
+        isOpen: true,
+        title: 'HOP-MAP',
+        message: firstCheckinText,
+        website: 'www.cobeertaste.com'
+      });
+    } else if (isTenthStamp) {
       setCheckinPopupModal({
         isOpen: true,
         title: 'HOP-MAP',
@@ -3891,6 +3915,18 @@ export default function App() {
               {authError && (
                 <div className="p-3 rounded-xl text-[10px] font-medium bg-[#E85B41]/15 border-2 border-[#1B2036] text-[#E85B41] text-left leading-normal animate-fade-in space-y-2 font-body font-bold">
                   <div>{authError}</div>
+                  {!isRegisterMode && (authError.includes('Criar conta') || authError.includes('Create account') || authError.includes('não criada') || authError.includes('not yet registered')) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsRegisterMode(true);
+                        setAuthError('');
+                      }}
+                      className="mt-1 px-3 py-1.5 bg-[#12908C] hover:bg-[#0B6C69] text-white rounded-xl text-[10px] font-bold cursor-pointer inline-block shadow-sm transition"
+                    >
+                      {lang === 'PT' ? '→ Criar conta agora com este e-mail' : '→ Create account now with this email'}
+                    </button>
+                  )}
                   {authError.includes('consola Firebase') && (
                     <div className="mt-2 pt-2 border-t border-[#1B2036]/20 text-[9px] text-[#1B2036]/80 space-y-1.5 font-normal">
                       <p className="font-bold text-[#E85B41]">Passos para corrigir na Consola Firebase:</p>
@@ -3917,6 +3953,7 @@ export default function App() {
                       setAuthError(t('firebaseNotConfigured', lang));
                       return;
                     }
+                    const cleanEmail = loginEmail.trim();
                     if (isRegisterMode) {
                       if (!isOver18) {
                         setAuthError(
@@ -3926,7 +3963,7 @@ export default function App() {
                         );
                         return;
                       }
-                      if (!loginEmail || !loginPassword) {
+                      if (!cleanEmail || !loginPassword) {
                         setAuthError(t('fillRequiredFields', lang));
                         return;
                       }
@@ -3980,7 +4017,7 @@ export default function App() {
                       }
 
                       setIsAuthLoading(true);
-                      const userCredential = await createUserWithEmailAndPassword(auth, loginEmail, loginPassword);
+                      const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, loginPassword);
                       if (userCredential.user) {
                         await updateProfile(userCredential.user, { displayName: displayNameVal });
                         
@@ -3988,7 +4025,7 @@ export default function App() {
                         try {
                           await setDoc(doc(db, 'users', userCredential.user.uid), {
                             uid: userCredential.user.uid,
-                            email: loginEmail.trim(),
+                            email: cleanEmail,
                             username: displayNameVal,
                             user_language: lang,
                             createdAt: new Date().toISOString()
@@ -3997,7 +4034,7 @@ export default function App() {
                           if (isPermissionError(uerr)) {
                             handleFirestoreError(uerr, OperationType.WRITE, `users/${userCredential.user.uid}`);
                           }
-                          console.error('Error creating user profile in Firestore:', uerr);
+                          console.warn('Notice creating user profile in Firestore:', uerr);
                         }
                       }
                       triggerSelfPush(
@@ -4006,7 +4043,7 @@ export default function App() {
                         'system'
                       );
                     } else {
-                      if (!loginEmail || !loginPassword) {
+                      if (!cleanEmail || !loginPassword) {
                         setAuthError(t('enterEmailPass', lang));
                         return;
                       }
@@ -4015,7 +4052,7 @@ export default function App() {
                         return;
                       }
                       setIsAuthLoading(true);
-                      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+                      await signInWithEmailAndPassword(auth, cleanEmail, loginPassword);
                       triggerSelfPush(
                         t('welcomeBackTitle', lang),
                         t('welcomeBackMsg', lang),
@@ -4023,12 +4060,14 @@ export default function App() {
                       );
                     }
                   } catch (err: any) {
-                    console.error('Auth error:', err);
+                    console.warn('Auth notice:', err?.code || err?.message);
                     let PortugueseError = err.message || (lang === 'PT' ? 'Ocorreu um erro na autenticação.' : 'An authentication error occurred.');
                     if (err.code === 'auth/invalid-email') {
                       PortugueseError = lang === 'PT' ? 'E-mail inválido.' : 'Invalid email address.';
                     } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-                      PortugueseError = lang === 'PT' ? 'Credenciais incorretas.' : 'Incorrect credentials.';
+                      PortugueseError = lang === 'PT' 
+                        ? 'E-mail ou palavra-passe incorretos, ou conta ainda não criada. Se ainda não criaste conta, clica em "Criar conta" abaixo!' 
+                        : 'Incorrect email or password, or account not yet registered. If you haven\'t created an account yet, click "Create account" below!';
                     } else if (err.code === 'auth/email-already-in-use') {
                       PortugueseError = lang === 'PT' ? 'Este e-mail já está em uso.' : 'Email is already in use.';
                     } else if (err.code === 'auth/weak-password' || (err.message && err.message.toLowerCase().includes('password'))) {
@@ -4045,7 +4084,7 @@ export default function App() {
                 }}
                 className="w-full py-2.5 bg-[#12908C] hover:bg-[#0B6C69] text-white font-bold text-xs rounded-xl shadow-[3px_3px_0px_#1B2036] border-2 border-[#1B2036] active:scale-98 transition duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-label uppercase"
               >
-                {isAuthLoading ? (lang === 'PT' ? 'A carregar...' : 'Loading...') : (isRegisterMode ? t('registerTab', lang) : t('loginTab', lang))}
+                {isAuthLoading ? (lang === 'PT' ? 'A carregar...' : 'Loading...') : (isRegisterMode ? t('registerTab', lang) : t('loginButton', lang))}
               </button>
 
               {/* Register Toggle Link */}
@@ -4065,7 +4104,7 @@ export default function App() {
                 {!isRegisterMode && (
                   <button 
                     onClick={() => {
-                      setResetEmail(loginEmail);
+                      setResetEmail(loginEmail.trim());
                       setResetError('');
                       setResetSuccess('');
                       setShowResetModal(true);
@@ -4149,7 +4188,7 @@ export default function App() {
                       placeholder={lang === 'PT' ? "Pesquisar spots..." : "Search spots..."}
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm rounded-2xl border-2 border-black bg-white text-neutral-900 placeholder-neutral-500 focus:outline-none focus:ring-0 transition-all shadow-xs"
+                      className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm rounded-2xl border-2 border-black bg-[#F6EFDC] text-neutral-900 placeholder-neutral-500 focus:outline-none focus:ring-0 transition-all shadow-xs"
                       id="input-explore-search"
                     />
                     {searchQuery && (
@@ -4170,7 +4209,7 @@ export default function App() {
                       className={`w-full p-2.5 rounded-xl border-2 border-black text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                         selectedZone !== 'All'
                           ? 'bg-amber-500/15 text-black'
-                          : 'bg-white text-neutral-800 hover:bg-neutral-50 shadow-xs'
+                          : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-xs'
                       }`}
                       id="zone-dropdown-trigger"
                     >
@@ -4209,11 +4248,11 @@ export default function App() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -4 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute left-0 right-0 mt-1.5 rounded-2xl border-2 border-black shadow-2xl z-50 overflow-hidden flex flex-col bg-white text-neutral-900"
+                          className="absolute left-0 right-0 mt-1.5 rounded-2xl border-2 border-black shadow-2xl z-50 overflow-hidden flex flex-col bg-[#F6EFDC] text-neutral-900"
                           id="zone-dropdown-list-container"
                         >
                           {/* Search input inside dropdown */}
-                          <div className="p-2 border-b-2 border-black bg-neutral-50">
+                          <div className="p-2 border-b-2 border-black bg-[#EFE6CC]">
                             <div className="relative">
                               <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-neutral-500" />
                               <input
@@ -4221,7 +4260,7 @@ export default function App() {
                                 placeholder={lang === 'PT' ? "Pesquisar localidade..." : "Search location..."}
                                 value={zoneSearchQuery}
                                 onChange={(e) => setZoneSearchQuery(e.target.value)}
-                                className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border-2 border-black bg-white text-neutral-900 placeholder-neutral-500 focus:outline-none transition-all"
+                                className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border-2 border-black bg-[#F6EFDC] text-neutral-900 placeholder-neutral-500 focus:outline-none transition-all"
                                 id="zone-dropdown-search"
                               />
                               {zoneSearchQuery && (
@@ -4237,7 +4276,7 @@ export default function App() {
                           </div>
 
                           {/* Scrollable List of Zones (No scrollbar) */}
-                          <div className="max-h-56 overflow-y-auto no-scrollbar divide-y divide-neutral-200 py-1">
+                          <div className="max-h-56 overflow-y-auto no-scrollbar divide-y divide-black/10 py-1">
                             {/* 'All' option */}
                             <button
                               type="button"
@@ -4249,7 +4288,7 @@ export default function App() {
                               className={`w-full text-left px-3.5 py-2 text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                                 selectedZone === 'All'
                                   ? 'bg-amber-500/15 text-black font-extrabold'
-                                  : 'hover:bg-neutral-50 text-neutral-700'
+                                  : 'hover:bg-[#EFE6CC] text-neutral-700'
                               }`}
                             >
                               <div className="flex items-center space-x-2">
@@ -4259,7 +4298,7 @@ export default function App() {
                               <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
                                 selectedZone === 'All'
                                   ? 'bg-amber-500/20 text-black'
-                                  : 'bg-neutral-100 text-neutral-600'
+                                  : 'bg-black/10 text-neutral-600'
                               }`}>
                                 {bars.length}
                               </span>
@@ -4280,7 +4319,7 @@ export default function App() {
                                   className={`w-full text-left px-3.5 py-2 text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                                     selectedZone === zone
                                       ? 'bg-amber-500/15 text-black font-extrabold'
-                                      : 'hover:bg-neutral-50 text-neutral-700'
+                                      : 'hover:bg-[#EFE6CC] text-neutral-700'
                                   }`}
                                   id={`zone-option-${zone.toLowerCase().replace(' ', '-')}`}
                                 >
@@ -4312,7 +4351,7 @@ export default function App() {
                     
                     {/* Rectangle Divisor 1: Filter Icons + Spot Counter Text (Grouped & Left-Aligned) */}
                     <div 
-                      className="flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-start gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-2xl border-2 border-black bg-white shadow-xs transition-all" 
+                      className="flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-start gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-2xl border-2 border-black bg-[#F6EFDC] shadow-xs transition-all" 
                       id="spots-filters-and-counter-group"
                     >
                       {/* Filter Icons (Left-aligned) */}
@@ -4323,7 +4362,7 @@ export default function App() {
                           className={`p-2 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-xl shrink-0 transition-all flex items-center justify-center touch-target-expand cursor-pointer border-2 border-black ${
                             selectedZone === 'All' && selectedStyle === 'All' && !showOnlyFavorites && !proximitySort && !topRatedSort && !openNowFilter && !alphabeticalSort
                               ? 'bg-amber-500 text-black font-extrabold shadow-sm' 
-                              : 'bg-white text-neutral-800 hover:bg-neutral-100 shadow-2xs'
+                              : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-2xs'
                           }`}
                           id="filter-all"
                           title={lang === 'PT' ? 'Todos os Spots' : 'All Spots'}
@@ -4338,7 +4377,7 @@ export default function App() {
                           className={`p-2 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-xl shrink-0 transition-all flex items-center justify-center touch-target-expand cursor-pointer border-2 border-black ${
                             showOnlyFavorites 
                               ? 'bg-amber-500 text-black font-extrabold shadow-sm' 
-                              : 'bg-white text-neutral-800 hover:bg-neutral-100 shadow-2xs'
+                              : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-2xs'
                           }`}
                           id="filter-favs"
                           title={lang === 'PT' ? 'Favoritos' : 'Favorites'}
@@ -4359,7 +4398,7 @@ export default function App() {
                           className={`p-2 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-xl shrink-0 transition-all flex items-center justify-center touch-target-expand cursor-pointer border-2 border-black ${
                             proximitySort 
                               ? 'bg-amber-500 text-black font-extrabold shadow-sm' 
-                              : 'bg-white text-neutral-800 hover:bg-neutral-100 shadow-2xs'
+                              : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-2xs'
                           }`}
                           id="filter-proximity"
                           title={lang === 'PT' ? 'Ordenar por Proximidade' : 'Sort by Proximity'}
@@ -4380,7 +4419,7 @@ export default function App() {
                           className={`p-2 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-xl shrink-0 transition-all flex items-center justify-center touch-target-expand cursor-pointer border-2 border-black ${
                             topRatedSort 
                               ? 'bg-amber-500 text-black font-extrabold shadow-sm' 
-                              : 'bg-white text-neutral-800 hover:bg-neutral-100 shadow-2xs'
+                              : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-2xs'
                           }`}
                           id="filter-top-rated"
                           title={lang === 'PT' ? 'Melhor Classificação (Top Rating)' : 'Top Rated'}
@@ -4395,7 +4434,7 @@ export default function App() {
                           className={`p-2 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-xl shrink-0 transition-all flex items-center justify-center touch-target-expand cursor-pointer border-2 border-black ${
                             openNowFilter 
                               ? 'bg-amber-500 text-black font-extrabold shadow-sm' 
-                              : 'bg-white text-neutral-800 hover:bg-neutral-100 shadow-2xs'
+                              : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-2xs'
                           }`}
                           id="filter-open-now"
                           title={lang === 'PT' ? 'Aberto Agora' : 'Open Now'}
@@ -4416,7 +4455,7 @@ export default function App() {
                           className={`p-2 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-xl shrink-0 transition-all flex items-center justify-center touch-target-expand cursor-pointer border-2 border-black ${
                             alphabeticalSort 
                               ? 'bg-amber-500 text-black font-extrabold shadow-sm' 
-                              : 'bg-white text-neutral-800 hover:bg-neutral-100 shadow-2xs'
+                              : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-2xs'
                           }`}
                           id="filter-alphabetical"
                           title={lang === 'PT' ? 'Ordem Alfabética (A-Z)' : 'Alphabetical Order (A-Z)'}
@@ -4446,7 +4485,7 @@ export default function App() {
 
                     {/* Rectangle Divisor 2: View Mode Switcher (Grouped in its own separate divider box) */}
                     <div 
-                      className="flex items-center justify-start sm:justify-end space-x-1 sm:space-x-1.5 p-2 sm:p-2.5 rounded-2xl border-2 border-black bg-white shadow-xs shrink-0 transition-all" 
+                      className="flex items-center justify-start sm:justify-end space-x-1 sm:space-x-1.5 p-2 sm:p-2.5 rounded-2xl border-2 border-black bg-[#F6EFDC] shadow-xs shrink-0 transition-all" 
                       id="spot-view-mode-bar"
                     >
                       {/* Lista */}
@@ -4456,7 +4495,7 @@ export default function App() {
                         className={`p-2 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-xl transition-all flex items-center justify-center cursor-pointer touch-target-expand border-2 border-black ${
                           spotViewMode === 'list'
                             ? 'bg-amber-500 text-black font-extrabold shadow-sm'
-                            : 'bg-white text-neutral-800 hover:bg-neutral-100 shadow-2xs'
+                            : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-2xs'
                         }`}
                         id="btn-view-mode-list"
                         title={lang === 'PT' ? 'Lista (Cartões normais com detalhes do local)' : 'List (Normal cards with spot details)'}
@@ -4472,7 +4511,7 @@ export default function App() {
                         className={`p-2 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-xl transition-all flex items-center justify-center cursor-pointer touch-target-expand border-2 border-black ${
                           spotViewMode === 'mosaic'
                             ? 'bg-amber-500 text-black font-extrabold shadow-sm'
-                            : 'bg-white text-neutral-800 hover:bg-neutral-100 shadow-2xs'
+                            : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-2xs'
                         }`}
                         id="btn-view-mode-mosaic"
                         title={lang === 'PT' ? 'Mosaico (2 colunas com foto de capa, classificação e nome)' : 'Mosaic (2 columns with cover photo, rating and name)'}
@@ -4488,7 +4527,7 @@ export default function App() {
                         className={`p-2 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-xl transition-all flex items-center justify-center cursor-pointer touch-target-expand border-2 border-black ${
                           spotViewMode === 'icons'
                             ? 'bg-amber-500 text-black font-extrabold shadow-sm'
-                            : 'bg-white text-neutral-800 hover:bg-neutral-100 shadow-2xs'
+                            : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-2xs'
                         }`}
                         id="btn-view-mode-icons"
                         title={lang === 'PT' ? 'Ícones (Grelha compacta estilo dashboard apenas com capas sem detalhes)' : 'Icons (Compact dashboard grid with cover icons only without details)'}
@@ -4846,7 +4885,7 @@ export default function App() {
                 </div>
 
                 {/* Festivals View Mode Bar + Counter */}
-                <div className="flex items-center justify-between gap-2 p-2 rounded-2xl border-2 border-black bg-white text-zinc-900 shadow-xs transition-all" id="festivals-control-bar">
+                <div className="flex items-center justify-between gap-2 p-2 rounded-2xl border-2 border-black bg-[#F6EFDC] text-zinc-900 shadow-xs transition-all" id="festivals-control-bar">
                   <span className="text-[11px] sm:text-xs font-sans text-neutral-600 font-bold whitespace-nowrap pl-1 select-none">
                     {lang === 'PT' ? `A mostrar ${events.length} festivais` : `Showing ${events.length} festivals`}
                   </span>
@@ -4859,7 +4898,7 @@ export default function App() {
                       className={`p-2 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-xl transition-all flex items-center justify-center cursor-pointer touch-target-expand border-2 border-black ${
                         festivalViewMode === 'list'
                           ? 'bg-amber-500 text-black font-extrabold shadow-sm'
-                          : 'bg-white text-neutral-800 hover:bg-neutral-100 shadow-2xs'
+                          : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-2xs'
                       }`}
                       id="btn-festival-view-mode-list"
                       title={lang === 'PT' ? 'Lista (Cartões com detalhes do festival)' : 'List (Cards with festival details)'}
@@ -4875,7 +4914,7 @@ export default function App() {
                       className={`p-2 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-xl transition-all flex items-center justify-center cursor-pointer touch-target-expand border-2 border-black ${
                         festivalViewMode === 'mosaic'
                           ? 'bg-amber-500 text-black font-extrabold shadow-sm'
-                          : 'bg-white text-neutral-800 hover:bg-neutral-100 shadow-2xs'
+                          : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-2xs'
                       }`}
                       id="btn-festival-view-mode-mosaic"
                       title={lang === 'PT' ? 'Mosaico (2 colunas com capa e nome)' : 'Mosaic (2 columns with cover and name)'}
@@ -4891,7 +4930,7 @@ export default function App() {
                       className={`p-2 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-xl transition-all flex items-center justify-center cursor-pointer touch-target-expand border-2 border-black ${
                         festivalViewMode === 'icons'
                           ? 'bg-amber-500 text-black font-extrabold shadow-sm'
-                          : 'bg-white text-neutral-800 hover:bg-neutral-100 shadow-2xs'
+                          : 'bg-[#F6EFDC] text-neutral-800 hover:bg-[#EFE6CC] shadow-2xs'
                       }`}
                       id="btn-festival-view-mode-icons"
                       title={lang === 'PT' ? 'Ícones (Grelha compacta estilo dashboard)' : 'Icons (Compact dashboard grid)'}
@@ -4940,7 +4979,7 @@ export default function App() {
                             <div 
                               key={ev.id}
                               onClick={() => setSelectedFestival(ev)}
-                              className="rounded-2xl p-2 border-2 border-black bg-white text-zinc-900 shadow-[3px_3px_0px_#000000] transition-all duration-200 flex flex-col items-center justify-center text-center cursor-pointer group hover:scale-[1.03] active:scale-97 relative"
+                              className="rounded-2xl p-2 border-2 border-black bg-[#F6EFDC] text-zinc-900 shadow-[3px_3px_0px_#000000] transition-all duration-200 flex flex-col items-center justify-center text-center cursor-pointer group hover:scale-[1.03] active:scale-97 relative"
                               id={`festival-icon-${ev.id}`}
                               title={ev.title}
                               aria-label={ev.title}
@@ -4980,7 +5019,7 @@ export default function App() {
                             <div 
                               key={ev.id}
                               onClick={() => setSelectedFestival(ev)}
-                              className="rounded-2xl overflow-hidden border-2 border-black bg-white text-zinc-900 shadow-[3px_3px_0px_#000000] transition-all duration-300 flex flex-col cursor-pointer group hover:scale-[1.01] active:scale-[0.99]"
+                              className="rounded-2xl overflow-hidden border-2 border-black bg-[#F6EFDC] text-zinc-900 shadow-[3px_3px_0px_#000000] transition-all duration-300 flex flex-col cursor-pointer group hover:scale-[1.01] active:scale-[0.99]"
                               id={`festival-mosaic-${ev.id}`}
                             >
                               <div className="relative h-28 sm:h-36 w-full overflow-hidden">
@@ -5042,7 +5081,7 @@ export default function App() {
                         return (
                           <div 
                             key={ev.id}
-                            className="rounded-2xl sm:rounded-3xl border-2 border-black bg-white text-zinc-900 shadow-[3px_3px_0px_#000000] overflow-hidden transition-all duration-300"
+                            className="rounded-2xl sm:rounded-3xl border-2 border-black bg-[#F6EFDC] text-zinc-900 shadow-[3px_3px_0px_#000000] overflow-hidden transition-all duration-300"
                           >
                             <div className="relative h-36 w-full cursor-pointer" onClick={() => setSelectedFestival(ev)}>
                               {ev.coverPhoto ? (
@@ -5508,7 +5547,7 @@ export default function App() {
 
                 {/* User Info Header Card */}
                 <div 
-                  className="p-4.5 rounded-3xl flex items-center space-x-3 border-2 border-zinc-700 transition-all bg-white text-zinc-900 shadow-sm"
+                  className="p-4.5 rounded-3xl flex items-center space-x-3 border-2 border-zinc-700 transition-all bg-[#F6EFDC] text-zinc-900 shadow-sm"
                 >
                   <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-zinc-700 flex items-center justify-center text-3xl shrink-0 select-none">
                     {getLevelDetails(user.points, lang).badge}
@@ -5548,13 +5587,22 @@ export default function App() {
                       e.stopPropagation();
                       try {
                         await signOut(auth);
-                        triggerSelfPush('Sessão Terminada 🍻', 'Fizeste log-off com sucesso do teu roteiro Hop-Map.', 'system');
                       } catch (err: any) {
-                        console.error('Error signing out:', err);
+                        console.warn('Notice signing out:', err);
                       }
+                      setUser(prev => ({
+                        ...prev,
+                        isLoggedIn: false,
+                        id: 'user_guest'
+                      }));
+                      triggerSelfPush(
+                        lang === 'PT' ? 'Sessão Terminada 🍻' : 'Signed Out 🍻',
+                        lang === 'PT' ? 'Fizeste log-off com sucesso do teu roteiro Hop-Map.' : 'You have successfully signed out of Hop-Map.',
+                        'system'
+                      );
                     }}
-                    className="p-2.5 rounded-xl border border-zinc-700 transition cursor-pointer flex items-center justify-center shrink-0 bg-zinc-100 hover:bg-red-50 hover:border-red-400 text-zinc-600 hover:text-red-600"
-                    title="Terminar Sessão (Log-off)"
+                    className="p-2.5 rounded-xl border border-zinc-700 transition cursor-pointer flex items-center justify-center shrink-0 bg-[#EFE6CC] hover:bg-red-50 hover:border-red-400 text-zinc-600 hover:text-red-600"
+                    title={lang === 'PT' ? "Terminar Sessão (Log-off)" : "Sign Out"}
                     id="btn-log-off"
                   >
                     <LogOut className="w-4 h-4" />
@@ -5562,7 +5610,7 @@ export default function App() {
                 </div>
 
                 {/* 5 KEY STATS LIST FOR USER PROFILE */}
-                <div className="p-4 rounded-3xl border-2 border-zinc-700 transition-all bg-white text-neutral-900 shadow-sm space-y-3">
+                <div className="p-4 rounded-3xl border-2 border-zinc-700 transition-all bg-[#F6EFDC] text-neutral-900 shadow-sm space-y-3">
                   <div className="flex items-center justify-between border-b border-zinc-700 pb-2.5">
                     <button
                       onClick={() => setIsBadgesModalOpen(true)}
@@ -5609,7 +5657,7 @@ export default function App() {
                             : 'Total points accumulated'}
                         </span>
                       </div>
-                      <div className="shrink-0 font-mono text-sm font-extrabold text-black bg-zinc-100 border border-zinc-700 px-3 py-1.5 rounded-xl">
+                      <div className="shrink-0 font-mono text-sm font-extrabold text-black bg-[#EFE6CC] border border-zinc-700 px-3 py-1.5 rounded-xl">
                         {user.points || 0} <span className="text-[10px] text-amber-600 font-bold">HOPS</span>
                       </div>
                     </div>
@@ -5617,7 +5665,7 @@ export default function App() {
                     {/* 3. N.º Badges Desbloqueados */}
                     <div 
                       onClick={() => setIsBadgesModalOpen(true)}
-                      className="py-2.5 flex items-center justify-between gap-3 cursor-pointer group hover:bg-zinc-100 -mx-2 px-2 rounded-xl transition"
+                      className="py-2.5 flex items-center justify-between gap-3 cursor-pointer group hover:bg-[#EFE6CC] -mx-2 px-2 rounded-xl transition"
                     >
                       <div className="min-w-0">
                         <span className="text-[11px] font-bold block text-black font-display group-hover:text-amber-600 transition">
@@ -5646,7 +5694,7 @@ export default function App() {
                             : 'Number of unique spots visited with check-ins'}
                         </span>
                       </div>
-                      <div className="shrink-0 font-mono text-sm font-extrabold text-black bg-zinc-100 border border-zinc-700 px-3 py-1.5 rounded-xl">
+                      <div className="shrink-0 font-mono text-sm font-extrabold text-black bg-[#EFE6CC] border border-zinc-700 px-3 py-1.5 rounded-xl">
                         {conqueredSpotsCount} <span className="text-[10px] text-zinc-600 font-medium">{lang === 'PT' ? 'Spots' : 'Spots'}</span>
                       </div>
                     </div>
@@ -5663,7 +5711,7 @@ export default function App() {
                             : 'Position on the global leaderboard with special highlight'}
                         </span>
                       </div>
-                      <div className="shrink-0 font-mono text-sm font-extrabold px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-100 text-black">
+                      <div className="shrink-0 font-mono text-sm font-extrabold px-3 py-1.5 rounded-xl border border-zinc-700 bg-[#EFE6CC] text-black">
                         {isGlobalRank1 && <span className="mr-1 select-none">👑</span>}
                         {typeof userGlobalRank === 'number' ? `#${userGlobalRank}` : userGlobalRank} <span className="text-[10px] text-amber-600 font-bold">{lang === 'PT' ? 'Global' : 'Global'}</span>
                       </div>
@@ -5673,7 +5721,7 @@ export default function App() {
 
                 {/* EARNED BADGES SECTION (STRICT RULE: Only appears if user has at least 1 badge) */}
                 {unlockedBadges.length > 0 && (
-                  <div className="p-4 rounded-3xl border-2 border-zinc-700 transition-all bg-white text-neutral-900 shadow-sm space-y-3">
+                  <div className="p-4 rounded-3xl border-2 border-zinc-700 transition-all bg-[#F6EFDC] text-neutral-900 shadow-sm space-y-3">
                     <div className="flex items-center justify-between border-b border-zinc-700 pb-2.5">
                       <div className="flex items-center gap-2">
                         <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-700">
@@ -5706,14 +5754,9 @@ export default function App() {
                             key={badge.id}
                             onClick={() => setIsBadgesModalOpen(true)}
                             title={name}
-                            className="group relative flex flex-col items-center p-2 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-zinc-700 transition-all cursor-pointer shadow-xs"
+                            className="w-11 h-11 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border-2 border-zinc-700 flex items-center justify-center text-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs"
                           >
-                            <div className="w-10 h-10 rounded-xl bg-black/10 border border-zinc-700 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                              {badge.icon}
-                            </div>
-                            <span className="text-[8px] font-bold font-display text-zinc-800 mt-1 max-w-[56px] truncate text-center">
-                              {name}
-                            </span>
+                            {badge.icon}
                           </button>
                         );
                       })}
@@ -5723,7 +5766,7 @@ export default function App() {
 
 
                 {/* FRIENDS SEARCH & FRIENDS LIST SECTION */}
-                <div className="p-4 rounded-3xl border-2 border-zinc-700 transition-all bg-white text-neutral-900 shadow-sm space-y-4">
+                <div className="p-4 rounded-3xl border-2 border-zinc-700 transition-all bg-[#F6EFDC] text-neutral-900 shadow-sm space-y-4">
                   
                   {/* Header */}
                   <div className="flex items-center justify-between border-b border-zinc-700 pb-3">
@@ -5788,7 +5831,7 @@ export default function App() {
                           value={friendSearchQuery}
                           onChange={(e) => setFriendSearchQuery(e.target.value)}
                           placeholder={lang === 'PT' ? "Pesquisa por nome de utilizador..." : "Search by username..."}
-                          className="w-full pl-8 pr-3 py-2 text-[10px] rounded-xl outline-none border border-zinc-700 bg-zinc-50 text-zinc-900 focus:border-black transition-all"
+                          className="w-full pl-8 pr-3 py-2 text-[10px] rounded-xl outline-none border border-zinc-700 bg-[#EFE6CC] text-zinc-900 focus:border-black transition-all"
                         />
                       </div>
                       <button
@@ -5806,12 +5849,12 @@ export default function App() {
 
                     {/* Friend Search Results */}
                     {friendSearchResults.length > 0 && (
-                      <div className="mt-2.5 rounded-2xl p-2 border border-zinc-700 space-y-1.5 max-h-[160px] overflow-y-auto bg-zinc-50">
+                      <div className="mt-2.5 rounded-2xl p-2 border border-zinc-700 space-y-1.5 max-h-[160px] overflow-y-auto bg-[#EFE6CC]">
                         {friendSearchResults.map(res => {
                           const isAlreadyFriend = (user.friends || []).includes(res.id);
                           const isSentPending = sentPendingRequests.includes(res.id);
                           return (
-                            <div key={res.id} className="flex items-center justify-between p-1.5 rounded-lg transition hover:bg-zinc-100">
+                            <div key={res.id} className="flex items-center justify-between p-1.5 rounded-lg transition hover:bg-[#F6EFDC]">
                               <div className="flex items-center space-x-2">
                                 <span className="text-sm select-none">{getLevelDetails(res.points).badge}</span>
                                 <div className="text-left">
@@ -5861,9 +5904,9 @@ export default function App() {
                         <p className="text-[9px] text-zinc-500 mt-1">{lang === 'PT' ? 'A carregar amigos...' : 'Loading friends...'}</p>
                       </div>
                     ) : friendsDetails.length === 0 ? (
-                      <div className="border border-dashed border-zinc-700 p-4 rounded-2xl text-center bg-zinc-50">
-                        <p className="text-zinc-500 text-[10px] leading-relaxed">{lang === 'PT' ? 'Não tens amigos adicionados.' : 'You have no friends added.'}</p>
-                        <p className="text-zinc-500 text-[8px] mt-0.5">{lang === 'PT' ? 'Pesquisa por nome acima para criar a tua comunidade cervejeira!' : 'Search by username above to build your beer community!'}</p>
+                      <div className="border border-dashed border-zinc-700 p-4 rounded-2xl text-center bg-[#EFE6CC]">
+                        <p className="text-zinc-700 text-[10px] leading-relaxed">{lang === 'PT' ? 'Não tens amigos adicionados.' : 'You have no friends added.'}</p>
+                        <p className="text-zinc-600 text-[8px] mt-0.5">{lang === 'PT' ? 'Pesquisa por nome acima para criar a tua comunidade cervejeira!' : 'Search by username above to build your beer community!'}</p>
                       </div>
                     ) : (
                       <>
@@ -5876,7 +5919,7 @@ export default function App() {
                               return (
                                 <div 
                                   key={friend.id} 
-                                  className="flex items-center justify-between p-2 rounded-xl border border-zinc-700 bg-zinc-50"
+                                  className="flex items-center justify-between p-2 rounded-xl border border-zinc-700 bg-[#EFE6CC]"
                                 >
                                   <div className="flex items-center space-x-2">
                                     <span className="text-lg select-none">{details.badge}</span>
@@ -5885,7 +5928,7 @@ export default function App() {
                                         <span className="text-[10px] font-black text-black">{friend.username}</span>
                                         <span className="text-[8px] font-mono text-amber-600 font-bold">({friend.points} HOPS)</span>
                                       </div>
-                                      <div className="text-[8px] text-zinc-500 font-sans italic">"{details.title}"</div>
+                                      <div className="text-[8px] text-zinc-600 font-sans italic">"{details.title}"</div>
                                     </div>
                                   </div>
                                   <button
@@ -5907,7 +5950,7 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => setShowAllFriends(!showAllFriends)}
-                              className="text-[9px] font-bold px-3 py-1.5 rounded-lg border border-zinc-700 bg-white hover:bg-neutral-50 text-amber-700 shadow-xs transition-all cursor-pointer"
+                              className="text-[9px] font-bold px-3 py-1.5 rounded-lg border border-zinc-700 bg-[#EFE6CC] hover:bg-[#F2A93B] text-amber-800 shadow-xs transition-all cursor-pointer"
                               id="btn-toggle-all-friends"
                             >
                               {showAllFriends ? (lang === 'PT' ? 'Ver menos' : 'Show less') : (lang === 'PT' ? 'Ver todos' : 'Show all')}
@@ -5939,10 +5982,10 @@ export default function App() {
 
                   <div className="space-y-2">
                     {checkinList.length === 0 ? (
-                      <div className="bg-zinc-50 border border-dashed border-zinc-700 p-4 rounded-xl text-center">
+                      <div className="bg-[#EFE6CC] border border-dashed border-zinc-700 p-4 rounded-xl text-center">
                         <Compass className="w-6 h-6 text-amber-500/50 mx-auto mb-1.5" />
                         <p className="text-neutral-700 font-bold text-[10px]">{t('noCheckinsYet', lang)}</p>
-                        <p className="text-neutral-500 text-[9px] mt-0.5">{t('noCheckinsSub', lang)}</p>
+                        <p className="text-neutral-600 text-[9px] mt-0.5">{t('noCheckinsSub', lang)}</p>
                       </div>
                     ) : (
                       <>
@@ -5953,7 +5996,7 @@ export default function App() {
                             return (
                               <div 
                                 key={item.id} 
-                                className="p-3.5 rounded-2xl border border-zinc-700 transition-all duration-200 bg-white text-neutral-900 shadow-xs"
+                                className="p-3.5 rounded-2xl border border-zinc-700 transition-all duration-200 bg-[#F6EFDC] text-neutral-900 shadow-xs"
                               >
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="space-y-1">
@@ -5961,7 +6004,7 @@ export default function App() {
                                       <span className="text-[11px] font-extrabold text-amber-700 font-display tracking-tight">
                                         {item.barName}
                                       </span>
-                                      <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-zinc-100 text-zinc-700 border border-zinc-700">
+                                      <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-[#EFE6CC] text-zinc-700 border border-zinc-700">
                                         📍 {item.location}
                                       </span>
                                       {item.beerStyle && (
@@ -6003,7 +6046,7 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => setShowAllCheckins(!showAllCheckins)}
-                              className="text-[9px] font-bold px-3 py-1.5 rounded-lg border border-zinc-700 bg-white hover:bg-neutral-50 text-amber-700 shadow-xs transition-all cursor-pointer"
+                              className="text-[9px] font-bold px-3 py-1.5 rounded-lg border border-zinc-700 bg-[#EFE6CC] hover:bg-[#F2A93B] text-amber-800 shadow-xs transition-all cursor-pointer"
                               id="btn-toggle-all-checkins"
                             >
                               {showAllCheckins ? (lang === 'PT' ? 'Ver menos' : 'Show less') : (lang === 'PT' ? 'Ver mais' : 'Show more')}
@@ -6023,8 +6066,8 @@ export default function App() {
                   </h4>
                   <div className="space-y-2">
                     {ratingsHistory.length === 0 ? (
-                      <div className="bg-zinc-50 border border-dashed border-zinc-700 p-4 rounded-xl text-center">
-                        <p className="text-neutral-500 text-[10px] leading-relaxed">
+                      <div className="bg-[#EFE6CC] border border-dashed border-zinc-700 p-4 rounded-xl text-center">
+                        <p className="text-neutral-600 text-[10px] leading-relaxed">
                           {lang === 'PT' 
                             ? 'Ainda não submeteste nenhuma avaliação. Avalia os teus spots favoritos!' 
                             : "You haven't submitted any reviews yet. Rate your favorite spots!"}
@@ -6043,7 +6086,7 @@ export default function App() {
                             return (
                               <div 
                                 key={item.id} 
-                                className="p-3.5 rounded-2xl border border-zinc-700 transition-all duration-200 bg-white text-neutral-900 shadow-xs"
+                                className="p-3.5 rounded-2xl border border-zinc-700 transition-all duration-200 bg-[#F6EFDC] text-neutral-900 shadow-xs"
                               >
                                 <div className="flex justify-between items-start">
                                   <div>
@@ -6100,7 +6143,7 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => setShowAllReviews(!showAllReviews)}
-                              className="text-[9px] font-bold px-3 py-1.5 rounded-lg border border-zinc-700 bg-white hover:bg-neutral-50 text-amber-700 shadow-xs transition-all cursor-pointer"
+                              className="text-[9px] font-bold px-3 py-1.5 rounded-lg border border-zinc-700 bg-[#EFE6CC] hover:bg-[#F2A93B] text-amber-800 shadow-xs transition-all cursor-pointer"
                               id="btn-toggle-all-reviews"
                             >
                               {showAllReviews 
@@ -6130,7 +6173,7 @@ export default function App() {
                             <Bell className="w-3.5 h-3.5 text-amber-600" />
                             {lang === 'PT' ? 'HISTÓRICO DE NOTIFICAÇÕES' : 'NOTIFICATION HISTORY'}
                           </h4>
-                          <span className="text-[8px] px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-700 text-zinc-600 font-mono">
+                          <span className="text-[8px] px-1.5 py-0.5 rounded bg-[#EFE6CC] border border-zinc-700 text-zinc-700 font-mono">
                             {lang === 'PT' ? 'Últimas 5' : 'Latest 5'}
                           </span>
                         </div>
@@ -6148,7 +6191,7 @@ export default function App() {
                       </div>
                       <div className="space-y-2">
                         {recentNotifications.length === 0 ? (
-                          <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-700 text-center text-[9px] text-zinc-500 font-mono">
+                          <div className="p-3.5 rounded-2xl bg-[#EFE6CC] border border-zinc-700 text-center text-[9px] text-zinc-600 font-mono">
                             {lang === 'PT' ? 'Sem notificações' : 'No notifications'}
                           </div>
                         ) : (
@@ -6160,8 +6203,8 @@ export default function App() {
                               }}
                               className={`p-3.5 rounded-2xl border border-zinc-700 transition-all duration-200 cursor-pointer flex items-start space-x-2.5 ${
                                 notif.isRead 
-                                  ? 'bg-zinc-50 text-neutral-500' 
-                                  : 'bg-white text-neutral-900 hover:bg-amber-50/50'
+                                  ? 'bg-[#EFE6CC] text-neutral-600' 
+                                  : 'bg-[#F6EFDC] text-neutral-900 hover:bg-[#FAF6EB]'
                               }`}
                             >
                               <div className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${notif.isRead ? 'bg-transparent' : 'bg-amber-500 animate-pulse'}`} />
@@ -6263,7 +6306,7 @@ export default function App() {
                 )}
 
                 {/* Language Preference Settings Card */}
-                <div className="p-4 rounded-2xl space-y-3 border-2 border-zinc-700 transition-all bg-white text-neutral-900 shadow-xs">
+                <div className="p-4 rounded-2xl space-y-3 border-2 border-zinc-700 transition-all bg-[#F6EFDC] text-neutral-900 shadow-xs">
                   <div className="flex items-center justify-between">
                     <div>
                       <h5 className="text-[11px] font-bold flex items-center font-display text-black">
@@ -6275,7 +6318,7 @@ export default function App() {
                       </p>
                     </div>
 
-                    <div className="flex items-center space-x-1.5 bg-zinc-100 border border-zinc-700 rounded-xl p-1">
+                    <div className="flex items-center space-x-1.5 bg-[#EFE6CC] border border-zinc-700 rounded-xl p-1">
                       <button
                         type="button"
                         onClick={() => handleLanguageChange('PT')}
@@ -6301,7 +6344,7 @@ export default function App() {
                 </div>
 
                 {/* Notifications Toggle Settings Card */}
-                <div className="p-4 rounded-2xl space-y-3 border-2 border-zinc-700 transition-all bg-white text-neutral-900 shadow-xs">
+                <div className="p-4 rounded-2xl space-y-3 border-2 border-zinc-700 transition-all bg-[#F6EFDC] text-neutral-900 shadow-xs">
                   <div className="flex items-center justify-between">
                     <div>
                       <h5 className="text-[11px] font-bold flex items-center font-display text-black">
@@ -6346,7 +6389,7 @@ export default function App() {
                 </div>
 
                 {/* Biometrics Settings */}
-                <div className="p-4 rounded-2xl space-y-3 border-2 border-zinc-700 transition-all bg-white text-neutral-900 shadow-xs">
+                <div className="p-4 rounded-2xl space-y-3 border-2 border-zinc-700 transition-all bg-[#F6EFDC] text-neutral-900 shadow-xs">
                   <div className="flex items-center justify-between">
                     <div>
                       <h5 className="text-[11px] font-bold flex items-center font-display text-black">
@@ -6382,7 +6425,7 @@ export default function App() {
                 </div>
 
                 {/* Share Check-in with Friends Settings */}
-                <div className="p-4 rounded-2xl space-y-3 border-2 border-zinc-700 transition-all bg-white text-neutral-900 shadow-xs">
+                <div className="p-4 rounded-2xl space-y-3 border-2 border-zinc-700 transition-all bg-[#F6EFDC] text-neutral-900 shadow-xs">
                   <div className="flex items-center justify-between">
                     <div className="pr-3">
                       <h5 className="text-[11px] font-bold flex items-center font-display text-black">
@@ -7960,7 +8003,7 @@ export default function App() {
                   onClick={() => setCheckinPopupModal(null)}
                   className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 active:scale-97 transition duration-150 cursor-pointer font-display uppercase tracking-wider"
                 >
-                  Continuar 🍻
+                  {lang === 'PT' ? 'Continuar 🍻' : 'Continue 🍻'}
                 </button>
               </motion.div>
             </div>
@@ -8097,8 +8140,8 @@ export default function App() {
                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
                 transition={{ duration: 0.2 }}
                 onClick={(e) => e.stopPropagation()}
-                className={`relative w-full max-w-lg rounded-3xl border overflow-hidden shadow-2xl ${
-                  darkMode ? 'bg-neutral-900 border-white/10 text-white' : 'bg-white border-neutral-200 text-zinc-900'
+                className={`relative w-full max-w-lg rounded-3xl border-2 overflow-hidden shadow-2xl ${
+                  darkMode ? 'bg-neutral-900 border-white/10 text-white' : 'bg-[#F6EFDC] border-black text-zinc-900'
                 }`}
                 id="modal-festival-details"
               >
@@ -8151,7 +8194,7 @@ export default function App() {
                   </p>
 
                   {/* Check-In Block inside Modal */}
-                  <div className={`p-3 rounded-2xl border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-neutral-100 border-neutral-200'} flex items-center justify-between gap-3 pt-3`}>
+                  <div className={`p-3 rounded-2xl border-2 ${darkMode ? 'bg-white/5 border-white/10' : 'bg-[#EFE6CC] border-black'} flex items-center justify-between gap-3 pt-3`}>
                     <div className="flex items-center space-x-1.5">
                       <Zap className="w-4 h-4 text-amber-500" />
                       <span className="text-xs font-bold text-amber-400 font-mono">+2 HOPS</span>
@@ -8248,29 +8291,33 @@ export default function App() {
         />
 
         {/* --- MONTHLY METRICS & BUSINESS REPORT MODAL (cobeertaste@gmail.com strictly) --- */}
-        <MonthlyReportModal
-          isOpen={isMonthlyReportOpen && isAdmin}
-          onClose={() => setIsMonthlyReportOpen(false)}
-          allSpots={bars}
-          isAdmin={isAdmin}
-          userEmail={user.email || auth.currentUser?.email || ''}
-          lang={lang}
-          darkMode={darkMode}
-        />
+        {isMonthlyReportOpen && isAdmin && (
+          <MonthlyReportModal
+            isOpen={isMonthlyReportOpen && isAdmin}
+            onClose={() => setIsMonthlyReportOpen(false)}
+            allSpots={bars}
+            isAdmin={isAdmin}
+            userEmail={user.email || auth.currentUser?.email || ''}
+            lang={lang}
+            darkMode={darkMode}
+          />
+        )}
 
         {/* --- MASTER ADMIN CHECK-IN PINS DASHBOARD MODAL (cobeertaste@gmail.com strictly) --- */}
-        <AdminPinsDashboardModal
-          isOpen={isAdminPinsModalOpen && isAdmin}
-          onClose={() => setIsAdminPinsModalOpen(false)}
-          allSpots={bars}
-          isAdmin={isAdmin}
-          userEmail={user.email || auth.currentUser?.email || ''}
-          lang={lang}
-          darkMode={darkMode}
-          onPinUpdated={(spotId, newPin) => {
-            setBars(prev => prev.map(b => b.id === spotId ? { ...b, checkinPin: newPin } : b));
-          }}
-        />
+        {isAdminPinsModalOpen && isAdmin && (
+          <AdminPinsDashboardModal
+            isOpen={isAdminPinsModalOpen && isAdmin}
+            onClose={() => setIsAdminPinsModalOpen(false)}
+            allSpots={bars}
+            isAdmin={isAdmin}
+            userEmail={user.email || auth.currentUser?.email || ''}
+            lang={lang}
+            darkMode={darkMode}
+            onPinUpdated={(spotId, newPin) => {
+              setBars(prev => prev.map(b => b.id === spotId ? { ...b, checkinPin: newPin } : b));
+            }}
+          />
+        )}
 
         {/* --- 8-BIT RETRO SPOT PIN ENTRY MODAL (Bartender PIN Validation) --- */}
         {pinModalSpot && (

@@ -73,6 +73,30 @@ interface ServerDonation {
   status: string;
 }
 const serverDonationsCache: ServerDonation[] = [];
+const serverMonthlyReportsCache: Record<string, any> = {};
+
+function checkMonthlyReportAutoDispatchScheduler() {
+  const now = new Date();
+  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+  
+  // Rule: Metrics begin strictly in August 2026 (2026-08)
+  if (prevMonthKey < '2026-08') return;
+
+  const isFirstDay = now.getDate() === 1;
+  const dispatchKey = `auto_dispatch_${prevMonthKey}`;
+  
+  if (isFirstDay && !serverMonthlyReportsCache[dispatchKey]) {
+    console.log(`[Hop-Map Server Scheduler] 📅 Dia 1 do mês: Envio automático das métricas do mês completo anterior (${prevMonthKey}) agendado para cobeertaste@gmail.com.`);
+    serverMonthlyReportsCache[dispatchKey] = {
+      month: prevMonthKey,
+      targetEmail: 'cobeertaste@gmail.com',
+      scheduledDate: `01/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`,
+      status: 'scheduled_or_ready',
+      timestamp: now.toISOString()
+    };
+  }
+}
 
 async function startServer() {
   const app = express();
@@ -215,6 +239,37 @@ async function startServer() {
     return res.json(serverDonationsCache);
   });
 
+  /**
+   * Endpoint: Record Monthly Report (Server Backup & Audit)
+   */
+  app.post('/api/record-monthly-report', (req: Request, res: Response) => {
+    try {
+      const report = req.body;
+      if (report && report.month) {
+        serverMonthlyReportsCache[report.month] = {
+          ...report,
+          serverReceivedAt: new Date().toISOString()
+        };
+        console.log(`[Server] Relatório mensal ${report.month} arquivado para ${report.recipientEmail || 'cobeertaste@gmail.com'}.`);
+      }
+      return res.json({ success: true, month: report?.month });
+    } catch (err: any) {
+      return res.status(400).json({ error: err.message });
+    }
+  });
+
+  /**
+   * Endpoint: Get Monthly Reports
+   */
+  app.get('/api/monthly-reports', (req: Request, res: Response) => {
+    return res.json({
+      metricsStartMonth: '2026-08',
+      officialRecipient: 'cobeertaste@gmail.com',
+      autoDispatchRule: 'Dia 1 de cada mês (métricas completas do mês anterior)',
+      reports: serverMonthlyReportsCache
+    });
+  });
+
   // Vite middleware in development vs static serving in production
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
@@ -288,6 +343,9 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Hop-Map Server running on http://0.0.0.0:${PORT}`);
+    // Check monthly report dispatch schedule
+    checkMonthlyReportAutoDispatchScheduler();
+    setInterval(checkMonthlyReportAutoDispatchScheduler, 30 * 60 * 1000); // check every 30 mins
   });
 }
 

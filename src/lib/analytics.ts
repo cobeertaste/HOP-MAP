@@ -7,11 +7,38 @@ import { collection, addDoc, doc, setDoc, getDocs, query, where, orderBy, limit 
 import { db, isFirebaseConfigured } from './firebase';
 import { AnalyticsEvent, AnalyticsEventType, MonthlyReport, SpotMonthlyMetrics, TopUserMetrics, DonationRecord, Bar } from '../types';
 import { getDonationsForMonth } from './donations';
-import { getSpotConsumedBeerStyles, fetchSpotConsumedBeerStylesForMonth, recordSpotBeerStyleConsumption } from './craftBeerStyles';
-import { getCurrentMonthKey, getMonthLabel } from './dateUtils';
-export { getCurrentMonthKey, getMonthLabel };
+import { 
+  getSpotConsumedBeerStyles, 
+  getSpotMonthlyConsumedBeerStyles,
+  fetchSpotConsumedBeerStylesForMonth, 
+  fetchAllConsumedBeerStylesForMonth, 
+  recordSpotBeerStyleConsumption 
+} from './craftBeerStyles';
+import { 
+  getCurrentMonthKey, 
+  getMonthLabel, 
+  getPreviousMonthKey, 
+  getNextMonthKey, 
+  getDispatchDateLabel, 
+  isMonthCompleted, 
+  getAvailableReportMonths, 
+  METRICS_START_MONTH 
+} from './dateUtils';
+export { 
+  getCurrentMonthKey, 
+  getMonthLabel, 
+  getPreviousMonthKey, 
+  getNextMonthKey, 
+  getDispatchDateLabel, 
+  isMonthCompleted, 
+  getAvailableReportMonths, 
+  METRICS_START_MONTH 
+};
 
 export const OFFICIAL_REPORT_EMAIL = 'cobeertaste@gmail.com';
+
+// Fast memory cache for reports to prevent high heap churn and slow re-consolidation
+const reportMemoryCache = new Map<string, { report: MonthlyReport; timestamp: number }>();
 
 /**
  * Checks if a given user email corresponds to the authorized Administrator
@@ -219,8 +246,17 @@ function incrementSpotMetricLocally(
  */
 export async function generateMonthlyReport(
   monthKey: string,
-  allSpots: Array<{ id: string; name: string }>
+  allSpots: Array<{ id: string; name: string }>,
+  forceRefresh = false
 ): Promise<MonthlyReport> {
+  // Check memory cache first for instant loading and minimal heap allocation
+  if (!forceRefresh) {
+    const memCached = reportMemoryCache.get(monthKey);
+    if (memCached && (Date.now() - memCached.timestamp < 60000)) {
+      return memCached.report;
+    }
+  }
+
   // 1. Gather all events from local buffer
   const allEvents = getLocalEvents().filter(evt => evt.month === monthKey);
 
@@ -317,9 +353,11 @@ export async function generateMonthlyReport(
   let totalShares = 0;
   let totalDirections = 0;
 
+  // 3.4. Single fast batch query for consumed styles across all spots (replaces 100+ slow sequential round-trips)
+  const batchSpotStyles = await fetchAllConsumedBeerStylesForMonth(monthKey);
+
   for (const s of spotsBreakdown) {
-    // Populate spot consumed styles from month-specific Firestore/local sync
-    const spotStyles = await fetchSpotConsumedBeerStylesForMonth(s.spotId, monthKey);
+    const spotStyles = batchSpotStyles[s.spotId] || getSpotMonthlyConsumedBeerStyles(s.spotId, monthKey) || {};
     s.consumedStyles = spotStyles;
 
     totalCheckins += s.checkins;
@@ -354,6 +392,9 @@ export async function generateMonthlyReport(
   const totalDonationsAmount = donationsBreakdown.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
   const totalDonationsCount = donationsBreakdown.length;
 
+  const dispatchDateLabel = getDispatchDateLabel(monthKey);
+  const isCompleted = isMonthCompleted(monthKey);
+
   const report: MonthlyReport = {
     id: `report_${monthKey}`,
     month: monthKey,
@@ -361,6 +402,8 @@ export async function generateMonthlyReport(
     recipientEmail: OFFICIAL_REPORT_EMAIL,
     generatedAt: new Date().toISOString(),
     status: 'generated',
+    scheduledDispatchDate: dispatchDateLabel,
+    isCompletedMonth: isCompleted,
     totalCheckins,
     totalRewards,
     totalViews,
@@ -375,7 +418,8 @@ export async function generateMonthlyReport(
     topBeerStyles
   };
 
-  // Cache report locally
+  // Cache report locally and in memory
+  reportMemoryCache.set(monthKey, { report, timestamp: Date.now() });
   saveReportLocally(report);
 
   return report;
@@ -413,9 +457,12 @@ export function getStoredReports(): MonthlyReport[] {
  * Formats the email body in plain text for mailto or standard email clients
  */
 export function formatEmailReportPlainText(report: MonthlyReport): string {
+  const dispatchDate = report.scheduledDispatchDate || getDispatchDateLabel(report.month);
   const lines: string[] = [
-    `📊 RELATÓRIO MENSAL HOP-MAP - ${report.monthLabel.toUpperCase()}`,
+    `📊 RELATÓRIO MENSAL HOP-MAP - ${report.monthLabel.toUpperCase()} (${report.month})`,
     `Destinatário Oficial: ${report.recipientEmail}`,
+    `Início das Métricas na Plataforma: Agosto de 2026 (${METRICS_START_MONTH})`,
+    `Data de Envio Automático: ${dispatchDate} (ao dia 1 do mês seguinte)`,
     `Gerado em: ${new Date(report.generatedAt).toLocaleString('pt-PT')}`,
     `Plataforma: Hop-Map by CoBeer Taste (https://www.cobeertaste.com)`,
     ``,
@@ -540,7 +587,8 @@ export function formatEmailReportHtml(report: MonthlyReport): string {
   <div class="container">
     <div class="header">
       <h1>📊 RELATÓRIO MENSAL HOP-MAP</h1>
-      <p>${report.monthLabel.toUpperCase()} • Destinatário: ${report.recipientEmail}</p>
+      <p>${report.monthLabel.toUpperCase()} • Envio Automático: ${report.scheduledDispatchDate || getDispatchDateLabel(report.month)} • Destinatário: ${report.recipientEmail}</p>
+      <p style="font-size: 11px; margin-top: 4px; opacity: 0.85;">Métricas ativas desde Agosto de 2026 • Plataforma Hop-Map by CoBeer Taste</p>
     </div>
     
     <div class="content">
@@ -719,6 +767,17 @@ export async function sendMonthlyReportEmail(report: MonthlyReport): Promise<{
     }
   }
 
+  // Backup sync to server endpoint
+  try {
+    fetch('/api/record-monthly-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedReport)
+    }).catch(() => {});
+  } catch (err) {
+    // Non-blocking
+  }
+
   return {
     success: true,
     message: `Relatório de ${report.monthLabel} preparado com sucesso para envio para ${report.recipientEmail}.`,
@@ -728,26 +787,37 @@ export async function sendMonthlyReportEmail(report: MonthlyReport): Promise<{
 
 /**
  * Automatically checks and dispatches the previous month's metrics report to cobeertaste@gmail.com on the 1st of each month.
+ * Rule: Metrics start in August 2026 (2026-08) and are sent automatically on day 1 of the following month.
+ * For example, on October 1st, the full previous month of September (2026-09) is sent to cobeertaste@gmail.com.
  */
 export async function checkAndAutoDispatchMonthlyReport(allSpots: Bar[]): Promise<MonthlyReport | null> {
   const now = new Date();
   
-  // Calculate previous month key (e.g. if now is 2026-08, prev is 2026-07)
-  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
-  const autoSentKey = `hop_monthly_report_auto_sent_${prevMonthKey}`;
+  // Calculate previous complete month key (e.g. if now is in October 2026, prev is September 2026)
+  const prevMonthKey = getPreviousMonthKey(now);
 
-  // Check if today is the 1st of the month
-  const isFirstDayOfMonth = now.getDate() === 1;
+  // Rule 1: Metrics strictly start in August 2026 ('2026-08').
+  // Months prior to 2026-08 (e.g. July 2026) have no metrics and must not be generated or dispatched.
+  if (prevMonthKey < METRICS_START_MONTH) {
+    return null;
+  }
+
+  const autoSentKey = `hop_monthly_report_auto_sent_${prevMonthKey}`;
   const alreadySent = localStorage.getItem(autoSentKey);
 
-  if (isFirstDayOfMonth && !alreadySent) {
-    console.log(`[Hop-Map Auto-Report] Dia 1 do mês detetado. A gerar e enviar relatório do mês anterior (${prevMonthKey}) para ${OFFICIAL_REPORT_EMAIL}...`);
+  // Rule 2: Sent automatically on day 1 of the following month (e.g. 1 de Outubro for Setembro metrics).
+  // Also dispatches on any subsequent day if day 1 was missed, ensuring metrics are never lost.
+  const isEligibleForDispatch = now.getDate() >= 1;
+
+  if (isEligibleForDispatch && !alreadySent) {
+    const isFirstDay = now.getDate() === 1;
+    const scheduledDateLabel = getDispatchDateLabel(prevMonthKey);
+    console.log(`[Hop-Map Auto-Report] ${isFirstDay ? 'Dia 1 do mês detetado.' : 'Mês anterior concluído detetado.'} A gerar e enviar relatório do mês completo anterior de ${getMonthLabel(prevMonthKey)} (${prevMonthKey}) para ${OFFICIAL_REPORT_EMAIL} (Agendamento: ${scheduledDateLabel})...`);
     try {
       const report = await generateMonthlyReport(prevMonthKey, allSpots);
       await sendMonthlyReportEmail(report);
       localStorage.setItem(autoSentKey, new Date().toISOString());
-      console.log(`[Hop-Map Auto-Report] ✅ Relatório mensal (${prevMonthKey}) registado e enviado para ${OFFICIAL_REPORT_EMAIL}.`);
+      console.log(`[Hop-Map Auto-Report] ✅ Relatório mensal de ${report.monthLabel} (${report.month}) enviado automaticamente com sucesso para ${OFFICIAL_REPORT_EMAIL}.`);
       return report;
     } catch (e) {
       console.error('[Hop-Map Auto-Report] Erro ao enviar relatório automático:', e);

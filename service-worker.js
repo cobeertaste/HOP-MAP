@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const STATIC_CACHE_NAME = `hop-map-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE_NAME = `hop-map-runtime-${CACHE_VERSION}`;
 const API_CACHE_NAME = `hop-map-api-${CACHE_VERSION}`;
@@ -14,6 +14,8 @@ const PRECACHE_ASSETS = [
   '/favicon.svg',
   '/favicon-96x96.png',
   '/apple-touch-icon.png',
+  '/icon-192.png',
+  '/icon-512.png',
   '/web-app-manifest-192x192.png',
   '/web-app-manifest-512x512.png',
   '/og-image.png'

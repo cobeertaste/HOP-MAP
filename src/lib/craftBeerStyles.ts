@@ -139,6 +139,60 @@ export async function fetchSpotConsumedBeerStylesForMonth(
 }
 
 /**
+ * Fast single-query batch loader for consumed beer styles across all spots for a specific month.
+ * Reduces 100+ individual round-trips into 1 single optimized read.
+ */
+export async function fetchAllConsumedBeerStylesForMonth(
+  monthKey: string
+): Promise<Record<string, Record<string, number>>> {
+  const aggregated: Record<string, Record<string, number>> = {};
+
+  // 1. Preload from local storage fast
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(`${LOCAL_STORAGE_MONTHLY_SPOT_STYLES_PREFIX}${monthKey}_`)) {
+        const spotId = key.replace(`${LOCAL_STORAGE_MONTHLY_SPOT_STYLES_PREFIX}${monthKey}_`, '');
+        const raw = localStorage.getItem(key);
+        if (raw && spotId) {
+          aggregated[spotId] = JSON.parse(raw);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Notice reading local monthly styles:', e);
+  }
+
+  // 2. Fetch all month's consumptions in ONE single query from Firestore
+  if (isFirebaseConfigured && db) {
+    try {
+      const q = query(
+        collection(db, 'spot_beer_consumptions'),
+        where('month', '==', monthKey)
+      );
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const spotId = data.spotId;
+          const style = data.beerStyle;
+          if (spotId && style) {
+            if (!aggregated[spotId]) {
+              aggregated[spotId] = {};
+            }
+            aggregated[spotId][style] = (aggregated[spotId][style] || 0) + 1;
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('[Hop-Map] Notice batch fetching Firestore beer styles:', err);
+    }
+  }
+
+  return aggregated;
+}
+
+/**
  * Records a consumed beer style at a spot in local storage buffer and Firestore
  */
 export async function recordSpotBeerStyleConsumption(

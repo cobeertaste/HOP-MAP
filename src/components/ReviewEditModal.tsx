@@ -27,17 +27,9 @@ export const ReviewEditModal: React.FC<ReviewEditModalProps> = ({
   lang,
   darkMode,
 }) => {
-  if (!isOpen || !review) return null;
-
-  const createdAtTime = review.createdAt ? new Date(review.createdAt).getTime() : Date.now();
-  const timeDifferenceHours = (Date.now() - createdAtTime) / (1000 * 60 * 60);
-  const isEditable = !review.createdAt || timeDifferenceHours <= 24;
-  const remainingHours = Math.max(0, Math.floor(24 - timeDifferenceHours));
-  const remainingMinutes = Math.max(0, Math.floor(((24 - timeDifferenceHours) % 1) * 60));
-
-  const [rating, setRating] = React.useState<number>(review.stars || 5);
-  const [comment, setComment] = React.useState<string>(review.texto_rating || '');
-  const [beerStyle, setBeerStyle] = React.useState<string>(review.tipo_cerveja || '');
+  const [rating, setRating] = React.useState<number>(review?.stars || 5);
+  const [comment, setComment] = React.useState<string>(review?.texto_rating || '');
+  const [beerStyle, setBeerStyle] = React.useState<string>(review?.tipo_cerveja || '');
   const [errorMsg, setErrorMsg] = React.useState<string>('');
 
   React.useEffect(() => {
@@ -48,6 +40,14 @@ export const ReviewEditModal: React.FC<ReviewEditModalProps> = ({
       setErrorMsg('');
     }
   }, [review]);
+
+  if (!isOpen || !review) return null;
+
+  const createdAtTime = review.createdAt ? new Date(review.createdAt).getTime() : Date.now();
+  const timeDifferenceHours = (Date.now() - createdAtTime) / (1000 * 60 * 60);
+  const isEditable = !review.createdAt || timeDifferenceHours <= 24;
+  const remainingHours = Math.max(0, Math.floor(24 - timeDifferenceHours));
+  const remainingMinutes = Math.max(0, Math.floor(((24 - timeDifferenceHours) % 1) * 60));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

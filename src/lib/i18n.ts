@@ -132,15 +132,14 @@ export const translations = {
     passwordPlaceholder: '••••••••',
     nameLabel: 'Nome do Utilizador',
     namePlaceholder: 'O teu nome ou alcunha',
-    loginButton: 'ENTRAR NO HOP-MAP 🍻',
+    loginButton: 'HOP ON',
+    newSpotDiscovered: 'NOVO LOCAL DESCOBERTO. HOP ON!',
     registerButton: 'CRIAR CONTA & RECEBER 12 HOPS 🍻',
     forgotPassword: 'Esqueceste-te da palavra-passe?',
     resetPasswordTitle: 'Recuperar Palavra-passe',
     resetPasswordDesc: 'Introduz o teu e-mail para receberes as instruções de reposição.',
     sendResetEmail: 'Enviar E-mail de Reposição',
     cancel: 'Cancelar',
-    orContinueAs: 'OU CONTINUA COMO',
-    guestMode: 'MODO CONVIDADO',
     firebaseNotConfigured: 'O Firebase não está configurado. Por favor, ativa o Firebase no ecrã do AI Studio.',
     fillRequiredFields: 'Por favor, preenche todos os campos obrigatórios.',
     passMinLength: 'A palavra-passe deve conter pelo menos 6 caracteres.',
@@ -266,7 +265,7 @@ export const translations = {
     shareSpotBtn: 'Partilhar Spot',
 
     // Social Popup Modal
-    followCobeerTaste: 'Segue Cobeer Taste! 🍻',
+    followCobeerTaste: 'Segue Cobeer Taste',
     joinCommunity: 'Junta-te à nossa comunidade e acompanha todas as novidades nas redes sociais:',
     continueHopMap: 'Continuar HOP-MAP',
 
@@ -334,15 +333,14 @@ export const translations = {
     passwordPlaceholder: '••••••••',
     nameLabel: 'Username',
     namePlaceholder: 'Your name or nickname',
-    loginButton: 'LOG IN TO HOP-MAP 🍻',
+    loginButton: 'HOP ON',
+    newSpotDiscovered: 'NEW SPOT DISCOVERED. HOP ON!',
     registerButton: 'CREATE ACCOUNT & GET 12 HOPS 🍻',
     forgotPassword: 'Forgot password?',
     resetPasswordTitle: 'Reset Password',
     resetPasswordDesc: 'Enter your email address to receive password reset instructions.',
     sendResetEmail: 'Send Reset Email',
     cancel: 'Cancel',
-    orContinueAs: 'OR CONTINUE AS',
-    guestMode: 'GUEST MODE',
     firebaseNotConfigured: 'Firebase is not configured. Please enable Firebase in AI Studio.',
     fillRequiredFields: 'Please fill in all required fields.',
     passMinLength: 'Password must be at least 6 characters.',
@@ -468,7 +466,7 @@ export const translations = {
     shareSpotBtn: 'Share Spot',
 
     // Social Popup Modal
-    followCobeerTaste: 'Follow Cobeer Taste! 🍻',
+    followCobeerTaste: 'Follow Cobeer Taste',
     joinCommunity: 'Join our community and stay updated on social media:',
     continueHopMap: 'Continue HOP-MAP',
 
