@@ -445,6 +445,17 @@ export const ALL_BADGES: Badge[] = [
     category: 'special',
     rarity: 'epic'
   },
+  {
+    id: 'beta_test_player',
+    code: 'BETA_TEST_PLAYER',
+    icon: '🚀',
+    namePt: 'BETA TEST PLAYER',
+    nameEn: 'BETA TEST PLAYER',
+    descriptionPt: 'Badge exclusivo de pioneiro! Conquistado por utilizadores que se registem e façam pelo menos um check-in até dia 31 de Dezembro de 2026. Após essa data não será mais possível conquistá-lo.',
+    descriptionEn: 'Exclusive pioneer badge! Awarded to users who register and complete at least one check-in until December 31, 2026. After this date it can no longer be acquired.',
+    category: 'special',
+    rarity: 'legendary'
+  },
 
   // 8. Festive Days & Public Holidays (Dias Festivos e Efemérides)
   {
@@ -1335,6 +1346,44 @@ export function calculateUserBadges(ctx: BadgeCalculationContext): BadgeUnlockSt
           ? (isPt ? 'Apoiante Oficial 💖' : 'Official Supporter 💖') 
           : (isPt ? '0/1 Doação' : '0/1 Donation');
         break;
+
+      case 'beta_test_player': {
+        const isRegistered = Boolean(user.isLoggedIn || (user.id && !user.id.startsWith('local-user-anon')));
+        const now = new Date();
+        // Cutoff deadline: December 31, 2026 23:59:59.999
+        const cutoffDate = new Date(2026, 11, 31, 23, 59, 59, 999);
+        const isCurrentlyBeforeCutoff = now.getTime() <= cutoffDate.getTime();
+
+        // Check if user has at least one check-in recorded on or before December 31, 2026
+        const hasCheckinBeforeCutoff = totalCheckinsCount >= 1 && (
+          isCurrentlyBeforeCutoff ||
+          (user.earnedBadges && user.earnedBadges.includes('beta_test_player')) ||
+          allParsedDates.some(d => d.year < 2026 || (d.year === 2026 && (d.month < 12 || (d.month === 12 && d.day <= 31)))) ||
+          history.some(h => {
+            const dateStr = h.date || (h.timestamp ? new Date(h.timestamp).toISOString().split('T')[0] : '');
+            return dateStr && dateStr <= '2026-12-31';
+          })
+        );
+
+        unlocked = isRegistered && hasCheckinBeforeCutoff;
+
+        if (unlocked) {
+          progressPercent = 100;
+          progressText = isPt ? 'Conquistado! 🚀 (Pioneiro 2026)' : 'Unlocked! 🚀 (Pioneer 2026)';
+        } else if (isCurrentlyBeforeCutoff) {
+          if (!isRegistered) {
+            progressPercent = 0;
+            progressText = isPt ? 'Regista-te e faz 1 check-in até 31/12/2026' : 'Register & do 1 check-in until Dec 31, 2026';
+          } else {
+            progressPercent = 0;
+            progressText = isPt ? 'Efetua 1 check-in até 31/12/2026 (0/1)' : 'Complete 1 check-in until Dec 31, 2026 (0/1)';
+          }
+        } else {
+          progressPercent = 0;
+          progressText = isPt ? 'Expirado a 31 de Dezembro de 2026 🔒' : 'Expired on December 31, 2026 🔒';
+        }
+        break;
+      }
 
       // Festive Days & Public Holidays
       case 'holiday_new_year':

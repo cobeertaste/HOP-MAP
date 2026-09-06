@@ -1574,8 +1574,10 @@ export default function App() {
     }
 
     // Identify newly unlocked badges
+    let foundNewBadge: Badge | null = null;
     for (const badge of unlockedBadges) {
       if (!prevUnlockedBadgeIdsRef.current.has(badge.id)) {
+        foundNewBadge = badge;
         setNewlyUnlockedBadge(badge);
         triggerSelfPush(
           lang === 'PT' ? '🏆 Novo Badge Desbloqueado!' : '🏆 New Badge Unlocked!',
@@ -1586,8 +1588,21 @@ export default function App() {
       }
     }
 
+    if (foundNewBadge) {
+      const allUnlockedIds = Array.from(currentUnlockedIds);
+      setUser(prev => ({
+        ...prev,
+        earnedBadges: allUnlockedIds
+      }));
+      if (!isLocalAuthFallback && auth.currentUser) {
+        setDoc(doc(db, 'users', user.id), { earnedBadges: allUnlockedIds }, { merge: true }).catch(err => {
+          console.warn('Could not persist earnedBadges to Firestore:', err);
+        });
+      }
+    }
+
     prevUnlockedBadgeIdsRef.current = currentUnlockedIds;
-  }, [unlockedBadges, lang]);
+  }, [unlockedBadges, lang, user.id, isLocalAuthFallback]);
 
   // Dynamic Real-time User Search for Registered Users
   useEffect(() => {
@@ -2870,8 +2885,8 @@ export default function App() {
             triggerSelfPush(
               lang === 'PT' ? 'Fora do Raio de Check-in (100m)! 📍' : 'Outside Check-in Range (100m)! 📍',
               lang === 'PT'
-                ? `Estás a ${Math.round(exactDistance)} metros deste spot. Para validares o check-in e consumo com o PIN do barman deves encontrar-te a menos de 100 metros.`
-                : `You are ${Math.round(exactDistance)} meters away. You must be within 100 meters of the spot to validate with bartender PIN.`,
+                ? `Estás a ${Math.round(exactDistance)} metros deste spot. Para efetuares check-in deves encontrar-te a menos de 100 metros do local.`
+                : `You are ${Math.round(exactDistance)} meters away. You must be within 100 meters of the spot to check in.`,
               'system'
             );
             return;
@@ -2881,19 +2896,20 @@ export default function App() {
           setAnimatingCheckinBarId(bar.id);
           setTimeout(() => setAnimatingCheckinBarId(null), 1500);
 
-          // Open the 8-Bit Retro PIN Keypad Modal!
-          setPinModalSpot(bar);
+          // NOTE: Bartender PIN entry is suspended until further notice.
+          // Directly complete check-in since user is verified within the 100-meter radius!
+          executeCheckinSuccess(bar);
         },
         (error) => {
           let errorMsg = `Não foi possível obter a tua localização do GPS: ${error.message}`;
           if (error.code === error.PERMISSION_DENIED) {
             errorMsg = lang === 'PT' 
-              ? 'Para fazeres check-in com validação por PIN, ativa o GPS nas definições do teu dispositivo/navegador.'
-              : 'To check in with PIN validation, please enable GPS in your device/browser settings.';
+              ? 'Para fazeres check-in, ativa o GPS nas definições do teu dispositivo/navegador para validar a distância máxima de 100 metros.'
+              : 'To check in, please enable GPS in your device/browser settings to confirm you are within 100 meters of the spot.';
           } else if (error.code === error.POSITION_UNAVAILABLE) {
             errorMsg = lang === 'PT'
-              ? 'A informação do GPS está indisponível de momento. Tenta novamente num local com céu aberto.'
-              : 'GPS information is currently unavailable. Try again in an open area.';
+              ? 'A informação do GPS está indisponível de momento. Tenta novamente num local com boa cobertura de sinal.'
+              : 'GPS information is currently unavailable. Try again in an open area with good reception.';
           } else if (error.code === error.TIMEOUT) {
             errorMsg = lang === 'PT'
               ? 'O tempo limite do GPS expirou. Tenta novamente.'
@@ -2908,13 +2924,18 @@ export default function App() {
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
-      // Fallback open PIN modal if navigator geolocation is not available
-      setPinModalSpot(bar);
+      triggerSelfPush(
+        lang === 'PT' ? 'GPS Não Suportado ❌' : 'GPS Not Supported ❌',
+        lang === 'PT'
+          ? 'O teu navegador não suporta geolocalização. É necessária localização GPS a menos de 100 metros para efetuar check-in.'
+          : 'Your browser does not support geolocation. GPS location within 100 meters is required to check in.',
+        'system'
+      );
     }
   };
 
-  // Callback after bartender/staff enters valid 4-digit PIN in RetroPinModal
-  const handlePinCheckinSuccess = async (bar: Bar, enteredPin: string) => {
+  // Execution after GPS distance <= 100m is verified (PIN prompt suspended until further notice)
+  const executeCheckinSuccess = async (bar: Bar) => {
     const todayLocal = new Date();
     const year = todayLocal.getFullYear();
     const month = String(todayLocal.getMonth() + 1).padStart(2, '0');
@@ -2934,13 +2955,13 @@ export default function App() {
     const isTenthStamp = nextStamps >= 10;
     
     let alertMsg = lang === 'PT'
-      ? `Check-in com PIN validado! Ganhaste +1 ponto HOP e +1 selo no spot ${bar.name}.`
-      : `PIN check-in validated! You earned +1 HOP point and +1 stamp at ${bar.name}.`;
+      ? `Check-in efetuado com sucesso! Ganhaste +1 ponto HOP e +1 selo no spot ${bar.name}.`
+      : `Check-in successful! You earned +1 HOP point and +1 stamp at ${bar.name}.`;
 
     if (isTenthStamp) {
       alertMsg = lang === 'PT'
-        ? `Check-in com PIN efetuado! Conquistaste os 10 check-ins no spot ${bar.name}! Spot concluído com distinção! 🏆`
-        : `PIN check-in validated! You completed all 10 check-ins at ${bar.name}! Spot conquered with distinction! 🏆`;
+        ? `Check-in efetuado! Conquistaste os 10 check-ins no spot ${bar.name}! Spot concluído com distinção! 🏆`
+        : `Check-in complete! You completed all 10 check-ins at ${bar.name}! Spot conquered with distinction! 🏆`;
     }
 
     // 1. Record in Firestore 'checkins' collection for audit and 24h lockout
@@ -3065,7 +3086,7 @@ export default function App() {
       id: `toast_${Date.now()}`,
       title: isFirstCheckinAtSpot
         ? firstCheckinText
-        : (lang === 'PT' ? 'Check-in com PIN Confirmado' : 'PIN Check-in Confirmed'),
+        : (lang === 'PT' ? 'Check-in Confirmado' : 'Check-in Confirmed'),
       barName: bar.name,
       pointsEarned: 1,
       subtitle: isFirstCheckinAtSpot
@@ -3113,6 +3134,11 @@ export default function App() {
         website: 'www.cobeertaste.com'
       });
     }
+  };
+
+  // Backwards compatibility alias for RetroPinModal or external triggers
+  const handlePinCheckinSuccess = async (bar: Bar, _enteredPin?: string) => {
+    await executeCheckinSuccess(bar);
   };
 
   // Determine current simulated city name based on userLocation
