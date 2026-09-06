@@ -283,6 +283,12 @@ export const translations = {
     shareCheckinSettingTitle: 'Partilha de Check-in com Amigos',
     shareCheckinSettingDesc: 'Notificar os amigos da tua Lista de Amigos quando fizeres check-in num spot ou festival.',
     friendCheckinNotifTitle: 'Check-in de Amigo 🍻',
+    socialActivityTitle: 'ATIVIDADE SOCIAL',
+    socialActivitySubtitle: 'Últimas 10 ações dos teus amigos',
+    viewSpot: 'Ver Spot',
+    viewFriendProfile: 'Ver Perfil',
+    checkedInAt: 'fez check-in no',
+    earnedBadge: 'conquistou o badge',
 
     // 8-Bit PIN Check-in Validation Modal
     pinModalTitle: 'VALIDAÇÃO DE CONSUMO',
@@ -484,6 +490,12 @@ export const translations = {
     shareCheckinSettingTitle: 'Share Check-in with Friends',
     shareCheckinSettingDesc: 'Notify friends on your Friend List when you check in at any spot or festival.',
     friendCheckinNotifTitle: 'Friend Check-in 🍻',
+    socialActivityTitle: 'SOCIAL ACTIVITY',
+    socialActivitySubtitle: "Your friends' last 10 actions",
+    viewSpot: 'View Spot',
+    viewFriendProfile: 'View Profile',
+    checkedInAt: 'checked in at',
+    earnedBadge: 'earned the badge',
 
     // 8-Bit PIN Check-in Validation Modal
     pinModalTitle: 'CONSUMPTION VALIDATION',

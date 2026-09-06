@@ -41,6 +41,7 @@
 }
 
 :root {
+  --app-height: 100vh;
   --app-height: 100dvh;
   --touch-target-min: 44px;
   --cream: #F6EFDC;
@@ -55,7 +56,8 @@
 
 html, body, #root {
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
   min-height: 100dvh;
   max-width: 100vw;
@@ -63,6 +65,23 @@ html, body, #root {
   padding: 0;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+/* Dynamic Viewport Height with 100vh fallback for older browsers */
+.full-screen-container,
+.app-screen-container {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+}
+
+/* Safe area padding for bottom fixed navigation */
+.bottom-nav-safe {
+  height: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 body {

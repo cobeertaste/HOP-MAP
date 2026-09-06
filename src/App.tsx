@@ -26,7 +26,7 @@ import { getActiveSpecialEvent } from './utils/specialEvents';
 
 import { BARS_DATA, EVENTS_DATA, getReviewsForBar } from './data';
 import { getBarGoogleMapsUrl } from './maps_utils';
-import { Bar, BeerEvent, UserProfile, BarZone, HopNotification, Review } from './types';
+import { Bar, BeerEvent, UserProfile, BarZone, HopNotification, Review, FriendSocialActivity } from './types';
 import AppleDeviceFrame from './components/AppleDeviceFrame';
 import BiometricsConfirm from './components/BiometricsConfirm';
 import ApplePaySheet from './components/ApplePaySheet';
@@ -44,6 +44,8 @@ import { UserSearchComponent } from './components/UserSearchComponent';
 import { ReviewEditModal } from './components/ReviewEditModal';
 import { BadgesModal } from './components/BadgesModal';
 import { BadgeUnlockedToast } from './components/BadgeUnlockedToast';
+import { FriendProfileModal } from './components/FriendProfileModal';
+import { SocialActivitySection } from './components/SocialActivitySection';
 import { ALL_BADGES, calculateUserBadges, getUserRankingStyling, BadgeUnlockStatus } from './lib/badges';
 import { Badge } from './types';
 import { recordDonation } from './lib/donations';
@@ -663,6 +665,12 @@ export default function App() {
       if (cachedNotif !== null) savedNotificationsEnabled = cachedNotif === 'true';
     } catch (e) {}
 
+    let savedFriends: string[] = ['mock_1', 'mock_2'];
+    try {
+      const cachedFriends = localStorage.getItem('hop_user_1_friends');
+      if (cachedFriends) savedFriends = JSON.parse(cachedFriends);
+    } catch (e) {}
+
     return {
       id: 'user_1',
       email: 'e-mail', // Metada User Email
@@ -672,7 +680,7 @@ export default function App() {
       level: initialLevelInfo.title,
       stamps: savedStamps,
       favorites: ['catraio'],
-      friends: [],
+      friends: savedFriends,
       purchasedEventTickets: [],
       biometricsEnabled: true,
       isLoggedIn: false,
@@ -1115,6 +1123,17 @@ export default function App() {
   const [pendingRequests, setPendingRequests] = useState<{ id: string; senderId: string; senderName: string; senderPoints: number }[]>([]);
   const [sentPendingRequests, setSentPendingRequests] = useState<string[]>([]);
 
+  // Friend Profile Modal & Social Activity State
+  const [selectedFriendProfile, setSelectedFriendProfile] = useState<{ id: string; username: string; points: number } | null>(null);
+  const [realtimeSocialActivities, setRealtimeSocialActivities] = useState<FriendSocialActivity[]>(() => {
+    try {
+      const cached = localStorage.getItem('hop_recent_social_activities');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   const [globalScores, setGlobalScores] = useState<{ id: string; username: string; points: number; isFriend?: boolean }[]>([]);
   const [isScoresLoading, setIsScoresLoading] = useState(false);
 
@@ -1378,6 +1397,7 @@ export default function App() {
 
         const seenSet = new Set(seenIds);
         const newNotifs: HopNotification[] = [];
+        const freshActivities: FriendSocialActivity[] = [];
 
         querySnapshot.forEach((docSnap) => {
           const notifId = docSnap.id;
@@ -1403,6 +1423,18 @@ export default function App() {
                 type: 'system'
               };
               newNotifs.push(freshPush);
+
+              freshActivities.push({
+                id: `social_checkin_${notifId}`,
+                friendId: data.senderId,
+                friendUsername: data.senderName || 'Amigo',
+                type: 'checkin',
+                spotName: data.locationName,
+                spotId: data.spotId || data.locationId,
+                timestamp: data.createdAt ? new Date(data.createdAt).getTime() : Date.now(),
+                relativeTimePt: lang === 'PT' ? 'Agora mesmo' : 'Just now',
+                relativeTimeEn: 'Just now'
+              });
             }
           }
         });
@@ -1411,6 +1443,17 @@ export default function App() {
           localStorage.setItem(cacheKey, JSON.stringify(Array.from(seenSet)));
           setNotifications(prev => [...newNotifs, ...prev]);
           setActivePush(newNotifs[0]);
+        }
+
+        if (freshActivities.length > 0 && active) {
+          setRealtimeSocialActivities(prev => {
+            const merged = [...freshActivities, ...prev];
+            const unique = Array.from(new Map(merged.map(item => [item.id, item])).values()).slice(0, 30);
+            try {
+              localStorage.setItem('hop_recent_social_activities', JSON.stringify(unique));
+            } catch (e) {}
+            return unique;
+          });
         }
       } catch (err) {
         console.warn("Could not fetch friend check-in notifications:", err);
@@ -1801,6 +1844,9 @@ export default function App() {
         ...prev,
         friends: updatedFriends
       }));
+      try {
+        localStorage.setItem('hop_user_1_friends', JSON.stringify(updatedFriends));
+      } catch (e) {}
       triggerSelfPush(
         'Amigo Adicionado (Local)! 🍻',
         `Adicionaste ${friendUsername} à tua lista local de amigos!`,
@@ -1868,6 +1914,9 @@ export default function App() {
       ...prev,
       friends: updatedFriends
     }));
+    try {
+      localStorage.setItem('hop_user_1_friends', JSON.stringify(updatedFriends));
+    } catch (e) {}
 
     if (user.isLoggedIn && !user.id.startsWith('local-user-')) {
       try {
@@ -4185,7 +4234,14 @@ export default function App() {
             </p>
           </motion.div>
         ) : (
-          <main ref={mainScrollRef} onScroll={handleMainScroll} className={`flex-1 ${activeTab === 'map' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto pb-4'} z-10 select-none relative min-h-0`}>
+          <main 
+            ref={mainScrollRef} 
+            onScroll={handleMainScroll} 
+            className={`flex-1 ${activeTab === 'map' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'} z-10 select-none relative min-h-0`}
+            style={{
+              paddingBottom: activeTab === 'map' ? undefined : 'calc(4rem + env(safe-area-inset-bottom, 0px))'
+            }}
+          >
           <AnimatePresence mode="wait">
             
             {/* VIEW A: EXPLORE LIST */}
@@ -5947,20 +6003,25 @@ export default function App() {
                                   key={friend.id} 
                                   className="flex items-center justify-between p-2 rounded-xl border border-zinc-700 bg-[#EFE6CC]"
                                 >
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-lg select-none">{details.badge}</span>
-                                    <div className="text-left">
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedFriendProfile(friend)}
+                                    className="flex items-center space-x-2 text-left hover:opacity-85 transition cursor-pointer flex-1 min-w-0"
+                                    title={lang === 'PT' ? `Ver perfil de ${friend.username}` : `View ${friend.username}'s profile`}
+                                  >
+                                    <span className="text-lg select-none shrink-0">{details.badge}</span>
+                                    <div className="text-left min-w-0">
                                       <div className="flex items-center gap-1">
-                                        <span className="text-[10px] font-black text-black">{friend.username}</span>
+                                        <span className="text-[10px] font-black text-black hover:underline truncate">{friend.username}</span>
                                         <span className="text-[8px] font-mono text-amber-600 font-bold">({friend.points} HOPS)</span>
                                       </div>
-                                      <div className="text-[8px] text-zinc-600 font-sans italic">"{details.title}"</div>
+                                      <div className="text-[8px] text-zinc-600 font-sans italic truncate">"{details.title}"</div>
                                     </div>
-                                  </div>
+                                  </button>
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveFriend(friend.id, friend.username)}
-                                    className="flex items-center gap-1.5 px-2.5 py-1 text-[8px] font-black text-red-600 hover:text-white hover:bg-red-500/20 rounded-lg border border-zinc-700 transition active:scale-95 cursor-pointer"
+                                    className="flex items-center gap-1.5 px-2.5 py-1 text-[8px] font-black text-red-600 hover:text-white hover:bg-red-500/20 rounded-lg border border-zinc-700 transition active:scale-95 cursor-pointer shrink-0 ml-2"
                                     title="Remover Amigo"
                                   >
                                     <X className="w-2.5 h-2.5 font-bold" />
@@ -5986,6 +6047,25 @@ export default function App() {
                       </>
                     )}
                   </div>
+                </div>
+
+                {/* 2.5 Dedicated Friends Social Activity Section (Last 10 Actions) */}
+                <div className="p-3.5 sm:p-4 rounded-2xl border-2 border-zinc-700 bg-[#FAF6EB] shadow-[3px_3px_0px_#1B2036]">
+                  <SocialActivitySection
+                    friends={friendsDetails}
+                    bars={bars}
+                    lang={lang}
+                    onSelectSpot={(spot) => {
+                      handleSelectBar(spot);
+                    }}
+                    onViewFriendProfile={(friend) => {
+                      setSelectedFriendProfile(friend);
+                    }}
+                    onAddSuggestedFriend={(id, username) => {
+                      handleAddFriend(id, username);
+                    }}
+                    realtimeActivities={realtimeSocialActivities}
+                  />
                 </div>
 
                 {/* Histórico de Check-ins (Máximo 5 itens) */}
@@ -7265,7 +7345,7 @@ export default function App() {
         {/* --- BOTTOM INTERACTIVE TAB NAVIGATION --- */}
         {user.isLoggedIn && (
           <nav 
-            className="border-t-2 border-[#1B2036] bg-[#F6EFDC] shrink-0 sticky bottom-0 flex items-center justify-around px-1 sm:px-3 z-[160] select-none w-full max-w-full overflow-hidden landscape-compact-nav"
+            className="border-t-2 border-[#1B2036] bg-[#F6EFDC] shrink-0 sticky bottom-0 flex items-center justify-around px-1 sm:px-3 z-[160] select-none w-full max-w-full overflow-hidden landscape-compact-nav bottom-nav-safe"
             style={{
               height: 'calc(3.75rem + env(safe-area-inset-bottom, 0px))',
               paddingBottom: 'env(safe-area-inset-bottom, 0px)'
@@ -8439,6 +8519,25 @@ export default function App() {
           onClose={() => setNewlyUnlockedBadge(null)}
           lang={lang}
         />
+
+        {/* --- FRIEND PROFILE MODAL --- */}
+        {selectedFriendProfile && (
+          <FriendProfileModal
+            isOpen={Boolean(selectedFriendProfile)}
+            onClose={() => setSelectedFriendProfile(null)}
+            friend={selectedFriendProfile}
+            bars={bars}
+            lang={lang}
+            onSelectSpot={(spot) => {
+              setSelectedFriendProfile(null);
+              handleSelectBar(spot);
+            }}
+            onRemoveFriend={(friendId, friendUsername) => {
+              handleRemoveFriend(friendId, friendUsername);
+            }}
+            isFriend={(user.friends || []).includes(selectedFriendProfile.id)}
+          />
+        )}
 
         {/* --- DELETE ACCOUNT CONFIRMATION MODAL --- */}
         <AnimatePresence>

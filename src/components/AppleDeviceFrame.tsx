@@ -28,7 +28,7 @@ export default function AppleDeviceFrame({ children, darkMode, setDarkMode }: Ap
   }, []);
 
   return (
-    <div className="fixed inset-0 w-full h-full min-h-screen min-h-[100dvh] h-[100dvh] max-w-full flex flex-col bg-[#F6EFDC] text-[#1B2036] overflow-hidden select-none font-sans">
+    <div className="fixed inset-0 w-full max-w-full flex flex-col bg-[#F6EFDC] text-[#1B2036] overflow-hidden select-none font-sans app-screen-container">
       {/* Main Full Screen Container */}
       <div className="relative w-full h-full flex flex-col overflow-hidden bg-[#F6EFDC] min-h-0 flex-1">
         {/* Content Wrapper inside Screen */}

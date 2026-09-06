@@ -206,6 +206,27 @@ export interface UserProfile {
   user_language?: 'PT' | 'EN';
 }
 
+export interface FriendSocialActivity {
+  id: string;
+  friendId: string;
+  friendUsername: string;
+  friendPoints?: number;
+  friendAvatar?: string;
+  type: 'checkin' | 'badge' | 'rating';
+  spotId?: string;
+  spotName?: string;
+  spotZone?: string;
+  beerStyle?: string;
+  badgeId?: string;
+  badgeName?: string;
+  badgeIcon?: string;
+  badgeRarity?: 'common' | 'rare' | 'epic' | 'legendary';
+  stars?: number;
+  timestamp: number;
+  relativeTimePt: string;
+  relativeTimeEn: string;
+}
+
 export interface HopNotification {
   id: string;
   title: string;
