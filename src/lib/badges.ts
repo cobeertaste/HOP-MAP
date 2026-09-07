@@ -456,6 +456,17 @@ export const ALL_BADGES: Badge[] = [
     category: 'special',
     rarity: 'legendary'
   },
+  {
+    id: 'pioneer_referral',
+    code: 'PIONEER_REFERRAL',
+    icon: '🤝',
+    namePt: 'Embaixador HOP MAP',
+    nameEn: 'HOP MAP Ambassador',
+    descriptionPt: 'Badge de Embaixador! Atribuído a utilizadores que recomendem o HOP-MAP a um amigo e este complete o seu primeiro check-in.',
+    descriptionEn: 'Ambassador Badge! Awarded to users who recommend HOP-MAP to a friend and they complete their first check-in.',
+    category: 'community',
+    rarity: 'epic'
+  },
 
   // 8. Festive Days & Public Holidays (Dias Festivos e Efemérides)
   {
@@ -1382,6 +1393,20 @@ export function calculateUserBadges(ctx: BadgeCalculationContext): BadgeUnlockSt
           progressPercent = 0;
           progressText = isPt ? 'Expirado a 31 de Dezembro de 2026 🔒' : 'Expired on December 31, 2026 🔒';
         }
+        break;
+      }
+
+      case 'pioneer_referral': {
+        const hasReferralBadge = Boolean(
+          (user.earnedBadges && user.earnedBadges.includes('pioneer_referral')) ||
+          (user.customBadges && user.customBadges.some(b => (typeof b === 'string' ? b === 'pioneer_referral' : b.id === 'pioneer_referral'))) ||
+          ((user as any).badges && (user as any).badges.some((b: any) => (typeof b === 'string' ? b === 'pioneer_referral' : b.id === 'pioneer_referral')))
+        );
+        unlocked = hasReferralBadge;
+        progressPercent = unlocked ? 100 : 0;
+        progressText = unlocked
+          ? (isPt ? 'Embaixador Oficial 🤝' : 'Official Ambassador 🤝')
+          : (isPt ? 'Convida 1 amigo com check-in (0/1)' : 'Invite 1 friend who checks in (0/1)');
         break;
       }
 

@@ -199,6 +199,10 @@ export interface UserProfile {
   checkinHistory?: Array<{ id: string; barId: string; barName: string; location: string; date: string; timestamp?: string; beerStyle?: string }>;
   checkedInFestivals?: string[]; // festivalId[]
   earnedBadges?: string[]; // badge ids
+  badges?: Array<{ id: string; unlockedAt?: any } | string>; // rich badge records
+  customBadges?: Array<{ id: string; unlockedAt?: any } | string>;
+  referredBy?: string; // UID of user who referred this user
+  hasCompletedFirstCheckin?: boolean; // tracks whether first checkin has been completed for referral badge attribution
   donationsCount?: number;
   reviewsCount?: number;
   shareCheckinsEnabled?: boolean;

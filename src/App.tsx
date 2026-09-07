@@ -46,6 +46,7 @@ import { BadgesModal } from './components/BadgesModal';
 import { BadgeUnlockedToast } from './components/BadgeUnlockedToast';
 import { FriendProfileModal } from './components/FriendProfileModal';
 import { SocialActivitySection } from './components/SocialActivitySection';
+import { ReferralInviteCard } from './components/ReferralInviteCard';
 import { ALL_BADGES, calculateUserBadges, getUserRankingStyling, BadgeUnlockStatus } from './lib/badges';
 import { Badge } from './types';
 import { recordDonation } from './lib/donations';
@@ -86,7 +87,7 @@ import {
   sendPasswordResetEmail,
   deleteUser
 } from 'firebase/auth';
-import { doc, setDoc, deleteDoc, collection, addDoc, getDocs, getDoc, query, orderBy, where, limit, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, deleteDoc, collection, addDoc, getDocs, getDoc, query, orderBy, where, limit, onSnapshot, serverTimestamp, arrayUnion } from 'firebase/firestore';
 
 // Deterministic particle templates for visual check-in burst animation
 enum OperationType {
@@ -889,6 +890,21 @@ export default function App() {
       console.warn('URL donation query handler note:', e);
     }
   }, [lang]);
+
+  // Capture referral code 'ref' from URL query params (e.g. ?ref={userID}) and save to pendingRef
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const refParam = urlParams.get('ref');
+      if (refParam && refParam.trim()) {
+        const cleanRef = refParam.trim();
+        localStorage.setItem('pendingRef', cleanRef);
+        console.log('HOP-MAP: Captured referral code in pendingRef:', cleanRef);
+      }
+    } catch (e) {
+      console.warn('HOP-MAP: Error reading referral query param:', e);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -2348,6 +2364,11 @@ export default function App() {
         }
 
         let savedShareCheckins = true;
+        let savedEarnedBadges: string[] = [];
+        let savedBadges: any[] = [];
+        let savedReferredBy: string | undefined = undefined;
+        let savedHasCompletedFirstCheckin = localStorage.getItem(cacheKeyPrefix + 'hasCompletedFirstCheckin') === 'true';
+
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
           const userDocSnap = await getDoc(userDocRef);
@@ -2370,6 +2391,19 @@ export default function App() {
               savedCheckinHistory = data.checkinHistory;
               localStorage.setItem(cacheKeyPrefix + 'checkinHistory', JSON.stringify(savedCheckinHistory));
             }
+            if (Array.isArray(data.earnedBadges)) {
+              savedEarnedBadges = data.earnedBadges;
+            }
+            if (Array.isArray(data.badges)) {
+              savedBadges = data.badges;
+            }
+            if (data.referredBy) {
+              savedReferredBy = data.referredBy;
+            }
+            if (typeof data.hasCompletedFirstCheckin === 'boolean') {
+              savedHasCompletedFirstCheckin = data.hasCompletedFirstCheckin;
+            }
+
             if (data.user_language === 'PT' || data.user_language === 'EN') {
               userLangVal = data.user_language as Language;
               setLang(userLangVal);
@@ -2382,9 +2416,13 @@ export default function App() {
             localStorage.setItem(cacheKeyPrefix + 'friends', JSON.stringify(savedFriends));
             localStorage.setItem(cacheKeyPrefix + 'checkedInFestivals', JSON.stringify(savedFestivals));
             localStorage.setItem(cacheKeyPrefix + 'shareCheckinsEnabled', String(savedShareCheckins));
+            if (savedHasCompletedFirstCheckin) {
+              localStorage.setItem(cacheKeyPrefix + 'hasCompletedFirstCheckin', 'true');
+            }
           } else {
             // Document doesn't exist, create it with initial points of 0
-            await setDoc(userDocRef, {
+            const pendingRef = localStorage.getItem('pendingRef');
+            const initialUserData: any = {
               uid: firebaseUser.uid,
               email: firebaseUser.email || '',
               username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'utilizador',
@@ -2394,8 +2432,13 @@ export default function App() {
               checkedInFestivals: savedFestivals,
               shareCheckinsEnabled: savedShareCheckins,
               user_language: userLangVal,
+              hasCompletedFirstCheckin: false,
               createdAt: new Date().toISOString()
-            }, { merge: true });
+            };
+            if (pendingRef && pendingRef.trim() && pendingRef.trim() !== firebaseUser.uid) {
+              initialUserData.referredBy = pendingRef.trim();
+            }
+            await setDoc(userDocRef, initialUserData, { merge: true });
           }
         } catch (err) {
           if (isPermissionError(err)) {
@@ -2419,6 +2462,10 @@ export default function App() {
           checkinHistory: savedCheckinHistory,
           shareCheckinsEnabled: savedShareCheckins,
           user_language: userLangVal,
+          earnedBadges: savedEarnedBadges.length > 0 ? savedEarnedBadges : prev.earnedBadges,
+          badges: savedBadges.length > 0 ? savedBadges : prev.badges,
+          referredBy: savedReferredBy || prev.referredBy,
+          hasCompletedFirstCheckin: savedHasCompletedFirstCheckin || prev.hasCompletedFirstCheckin,
           isLoggedIn: true
         }));
       } else {
@@ -2945,8 +2992,15 @@ export default function App() {
           setAnimatingCheckinBarId(bar.id);
           setTimeout(() => setAnimatingCheckinBarId(null), 1500);
 
-          // NOTE: Bartender PIN entry is suspended until further notice.
-          // Directly complete check-in since user is verified within the 100-meter radius!
+          // Check-in validation: direct check-in up to December 31, 2026;
+          // check-in + 4-digit PIN verification from January 1, 2027 onwards
+          const checkinNow = new Date();
+          const isAfter2026 = checkinNow >= new Date(2027, 0, 1);
+          if (isAfter2026) {
+            setPinModalSpot(bar);
+            return;
+          }
+
           executeCheckinSuccess(bar);
         },
         (error) => {
@@ -2980,6 +3034,78 @@ export default function App() {
           : 'Your browser does not support geolocation. GPS location within 100 meters is required to check in.',
         'system'
       );
+    }
+  };
+
+  // Referral System: Process first check-in badge attribution to Referrer (User A)
+  const processReferralFirstCheckin = async () => {
+    // Check if user has already completed first check-in
+    const alreadyCompleted = user.hasCompletedFirstCheckin === true ||
+      localStorage.getItem(`hop_user_${user.id}_hasCompletedFirstCheckin`) === 'true';
+
+    // Retrieve referrer ID from user document or pendingRef
+    const referrerId = user.referredBy || localStorage.getItem('pendingRef') || null;
+
+    if (!alreadyCompleted && referrerId && referrerId !== user.id) {
+      console.log(`[Referral System] First check-in! Attributing "Embaixador HOP MAP" badge to referrer: ${referrerId}`);
+      try {
+        // 1. Award badge to User A in Firestore users collection
+        if (db) {
+          const referrerRef = doc(db, 'users', referrerId);
+          await setDoc(referrerRef, {
+            badges: arrayUnion({ id: 'pioneer_referral', unlockedAt: new Date().toISOString() }),
+            earnedBadges: arrayUnion('pioneer_referral')
+          }, { merge: true });
+
+          // Send notification to User A
+          try {
+            await addDoc(collection(db, 'notifications'), {
+              recipientId: referrerId,
+              title: lang === 'PT' ? '🏆 Novo Badge: Embaixador HOP MAP!' : '🏆 New Badge: HOP MAP Ambassador!',
+              titleEn: '🏆 New Badge: HOP MAP Ambassador!',
+              body: lang === 'PT'
+                ? `O amigo que convidaste (${user.username || 'Amigo'}) realizou o seu 1.º check-in! Desbloqueaste a medalha de Embaixador HOP MAP.`
+                : `The friend you invited (${user.username || 'Friend'}) completed their 1st check-in! You unlocked the HOP MAP Ambassador badge.`,
+              bodyEn: `The friend you invited (${user.username || 'Friend'}) completed their 1st check-in! You unlocked the HOP MAP Ambassador badge.`,
+              type: 'reward',
+              isRead: false,
+              timestamp: new Date().toISOString(),
+              createdAt: serverTimestamp()
+            });
+          } catch (nErr) {
+            console.warn('Notice sending notification to referrer:', nErr);
+          }
+        }
+
+        // 2. Mark User B as having completed first check-in in Firestore
+        if (!isLocalAuthFallback && auth.currentUser) {
+          await setDoc(doc(db, 'users', user.id), {
+            hasCompletedFirstCheckin: true
+          }, { merge: true });
+        }
+
+        // 3. Update local state and localStorage for User B
+        setUser(prev => ({
+          ...prev,
+          hasCompletedFirstCheckin: true
+        }));
+        localStorage.setItem(`hop_user_${user.id}_hasCompletedFirstCheckin`, 'true');
+        localStorage.removeItem('pendingRef');
+        console.log('[Referral System] Successfully completed first check-in referral attribution.');
+      } catch (refErr) {
+        console.warn('Error during referral first check-in processing:', refErr);
+      }
+    } else if (!alreadyCompleted) {
+      if (!isLocalAuthFallback && auth.currentUser) {
+        setDoc(doc(db, 'users', user.id), {
+          hasCompletedFirstCheckin: true
+        }, { merge: true }).catch(err => console.warn('Could not update hasCompletedFirstCheckin:', err));
+      }
+      setUser(prev => ({
+        ...prev,
+        hasCompletedFirstCheckin: true
+      }));
+      localStorage.setItem(`hop_user_${user.id}_hasCompletedFirstCheckin`, 'true');
     }
   };
 
@@ -3040,6 +3166,9 @@ export default function App() {
         console.error('Error updating user points in Firestore:', uerr);
       }
     }
+
+    // 2.1 Process referral attribution on first check-in
+    await processReferralFirstCheckin();
 
     // 3. Save/Increment spot's TAPS & totalCheckins in Firestore and update state
     const currentBarTaps = bar.taps || getDeterministicBaseTaps(bar.id);
@@ -3338,6 +3467,9 @@ export default function App() {
         console.warn("Could not sync festival check-in to Firestore:", err);
       }
     }
+
+    // Process referral attribution on first festival check-in
+    await processReferralFirstCheckin();
   };
 
   // Adding Custom Review
@@ -4096,15 +4228,21 @@ export default function App() {
                       if (userCredential.user) {
                         await updateProfile(userCredential.user, { displayName: displayNameVal });
                         
-                        // Add newly registered user to firestore collection 'users' with user_language preference
+                        // Add newly registered user to firestore collection 'users' with user_language preference & referral tracking
                         try {
-                          await setDoc(doc(db, 'users', userCredential.user.uid), {
+                          const pendingRef = localStorage.getItem('pendingRef');
+                          const newUserData: any = {
                             uid: userCredential.user.uid,
                             email: cleanEmail,
                             username: displayNameVal,
                             user_language: lang,
+                            hasCompletedFirstCheckin: false,
                             createdAt: new Date().toISOString()
-                          });
+                          };
+                          if (pendingRef && pendingRef.trim() && pendingRef.trim() !== userCredential.user.uid) {
+                            newUserData.referredBy = pendingRef.trim();
+                          }
+                          await setDoc(doc(db, 'users', userCredential.user.uid), newUserData, { merge: true });
                         } catch (uerr) {
                           if (isPermissionError(uerr)) {
                             handleFirestoreError(uerr, OperationType.WRITE, `users/${userCredential.user.uid}`);
@@ -5865,6 +6003,20 @@ export default function App() {
                       {(user.friends || []).length} {lang === 'PT' ? 'AMIGOS' : 'FRIENDS'}
                     </span>
                   </div>
+
+                  {/* Referral Invite Card: Invite Friend button, unique link https://hopmap.app/?ref={userID}, Web Share API & Ambassador badge tracking */}
+                  <ReferralInviteCard
+                    userId={auth.currentUser?.uid || user.id}
+                    isLoggedIn={user.isLoggedIn}
+                    lang={lang}
+                    darkMode={darkMode}
+                    hasAmbassadorBadge={Boolean(
+                      (user.earnedBadges && user.earnedBadges.includes('pioneer_referral')) ||
+                      (user.customBadges && user.customBadges.some(b => (typeof b === 'string' ? b === 'pioneer_referral' : b.id === 'pioneer_referral'))) ||
+                      (user.badges && user.badges.some((b: any) => (typeof b === 'string' ? b === 'pioneer_referral' : b?.id === 'pioneer_referral')))
+                    )}
+                    triggerSelfPush={triggerSelfPush}
+                  />
 
                   {/* Pending Friend Requests Panel */}
                   {pendingRequests.length > 0 && (
