@@ -895,11 +895,29 @@ export default function App() {
   useEffect(() => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const refParam = urlParams.get('ref');
+      let refParam = urlParams.get('ref');
+      let langParam = urlParams.get('lang');
+
+      // Also inspect hash if routed via hash
+      if (!refParam && typeof window !== 'undefined' && window.location.hash.includes('?')) {
+        const hashQuery = window.location.hash.split('?')[1];
+        const hashParams = new URLSearchParams(hashQuery);
+        refParam = hashParams.get('ref');
+        if (!langParam) langParam = hashParams.get('lang');
+      }
+
       if (refParam && refParam.trim()) {
         const cleanRef = refParam.trim();
         localStorage.setItem('pendingRef', cleanRef);
         console.log('HOP-MAP: Captured referral code in pendingRef:', cleanRef);
+      }
+
+      if (langParam) {
+        const upperLang = langParam.toUpperCase();
+        if (upperLang === 'EN' || upperLang === 'PT') {
+          setLang(upperLang as Language);
+          localStorage.setItem('hop_app_language', upperLang);
+        }
       }
     } catch (e) {
       console.warn('HOP-MAP: Error reading referral query param:', e);

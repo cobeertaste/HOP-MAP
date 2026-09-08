@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { Share2, Copy, Check, Award, Users, Sparkles, MessageCircle, Facebook, Instagram } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Share2, Copy, Check, Award, Users, Sparkles, MessageCircle, Facebook, Instagram, Globe } from 'lucide-react';
 import { Language, t } from '../lib/i18n';
+import { getReferralShareUrl, getAppPublicOrigin } from '../lib/router';
 
 interface ReferralInviteCardProps {
   userId: string;
@@ -24,16 +25,43 @@ export const ReferralInviteCard: React.FC<ReferralInviteCardProps> = ({
   triggerSelfPush
 }) => {
   const [copied, setCopied] = useState(false);
+  // Allow user to choose which localized link/message they want to send (defaults to active UI language)
+  const [inviteLang, setInviteLang] = useState<'PT' | 'EN'>(lang);
 
-  // Generate unique referral link: https://hopmap.app/?ref={userID}
-  const cleanUserId = userId || 'hop-user';
-  const referralLink = `https://hopmap.app/?ref=${encodeURIComponent(cleanUserId)}`;
+  useEffect(() => {
+    setInviteLang(lang);
+  }, [lang]);
 
-  const shareTitle = t('inviteShareTitle', lang);
-  const shareText = t('inviteShareText', lang);
+  // Clean and validate user identifier
+  const cleanUserId = (userId || '').trim();
+  
+  // Generate valid canonical referral link using real public origin (never hardcoded non-existent domains)
+  // PT: https://.../?ref={userID}&lang=pt
+  // EN: https://.../en/?ref={userID}&lang=en
+  const referralLink = getReferralShareUrl(cleanUserId || 'guest', inviteLang);
+
+  const shareTitle = inviteLang === 'PT' ? 'Convite HOP-MAP 🍻' : 'HOP-MAP Invite 🍻';
+  const shareText = inviteLang === 'PT' 
+    ? t('inviteShareTextPT', 'PT') 
+    : t('inviteShareTextEN', 'EN');
   const fullInviteMessage = `${shareText} ${referralLink}`;
 
+  const ensureLoggedInNotice = () => {
+    if (!isLoggedIn || !cleanUserId) {
+      triggerSelfPush(
+        lang === 'PT' ? 'Aviso de Início de Sessão' : 'Sign In Notice',
+        lang === 'PT'
+          ? 'Inicia sessão ou cria conta para que o teu link fique associado ao teu perfil e ganhes o Badge de Embaixador!'
+          : 'Sign in or register so your invite link is linked to your profile and you earn the Ambassador Badge!',
+        'system'
+      );
+      return false;
+    }
+    return true;
+  };
+
   const copyToClipboard = async () => {
+    ensureLoggedInNotice();
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(referralLink);
@@ -61,6 +89,7 @@ export const ReferralInviteCard: React.FC<ReferralInviteCardProps> = ({
   };
 
   const handleNativeShare = async () => {
+    ensureLoggedInNotice();
     if (navigator.share) {
       try {
         await navigator.share({
@@ -88,6 +117,7 @@ export const ReferralInviteCard: React.FC<ReferralInviteCardProps> = ({
 
   // Direct WhatsApp sharing
   const handleWhatsAppShare = () => {
+    ensureLoggedInNotice();
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(fullInviteMessage)}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     triggerSelfPush(
@@ -99,6 +129,7 @@ export const ReferralInviteCard: React.FC<ReferralInviteCardProps> = ({
 
   // Direct Facebook / Messenger sharing
   const handleFacebookShare = () => {
+    ensureLoggedInNotice();
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(fullInviteMessage);
@@ -116,6 +147,7 @@ export const ReferralInviteCard: React.FC<ReferralInviteCardProps> = ({
 
   // Direct Instagram Direct message sharing
   const handleInstagramShare = async () => {
+    ensureLoggedInNotice();
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(fullInviteMessage);
@@ -147,7 +179,7 @@ export const ReferralInviteCard: React.FC<ReferralInviteCardProps> = ({
   return (
     <div
       id="referral-invite-card"
-      className="rounded-2xl p-3 sm:p-4 border border-zinc-700 bg-[#EFE6CC] shadow-[2px_2px_0px_#1B2036] space-y-3"
+      className="rounded-2xl p-3 sm:p-4 border border-zinc-700 bg-[#EFE6CC] shadow-[2px_2px_0px_#1B2036] space-y-3 text-neutral-900"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
@@ -209,6 +241,40 @@ export const ReferralInviteCard: React.FC<ReferralInviteCardProps> = ({
         </span>
       </div>
 
+      {/* Language Version Selector for Referral Link */}
+      <div className="flex items-center justify-between pt-1 border-t border-zinc-700/30">
+        <div className="flex items-center gap-1 text-[9px] font-bold text-zinc-700">
+          <Globe className="w-3 h-3 text-amber-700" />
+          <span>{t('inviteLangSelectLabel', lang)}</span>
+        </div>
+        <div className="flex items-center gap-1 bg-white/70 p-0.5 rounded-lg border border-zinc-700 text-[9px] font-bold">
+          <button
+            type="button"
+            id="referral-lang-pt-btn"
+            onClick={() => setInviteLang('PT')}
+            className={`px-2 py-0.5 rounded transition cursor-pointer ${
+              inviteLang === 'PT'
+                ? 'bg-amber-500 text-black shadow-xs font-black'
+                : 'text-zinc-600 hover:text-black'
+            }`}
+          >
+            🇵🇹 PT
+          </button>
+          <button
+            type="button"
+            id="referral-lang-en-btn"
+            onClick={() => setInviteLang('EN')}
+            className={`px-2 py-0.5 rounded transition cursor-pointer ${
+              inviteLang === 'EN'
+                ? 'bg-amber-500 text-black shadow-xs font-black'
+                : 'text-zinc-600 hover:text-black'
+            }`}
+          >
+            🇬🇧 EN
+          </button>
+        </div>
+      </div>
+
       {/* Link Input & Actions */}
       <div className="space-y-2">
         <div className="relative flex items-center">
@@ -217,7 +283,7 @@ export const ReferralInviteCard: React.FC<ReferralInviteCardProps> = ({
             readOnly
             value={referralLink}
             aria-label={t('referralLinkTooltip', lang)}
-            className="w-full pl-3 pr-20 py-2 text-[10px] font-mono bg-white/80 rounded-xl border border-zinc-700 text-zinc-800 select-all outline-none truncate"
+            className="w-full pl-3 pr-20 py-2 text-[10px] font-mono bg-white/90 rounded-xl border border-zinc-700 text-zinc-900 select-all outline-none truncate"
           />
           <button
             type="button"

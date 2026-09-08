@@ -10,7 +10,7 @@ import { Bar } from '../types';
 import { getCitySlug, getSpotSlug } from './router';
 import { SPOT_DESCRIPTIONS_EN_BY_ID } from './i18n';
 
-export const DEFAULT_BASE_URL = 'https://hop-map.ai.studio';
+export const DEFAULT_BASE_URL = 'https://hop-map.netlify.app';
 
 export interface PageMeta {
   lang: 'PT' | 'EN';

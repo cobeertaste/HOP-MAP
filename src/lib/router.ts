@@ -233,11 +233,55 @@ export function parseRoute(pathname: string, bars: Bar[], availableZones: string
 }
 
 /**
+ * Official production domain for Netlify deployment
+ */
+export const NETLIFY_PRODUCTION_ORIGIN = 'https://hop-map.netlify.app';
+
+/**
+ * Resolves the public, shareable origin of the Hop-Map web application.
+ * Configured with https://hop-map.netlify.app as the production target for Netlify,
+ * or window.location.origin if already running on netlify or a custom domain.
+ */
+export function getAppPublicOrigin(): string {
+  // Allow explicit override via Vite environment variables
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    const envUrl = (import.meta.env.VITE_PUBLIC_APP_URL || import.meta.env.VITE_APP_URL) as string | undefined;
+    if (envUrl && envUrl.trim()) {
+      return envUrl.trim().replace(/\/+$/, '');
+    }
+  }
+
+  if (typeof window !== 'undefined' && window.location && window.location.origin) {
+    const origin = window.location.origin;
+    // If currently running on Netlify or a custom production domain (not local dev container)
+    if (origin.includes('netlify.app') || (!origin.includes('ais-dev-') && !origin.includes('ais-pre-') && !origin.includes('localhost') && !origin.includes('127.0.0.1'))) {
+      return origin;
+    }
+  }
+
+  // Default production origin for public sharing is https://hop-map.netlify.app
+  return NETLIFY_PRODUCTION_ORIGIN;
+}
+
+/**
+ * Generates canonical referral URL for inviting friends in PT or EN
+ * e.g. "https://hop-map.netlify.app/?ref={userID}&lang=pt" or "https://hop-map.netlify.app/en/?ref={userID}&lang=en"
+ */
+export function getReferralShareUrl(userId: string, lang: 'PT' | 'EN' = 'PT'): string {
+  const origin = getAppPublicOrigin();
+  const cleanId = encodeURIComponent((userId || '').trim());
+  if (lang === 'EN') {
+    return `${origin}/en/?ref=${cleanId}&lang=en`;
+  }
+  return `${origin}/?ref=${cleanId}&lang=pt`;
+}
+
+/**
  * Generates full canonical shareable URL for a spot in PT or EN
- * e.g. "https://hop-map.ai.studio/porto/o-bandido" or "https://hop-map.ai.studio/en/porto/o-bandido"
+ * e.g. "https://hop-map.netlify.app/porto/o-bandido" or "https://hop-map.netlify.app/en/porto/o-bandido"
  */
 export function getSpotShareUrl(bar: Bar, customDomain?: string, lang: 'PT' | 'EN' = 'PT'): string {
-  const domain = customDomain || (typeof window !== 'undefined' ? window.location.origin : 'https://hop-map.ai.studio');
+  const domain = customDomain || getAppPublicOrigin();
   const city = getCitySlug(bar.zone) || 'portugal';
   const spotSlug = getSpotSlug(bar);
   const prefix = lang === 'EN' ? '/en' : '';
@@ -246,10 +290,10 @@ export function getSpotShareUrl(bar: Bar, customDomain?: string, lang: 'PT' | 'E
 
 /**
  * Generates URL for a city/region filter in PT or EN
- * e.g. "https://hop-map.ai.studio/porto" or "https://hop-map.ai.studio/en/porto"
+ * e.g. "https://ais-pre-...run.app/porto" or "https://ais-pre-...run.app/en/porto"
  */
 export function getCityShareUrl(zone: string, customDomain?: string, lang: 'PT' | 'EN' = 'PT'): string {
-  const domain = customDomain || (typeof window !== 'undefined' ? window.location.origin : 'https://hop-map.ai.studio');
+  const domain = customDomain || getAppPublicOrigin();
   const city = getCitySlug(zone);
   const prefix = lang === 'EN' ? '/en' : '';
   if (!city) return `${domain}${prefix || '/'}`;
