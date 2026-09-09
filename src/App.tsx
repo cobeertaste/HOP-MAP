@@ -768,6 +768,7 @@ export default function App() {
   const [loginName, setLoginName] = useState('');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [loginConfirmPassword, setLoginConfirmPassword] = useState('');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [isOver18, setIsOver18] = useState(false);
   const [authError, setAuthError] = useState('');
@@ -2382,6 +2383,7 @@ export default function App() {
         }
 
         let savedShareCheckins = true;
+        let savedUsername: string | undefined = undefined;
         let savedEarnedBadges: string[] = [];
         let savedBadges: any[] = [];
         let savedReferredBy: string | undefined = undefined;
@@ -2414,6 +2416,9 @@ export default function App() {
             }
             if (Array.isArray(data.badges)) {
               savedBadges = data.badges;
+            }
+            if (data.username && typeof data.username === 'string') {
+              savedUsername = data.username;
             }
             if (data.referredBy) {
               savedReferredBy = data.referredBy;
@@ -2469,7 +2474,7 @@ export default function App() {
           ...prev,
           id: firebaseUser.uid,
           email: firebaseUser.email || 'e-mail',
-          username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'utilizador',
+          username: savedUsername || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'utilizador',
           points: savedPoints,
           favorites: savedFavorites,
           friends: savedFriends,
@@ -4107,8 +4112,44 @@ export default function App() {
                       if (authError) setAuthError('');
                     }}
                     className="w-full px-4 py-2 text-xs rounded-xl border-2 border-[#1B2036] transition-all outline-none bg-[#EFE6CC] text-[#1B2036] placeholder-[#1B2036]/50 focus:border-[#12908C] font-body"
+                    id="input-login-password"
                   />
                 </div>
+
+                {/* Confirm Password Input (Only when registering) */}
+                {isRegisterMode && (
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center pr-1">
+                      <label className="text-[9px] font-bold uppercase tracking-wider text-[#1B2036]/70 pl-1 font-label">
+                        {t('confirmPasswordLabel', lang)}
+                      </label>
+                      {loginConfirmPassword.length > 0 && (
+                        <span className={`text-[8px] font-bold font-body ${
+                          loginPassword === loginConfirmPassword ? 'text-[#12908C]' : 'text-[#E85B41]'
+                        }`}>
+                          {loginPassword === loginConfirmPassword
+                            ? (lang === 'PT' ? '✓ Coincidem' : '✓ Match')
+                            : (lang === 'PT' ? '✗ Não coincidem' : '✗ Do not match')}
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={loginConfirmPassword}
+                      onChange={e => {
+                        setLoginConfirmPassword(e.target.value);
+                        if (authError) setAuthError('');
+                      }}
+                      className={`w-full px-4 py-2 text-xs rounded-xl border-2 transition-all outline-none bg-[#EFE6CC] text-[#1B2036] placeholder-[#1B2036]/50 font-body ${
+                        loginConfirmPassword.length > 0 && loginPassword !== loginConfirmPassword
+                          ? 'border-[#E85B41] focus:border-[#E85B41]'
+                          : 'border-[#1B2036] focus:border-[#12908C]'
+                      }`}
+                      id="input-register-confirm-password"
+                    />
+                  </div>
+                )}
 
                 {/* Over 18 Age Verification Checkbox when registering */}
                 {isRegisterMode && (
@@ -4146,6 +4187,7 @@ export default function App() {
                       onClick={() => {
                         setIsRegisterMode(true);
                         setAuthError('');
+                        setLoginConfirmPassword('');
                       }}
                       className="mt-1 px-3 py-1.5 bg-[#12908C] hover:bg-[#0B6C69] text-white rounded-xl text-[10px] font-bold cursor-pointer inline-block shadow-sm transition"
                     >
@@ -4170,6 +4212,7 @@ export default function App() {
               )}
 
               <button
+                id="btn-auth-submit"
                 disabled={isAuthLoading}
                 onClick={async () => {
                   setAuthError('');
@@ -4192,8 +4235,17 @@ export default function App() {
                         setAuthError(t('fillRequiredFields', lang));
                         return;
                       }
+                      if (!loginConfirmPassword) {
+                        setAuthError(t('confirmPasswordRequired', lang));
+                        return;
+                      }
                       if (loginPassword.length < 6) {
                         setAuthError(t('passMinLength', lang));
+                        return;
+                      }
+                      // Password match verification: must be strictly identical
+                      if (loginPassword !== loginConfirmPassword) {
+                        setAuthError(t('passwordsDoNotMatch', lang));
                         return;
                       }
                       
@@ -4203,16 +4255,19 @@ export default function App() {
                         return;
                       }
 
-                      // Check alphanumeric characters only (letters and numbers, no special characters or spaces)
-                      const isAlphanumericOnly = /^[a-zA-Z0-9]+$/.test(displayNameVal);
-                      if (!isAlphanumericOnly) {
+                      // Check alphanumeric and standard name characters (letters, accents, numbers, underscores, hyphens)
+                      const isNameValid = /^[a-zA-Z0-9À-ÿ_\s-]+$/.test(displayNameVal);
+                      if (!isNameValid) {
                         setAuthError(
                           lang === 'PT' 
-                            ? 'O nome de utilizador apenas pode conter letras e números (sem caracteres especiais ou espaços).' 
-                            : 'Username can only contain letters and numbers (no special characters or spaces).'
+                            ? 'O nome de utilizador apenas pode conter letras, números, hífen ou sublinhado.' 
+                            : 'Username can only contain letters, numbers, hyphens, or underscores.'
                         );
                         return;
                       }
+
+                      // Provide immediate visual feedback on button
+                      setIsAuthLoading(true);
 
                       // Unique username check in mock list
                       const mockUserNames = [
@@ -4222,52 +4277,102 @@ export default function App() {
                       ];
                       const isNameTakenMock = mockUserNames.some(m => m.toLowerCase() === displayNameVal.toLowerCase());
                       if (isNameTakenMock) {
-                        setAuthError(lang === 'PT' ? 'Já existe um utilizador com esse nome' : 'A user with that name already exists');
+                        setAuthError(lang === 'PT' ? 'Já existe um utilizador com esse nome. Por favor escolhe outro.' : 'A user with that name already exists. Please choose another.');
+                        setIsAuthLoading(false);
                         return;
                       }
 
-                      // Unique username check in Firestore
+                      // Unique username check in Firestore (with 3.5s timeout guard so it never hangs)
                       if (isFirebaseConfigured) {
                         try {
                           const usersRef = collection(db, 'users');
                           const qName = query(usersRef, where('username', '==', displayNameVal));
-                          const snapName = await getDocs(qName);
-                          if (!snapName.empty) {
-                            setAuthError(lang === 'PT' ? 'Já existe um utilizador com esse nome' : 'A user with that name already exists');
+                          const snapName = await Promise.race([
+                            getDocs(qName),
+                            new Promise<null>((_, reject) => setTimeout(() => reject(new Error('timeout')), 3500))
+                          ]) as any;
+                          if (snapName && !snapName.empty) {
+                            setAuthError(lang === 'PT' ? 'Já existe um utilizador com esse nome. Por favor escolhe outro.' : 'A user with that name already exists. Please choose another.');
+                            setIsAuthLoading(false);
                             return;
                           }
                         } catch (uErr) {
-                          console.warn('Error checking username uniqueness in Firestore:', uErr);
+                          console.warn('Notice checking username uniqueness in Firestore:', uErr);
                         }
                       }
 
-                      setIsAuthLoading(true);
                       const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, loginPassword);
                       if (userCredential.user) {
-                        await updateProfile(userCredential.user, { displayName: displayNameVal });
-                        
-                        // Add newly registered user to firestore collection 'users' with user_language preference & referral tracking
+                        const uid = userCredential.user.uid;
                         try {
-                          const pendingRef = localStorage.getItem('pendingRef');
-                          const newUserData: any = {
-                            uid: userCredential.user.uid,
-                            email: cleanEmail,
-                            username: displayNameVal,
-                            user_language: lang,
-                            hasCompletedFirstCheckin: false,
-                            createdAt: new Date().toISOString()
-                          };
-                          if (pendingRef && pendingRef.trim() && pendingRef.trim() !== userCredential.user.uid) {
-                            newUserData.referredBy = pendingRef.trim();
-                          }
-                          await setDoc(doc(db, 'users', userCredential.user.uid), newUserData, { merge: true });
+                          await updateProfile(userCredential.user, { displayName: displayNameVal });
+                        } catch (pErr) {
+                          console.warn('Notice updating profile displayName:', pErr);
+                        }
+                        
+                        // Add newly registered user to Firebase Firestore collection 'users' with full profile & referral tracking
+                        const pendingRef = localStorage.getItem('pendingRef');
+                        const completeUserData: any = {
+                          uid: uid,
+                          email: cleanEmail,
+                          username: displayNameVal,
+                          points: 0,
+                          favorites: ['catraio'],
+                          friends: [],
+                          checkedInFestivals: [],
+                          shareCheckinsEnabled: true,
+                          user_language: lang,
+                          hasCompletedFirstCheckin: false,
+                          createdAt: new Date().toISOString()
+                        };
+                        if (pendingRef && pendingRef.trim() && pendingRef.trim() !== uid) {
+                          completeUserData.referredBy = pendingRef.trim();
+                        }
+
+                        try {
+                          await setDoc(doc(db, 'users', uid), completeUserData, { merge: true });
+                          console.log('User registered and saved to Firebase Firestore successfully:', uid);
                         } catch (uerr) {
                           if (isPermissionError(uerr)) {
-                            handleFirestoreError(uerr, OperationType.WRITE, `users/${userCredential.user.uid}`);
+                            handleFirestoreError(uerr, OperationType.WRITE, `users/${uid}`);
                           }
                           console.warn('Notice creating user profile in Firestore:', uerr);
                         }
+
+                        // Local cache update
+                        const cacheKeyPrefix = `hop_user_${uid}_`;
+                        localStorage.setItem(cacheKeyPrefix + 'points', '0');
+                        localStorage.setItem(cacheKeyPrefix + 'favorites', JSON.stringify(['catraio']));
+                        localStorage.setItem(cacheKeyPrefix + 'friends', '[]');
+                        localStorage.setItem(cacheKeyPrefix + 'checkedInFestivals', '[]');
+                        localStorage.setItem(cacheKeyPrefix + 'shareCheckinsEnabled', 'true');
+                        localStorage.setItem(cacheKeyPrefix + 'user_language', lang);
+
+                        // Update in-memory user state immediately
+                        setUser(prev => ({
+                          ...prev,
+                          id: uid,
+                          name: displayNameVal,
+                          email: cleanEmail,
+                          isLoggedIn: true,
+                          points: 0,
+                          favorites: ['catraio'],
+                          friends: [],
+                          checkedInFestivals: [],
+                          shareCheckinsEnabled: true,
+                          user_language: lang,
+                          hasCompletedFirstCheckin: false,
+                          earnedBadges: [],
+                          badges: [],
+                          referredBy: pendingRef && pendingRef.trim() !== uid ? pendingRef.trim() : undefined,
+                          role: cleanEmail.toLowerCase() === 'cobeertaste@gmail.com' ? 'admin' : 'user'
+                        }));
+
+                        setLoginPassword('');
+                        setLoginConfirmPassword('');
+                        setIsRegisterMode(false);
                       }
+
                       triggerSelfPush(
                         t('accountCreatedTitle', lang),
                         lang === 'PT' ? `Olá ${displayNameVal}, bem-vindo ao teu roteiro Hop-Map!` : `Hello ${displayNameVal}, welcome to your Hop-Map guide!`,
@@ -4321,9 +4426,11 @@ export default function App() {
               {/* Register Toggle Link */}
               <div className="text-center flex flex-col items-center gap-2">
                 <button 
+                  id="btn-toggle-register-login"
                   onClick={() => {
                     setIsRegisterMode(!isRegisterMode);
                     setAuthError('');
+                    setLoginConfirmPassword('');
                   }}
                   className="text-[10px] text-[#12908C] hover:text-[#0B6C69] font-bold underline cursor-pointer font-label"
                 >

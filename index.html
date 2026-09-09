@@ -51,13 +51,26 @@
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/service-worker.js?v=5")
+          // Detect if running inside an iframe (e.g. AI Studio live preview container)
+          var isInIframe = false;
+          try {
+            isInIframe = window.self !== window.top;
+          } catch (e) {
+            isInIframe = true;
+          }
+
+          if (isInIframe) {
+            console.info("[PWA] Service Worker desativado em modo de pré-visualização (iframe). Ativo quando aberto em novo separador ou instalado como PWA.");
+            return;
+          }
+
+          navigator.serviceWorker.register("/service-worker.js")
             .then((registration) => {
               console.log("[PWA] Service Worker com Stale-While-Revalidate registado:", registration.scope);
               registration.update();
             })
             .catch((error) => {
-              console.error("[PWA] Falha ao registar o Service Worker:", error);
+              console.warn("[PWA] Aviso ao registar Service Worker:", error && error.message ? error.message : error);
             });
         });
       }

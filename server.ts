@@ -109,6 +109,42 @@ async function startServer() {
     res.json({ status: 'ok', service: 'Hop-Map Backend', timestamp: new Date().toISOString() });
   });
 
+  // Explicit Service Worker endpoint with appropriate PWA headers
+  app.get(['/service-worker.js', '/sw.js'], (req: Request, res: Response) => {
+    const swPath = path.resolve(process.cwd(), 'public', 'service-worker.js');
+    if (fs.existsSync(swPath)) {
+      res.setHeader('Content-Type', 'text/javascript; charset=utf-8');
+      res.setHeader('Service-Worker-Allowed', '/');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return res.sendFile(swPath);
+    }
+    const distSwPath = path.resolve(process.cwd(), 'dist', 'service-worker.js');
+    if (fs.existsSync(distSwPath)) {
+      res.setHeader('Content-Type', 'text/javascript; charset=utf-8');
+      res.setHeader('Service-Worker-Allowed', '/');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return res.sendFile(distSwPath);
+    }
+    res.status(404).send('Service Worker not found');
+  });
+
+  // Explicit Web App Manifest endpoints
+  app.get(['/site.webmanifest', '/manifest.json'], (req: Request, res: Response) => {
+    const manifestPath = path.resolve(process.cwd(), 'public', 'site.webmanifest');
+    if (fs.existsSync(manifestPath)) {
+      res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.sendFile(manifestPath);
+    }
+    const jsonPath = path.resolve(process.cwd(), 'public', 'manifest.json');
+    if (fs.existsSync(jsonPath)) {
+      res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.sendFile(jsonPath);
+    }
+    res.status(404).send('Manifest not found');
+  });
+
   /**
    * Endpoint: Create Stripe Checkout Session (Card & PayPal)
    */
