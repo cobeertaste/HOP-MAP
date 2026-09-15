@@ -1,0 +1,241 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile in Hop Map",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "username": { "type": "string" },
+        "points": { "type": "number" },
+        "favorites": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "friends": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "shareCheckinsEnabled": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Rating": {
+      "title": "Rating",
+      "description": "User beer rating for a bar",
+      "type": "object",
+      "properties": {
+        "stars": { "type": "number" },
+        "texto_rating": { "type": "string", "maxLength": 100 },
+        "tipo_cerveja": { "type": "string" },
+        "barId": { "type": "string" },
+        "barName": { "type": "string" },
+        "userName": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["stars", "texto_rating", "tipo_cerveja", "barId", "barName", "userName"]
+    },
+    "FriendRequest": {
+      "title": "FriendRequest",
+      "description": "Pending and active friend requests between users",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderPoints": { "type": "number" },
+        "receiverId": { "type": "string" },
+        "receiverName": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "senderName", "receiverId", "receiverName", "status"]
+    },
+    "SpotTaps": {
+      "title": "SpotTaps",
+      "description": "Spot TAPS count",
+      "type": "object",
+      "properties": {
+        "taps": { "type": "number" }
+      },
+      "required": ["taps"]
+    },
+    "CheckinNotification": {
+      "title": "CheckinNotification",
+      "description": "Check-in notifications broadcasted to friends",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "locationName": { "type": "string" },
+        "locationType": { "type": "string" },
+        "targetFriendIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "senderName", "locationName", "locationType", "targetFriendIds"]
+    },
+    "AnalyticsEvent": {
+      "title": "AnalyticsEvent",
+      "description": "Event logged for check-ins, rewards, spot views, shares, and directions clicks",
+      "type": "object",
+      "properties": {
+        "eventType": { "type": "string" },
+        "spotId": { "type": "string" },
+        "spotName": { "type": "string" },
+        "userId": { "type": "string" },
+        "username": { "type": "string" },
+        "month": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["eventType", "spotId", "spotName", "month", "timestamp"]
+    },
+    "MonthlyReport": {
+      "title": "MonthlyReport",
+      "description": "Monthly performance report sent to cobeertaste@gmail.com",
+      "type": "object",
+      "properties": {
+        "month": { "type": "string" },
+        "recipientEmail": { "type": "string" },
+        "totalCheckins": { "type": "number" },
+        "totalRewards": { "type": "number" },
+        "totalViews": { "type": "number" },
+        "totalShares": { "type": "number" },
+        "totalDirections": { "type": "number" },
+        "status": { "type": "string" },
+        "generatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["month", "recipientEmail", "status", "generatedAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Hop-Chat community real-time message",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string", "maxLength": 1000 },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderAvatar": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "mentions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["text", "senderId", "senderName", "timestamp"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notification for chat mentions and community events",
+      "type": "object",
+      "properties": {
+        "recipientId": { "type": "string" },
+        "recipientUsername": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "titleEn": { "type": "string" },
+        "message": { "type": "string" },
+        "messageEn": { "type": "string" },
+        "chatMessageId": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["recipientUsername", "senderName", "message", "timestamp"]
+    },
+    "SpotVibe": {
+      "title": "SpotVibe",
+      "description": "1-hour real-time spot mood check vote",
+      "type": "object",
+      "properties": {
+        "spotId": { "type": "string" },
+        "userId": { "type": "string" },
+        "username": { "type": "string" },
+        "vibe": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["spotId", "userId", "username", "vibe", "timestamp"]
+    },
+    "Checkin": {
+      "title": "Checkin",
+      "description": "Verified spot consumption check-in validated by staff PIN",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "spotId": { "type": "string" },
+        "spotName": { "type": "string" },
+        "dateString": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "spotId", "dateString"]
+    },
+    "SpotPin": {
+      "title": "SpotPin",
+      "description": "Secure 4-digit check-in PIN assigned to each spot, manageable only by administrator",
+      "type": "object",
+      "properties": {
+        "spotId": { "type": "string" },
+        "spotName": { "type": "string" },
+        "zone": { "type": "string" },
+        "checkinPin": { "type": "string", "minLength": 4, "maxLength": 4 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["spotId", "checkinPin"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User documents stored by their unique auth UID"
+    },
+    "ratings/{ratingId}": {
+      "schema": "Rating",
+      "description": "Global user beer rating entries"
+    },
+    "checkins/{checkinId}": {
+      "schema": "Checkin",
+      "description": "Historical consumption check-ins validated by bartender PIN"
+    },
+    "spots_pins/{spotId}": {
+      "schema": "SpotPin",
+      "description": "Admin-only 4-digit consumption check-in PIN records for spots"
+    },
+    "friend_requests/{requestId}": {
+      "schema": "FriendRequest",
+      "description": "Friend request entries linking two users"
+    },
+    "spots_taps/{spotId}": {
+      "schema": "SpotTaps",
+      "description": "Total TAPS points recorded for each individual bar spot"
+    },
+    "checkin_notifications/{notificationId}": {
+      "schema": "CheckinNotification",
+      "description": "Notifications sent to friends when a user performs a check-in"
+    },
+    "chat_messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Community Hop-Chat live messages"
+    },
+    "notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Direct in-app and push notification records for users"
+    },
+    "spot_vibes/{vibeId}": {
+      "schema": "SpotVibe",
+      "description": "Hourly spot vibe rating votes"
+    },
+    "analytics_events/{eventId}": {
+      "schema": "AnalyticsEvent",
+      "description": "Analytics events collection for check-ins, views, shares, directions, and rewards"
+    },
+    "monthly_reports/{reportId}": {
+      "schema": "MonthlyReport",
+      "description": "Historical monthly reports dispatched to cobeertaste@gmail.com"
+    }
+  }
+}

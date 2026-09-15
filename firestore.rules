@@ -1,0 +1,113 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email.lower() == 'cobeertaste@gmail.com';
+    }
+
+    function isValidUser(user) {
+      return user.uid is string && user.uid.size() <= 128
+        && user.email is string && user.email.size() <= 100
+        && user.username is string && user.username.size() <= 100
+        && (!('points' in user) || user.points is number)
+        && (!('favorites' in user) || user.favorites is list)
+        && (!('friends' in user) || user.friends is list)
+        && (!('shareCheckinsEnabled' in user) || user.shareCheckinsEnabled is bool);
+    }
+
+    function isValidRating(rating) {
+      return rating.stars is number && rating.stars >= 1 && rating.stars <= 5
+        && rating.texto_rating is string && rating.texto_rating.size() <= 100
+        && rating.tipo_cerveja is string && rating.tipo_cerveja.size() <= 100
+        && rating.barId is string && rating.barId.size() <= 100
+        && rating.barName is string && rating.barName.size() <= 100
+        && rating.userName is string && rating.userName.size() <= 100;
+    }
+
+    function isValidCheckin(checkin) {
+      return checkin.userId is string && checkin.userId.size() <= 128
+        && checkin.spotId is string && checkin.spotId.size() <= 128
+        && checkin.dateString is string && checkin.dateString.size() <= 30;
+    }
+
+    // 2. Users Collection
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update, delete: if true;
+    }
+    
+    // 3. Ratings Collection
+    match /ratings/{ratingId} {
+      allow read: if true;
+      allow create, update, delete: if true;
+    }
+
+    // 4. Friend Requests Collection
+    match /friend_requests/{requestId} {
+      allow read, write: if true;
+    }
+
+    // 5. Spots Taps Collection
+    match /spots_taps/{spotId} {
+      allow read, write: if true;
+    }
+
+    // 6. Checkin Notifications Collection
+    match /checkin_notifications/{notificationId} {
+      allow read, write: if true;
+    }
+
+    // 7. Community Chat Messages (Hop-Chat 🍻)
+    match /chat_messages/{messageId} {
+      allow read, create: if true;
+      allow update, delete: if true;
+    }
+
+    // 8. Notifications Collection (@mentions & Alerts)
+    match /notifications/{notificationId} {
+      allow read, write: if true;
+    }
+
+    // 9. Spot Vibes (Hourly Mood Check)
+    match /spot_vibes/{vibeId} {
+      allow read, create: if true;
+      allow update, delete: if true;
+    }
+
+    // 10. Analytics Events Collection (Creation by app, Read only by Administrator)
+    match /analytics_events/{eventId} {
+      allow read: if isAdmin();
+      allow create: if request.resource.data.eventType is string 
+                    && request.resource.data.spotId is string 
+                    && request.resource.data.month is string;
+      allow update, delete: if false;
+    }
+
+    // 11. Monthly Reports Collection (Administrator Only)
+    match /monthly_reports/{reportId} {
+      allow read, write: if isAdmin();
+    }
+
+    // 12. Checkins Collection (Consumption Check-ins with Bartender PIN)
+    match /checkins/{checkinId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidCheckin(request.resource.data) && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // 13. Spot PINs Collection (Master Administrator Only - cobeertaste@gmail.com)
+    match /spots_pins/{spotId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

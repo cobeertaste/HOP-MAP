@@ -1,0 +1,6 @@
+{
+  "name": "HOP-MAP",
+  "description": "Mapa interativo dos melhores taprooms e cervejarias artesanais em Portugal (continente, Madeira e Açores): locais, eventos e festivais de cerveja. Criado por COBEER TASTE. Craft beer map of Portugal (mainland, Madeira & Azores): discover top taprooms and breweries, events, festivals and social links in one place. Created by COBEER TASTE.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
