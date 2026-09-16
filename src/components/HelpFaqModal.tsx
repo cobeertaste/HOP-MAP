@@ -59,10 +59,10 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     id: 'faq-stamp-card',
     category: 'checkins',
-    questionPT: 'O que é o Cartão de Selos (10 visitas)?',
-    questionEN: 'What is the 10-stamp card?',
-    answerPT: 'Cada spot participante tem um Cartão de Selos virtual de 10 visitas (máximo 1 selo por dia por spot). Ao carimbares o 10º selo, desbloqueias benefícios especiais do espaço e a animação retro de Stage Clear!',
-    answerEN: 'Every participating venue features a 10-stamp loyalty card (max 1 stamp per day per spot). Upon collecting the 10th stamp, you unlock exclusive venue perks and the retro Stage Clear celebration!',
+    questionPT: 'O que é o cartão de selos (10 check-in)?',
+    questionEN: 'What is the stamp card (10 check-ins)?',
+    answerPT: 'Cada spot participante tem um Cartão de Selos virtual de 10 visitas (máximo 1 selo por dia por spot). Válido apenas em spots parceiros. Ao carimbares o 10º selo, desbloqueias benefícios especiais do espaço e a animação retro de Stage Clear!',
+    answerEN: 'Every participating venue features a 10-stamp loyalty card (max 1 stamp per day per spot). Valid only at partner spots. Upon collecting the 10th stamp, you unlock exclusive venue perks and the retro Stage Clear celebration!',
     icon: <Award className="w-4 h-4 text-[#E85B41]" />
   },
   {
@@ -162,7 +162,7 @@ export const HelpFaqModal: React.FC<HelpFaqModalProps> = ({
               </div>
               <div>
                 <h3 className="text-xs sm:text-sm font-bold font-press text-[#1B2036] tracking-wide">
-                  {isPT ? 'AJUDA & FAQ' : 'HELP & FAQ'}
+                  {isPT ? 'AJUDA & QUESTÕES' : 'HELP & FAQ'}
                 </h3>
                 <p className="text-[9px] sm:text-[10px] text-[#1B2036]/75 font-mono">
                   HOP-MAP by Cobeer Taste

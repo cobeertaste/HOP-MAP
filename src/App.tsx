@@ -6867,13 +6867,13 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Ajuda & FAQ / Help & FAQ */}
+                {/* Ajuda & Questões / Help & FAQ */}
                 <div className="p-4 rounded-2xl space-y-3 border-2 border-zinc-700 transition-all bg-[#F6EFDC] text-neutral-900 shadow-xs">
                   <div className="flex items-center justify-between gap-3">
                     <div className="pr-2">
                       <h5 className="text-[11px] font-bold flex items-center font-display text-black">
                         <HelpCircle className="w-4 h-4 text-[#12908C] mr-2 shrink-0" />
-                        {lang === 'PT' ? 'Ajuda & FAQ' : 'Help & FAQ'}
+                        {lang === 'PT' ? 'Ajuda & Questões' : 'Help & FAQ'}
                       </h5>
                       <p className="text-[9px] mt-0.5 leading-normal text-zinc-600">
                         {lang === 'PT'

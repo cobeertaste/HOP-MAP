@@ -237,7 +237,7 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-bold font-sans text-[#1B2036]">
-                      {isPT ? 'Ajuda & FAQ' : 'Help & FAQ'}
+                      {isPT ? 'Ajuda & Questões' : 'Help & FAQ'}
                     </div>
                     <p className="text-[10px] text-[#1B2036]/70 font-mono truncate">
                       {isPT ? 'Dúvidas, regras e contacto' : 'Questions, rules & support'}

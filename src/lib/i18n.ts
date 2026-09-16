@@ -281,7 +281,7 @@ export const translations = {
     menuHopChat: 'HOP-Chat comunidade',
     menuBuyBeer: 'Oferece uma rodada',
     menuLeaderboard: 'Ver tabela de classificações',
-    menuHelpFaq: 'Ajuda & FAQ',
+    menuHelpFaq: 'Ajuda & Questões',
 
     // GPS Status
     gpsActive: 'Sinal GPS Ativo',
