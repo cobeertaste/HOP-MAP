@@ -208,6 +208,52 @@ export interface UserProfile {
   shareCheckinsEnabled?: boolean;
   notificationsEnabled?: boolean;
   user_language?: 'PT' | 'EN';
+  role?: 'admin' | 'owner' | 'user';
+  isOwner?: boolean;
+  ownedSpotId?: string;
+  ownerClaimPending?: boolean;
+  ownerClaimApproved?: boolean;
+  ownerClaimSpotId?: string;
+  ownerClaimSpotName?: string;
+  ownerClaimRequestedAt?: string;
+}
+
+export interface OwnerClaimRecord {
+  userId: string;
+  userEmail: string;
+  username: string;
+  spotId: string;
+  spotName: string;
+  requestedAt: string;
+  status: 'pending' | 'approved' | 'rejected';
+  approvedAt?: string;
+}
+
+export interface OwnerSpotMonthlyMetrics {
+  spotId: string;
+  spotName: string;
+  monthKey: string; // 'YYYY-MM'
+  monthLabel: string; // e.g. "Agosto de 2026"
+  isCompletedMonth: boolean;
+  scheduledDispatchDate: string; // e.g. "1 de Setembro de 2026"
+  totalCheckins: number;
+  uniqueVisitors: number;
+  hopsAwarded: number;
+  totalShares: number;
+  totalViews: number;
+  totalDirections: number;
+  ratingsCount: number;
+  averageRating: number;
+  peakHourRange: string; // e.g. "19h - 21h"
+  hourlyBreakdown: Array<{ hourRange: string; count: number; percentage: number }>;
+  reviews: Array<{
+    id: string;
+    userName: string;
+    rating: number;
+    comment: string;
+    beerStyleReviewed?: string;
+    date: string;
+  }>;
 }
 
 export interface FriendSocialActivity {

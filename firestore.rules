@@ -84,9 +84,9 @@ service cloud.firestore {
       allow update, delete: if true;
     }
 
-    // 10. Analytics Events Collection (Creation by app, Read only by Administrator)
+    // 10. Analytics Events Collection (Creation by app, Read by Administrator or Verified Spot Owner for their own spot)
     match /analytics_events/{eventId} {
-      allow read: if isAdmin();
+      allow read: if isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownedSpotId == resource.data.spotId && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownerClaimApproved == true);
       allow create: if request.resource.data.eventType is string 
                     && request.resource.data.spotId is string 
                     && request.resource.data.month is string;

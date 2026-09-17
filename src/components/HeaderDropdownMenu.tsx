@@ -7,7 +7,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Menu, X, User, MessageSquare, Beer, Trophy, HelpCircle, 
-  FileText, ChevronRight
+  FileText, ChevronRight, Store, ShieldCheck
 } from 'lucide-react';
 import { PixelIcon } from './PixelIcons';
 
@@ -20,6 +20,9 @@ interface HeaderDropdownMenuProps {
   onOpenHelpFaq: () => void;
   isAdmin?: boolean;
   onOpenAdminReport?: () => void;
+  onOpenAdminClaims?: () => void;
+  isOwner?: boolean;
+  onOpenOwnerMetrics?: () => void;
   hasUnreadNotifications?: boolean;
   isChristmas?: boolean;
 }
@@ -33,6 +36,9 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
   onOpenHelpFaq,
   isAdmin = false,
   onOpenAdminReport,
+  onOpenAdminClaims,
+  isOwner = false,
+  onOpenOwnerMetrics,
   hasUnreadNotifications = false,
   isChristmas = false,
 }) => {
@@ -247,30 +253,84 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
                 <ChevronRight className="w-4 h-4 text-[#1B2036]/50 group-hover:text-[#1B2036] group-hover:translate-x-0.5 transition-all shrink-0" />
               </button>
 
-              {/* Administrator Option if applicable */}
-              {isAdmin && onOpenAdminReport && (
-                <div className="pt-1 mt-1 border-t-2 border-[#1B2036]/20">
-                  <button
-                    type="button"
-                    onClick={() => handleSelect(onOpenAdminReport)}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#12908C]/15 active:bg-[#12908C]/30 transition-colors text-left cursor-pointer group"
-                    id="menu-item-admin-report"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-[#12908C]/20 border-2 border-[#1B2036] flex items-center justify-center shadow-[1.5px_1.5px_0px_#1B2036] shrink-0">
-                        <FileText className="w-4 h-4 text-[#1B2036]" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold font-sans text-[#1B2036]">
-                          {isPT ? 'Relatório Mensal Admin' : 'Admin Monthly Report'}
-                        </div>
-                        <p className="text-[10px] text-[#1B2036]/70 font-mono truncate">
-                          cobeertaste@gmail.com
-                        </p>
-                      </div>
+              {/* Verified Owner Spot Metrics Option */}
+              {isOwner && onOpenOwnerMetrics && (
+                <button
+                  type="button"
+                  onClick={() => handleSelect(onOpenOwnerMetrics)}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-500/15 active:bg-amber-500/30 transition-colors text-left cursor-pointer group"
+                  id="menu-item-owner-metrics"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 border-2 border-[#1B2036] flex items-center justify-center shadow-[1.5px_1.5px_0px_#1B2036] shrink-0">
+                      <Store className="w-4 h-4 text-[#1B2036]" />
                     </div>
-                    <ChevronRight className="w-4 h-4 text-[#1B2036]/50 group-hover:text-[#1B2036] transition-all shrink-0" />
-                  </button>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold font-sans text-[#1B2036] flex items-center gap-1.5">
+                        <span>{isPT ? 'Métricas do Spot' : 'Spot Metrics'}</span>
+                        <span className="px-1.5 py-0.2 rounded bg-amber-500 text-black text-[8px] font-mono font-bold">
+                          OWNER
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-[#1B2036]/70 font-mono truncate">
+                        {isPT ? 'Check-ins, afluência e relatório' : 'Check-ins, peak hours & reports'}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#1B2036]/50 group-hover:text-[#1B2036] group-hover:translate-x-0.5 transition-all shrink-0" />
+                </button>
+              )}
+
+              {/* Administrator Option if applicable */}
+              {isAdmin && (
+                <div className="pt-1 mt-1 border-t-2 border-[#1B2036]/20 space-y-1">
+                  {onOpenAdminReport && (
+                    <button
+                      type="button"
+                      onClick={() => handleSelect(onOpenAdminReport)}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#12908C]/15 active:bg-[#12908C]/30 transition-colors text-left cursor-pointer group"
+                      id="menu-item-admin-report"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-[#12908C]/20 border-2 border-[#1B2036] flex items-center justify-center shadow-[1.5px_1.5px_0px_#1B2036] shrink-0">
+                          <FileText className="w-4 h-4 text-[#1B2036]" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold font-sans text-[#1B2036]">
+                            {isPT ? 'Relatório Mensal Admin' : 'Admin Monthly Report'}
+                          </div>
+                          <p className="text-[10px] text-[#1B2036]/70 font-mono truncate">
+                            cobeertaste@gmail.com
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-[#1B2036]/50 group-hover:text-[#1B2036] transition-all shrink-0" />
+                    </button>
+                  )}
+
+                  {onOpenAdminClaims && (
+                    <button
+                      type="button"
+                      onClick={() => handleSelect(onOpenAdminClaims)}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-500/15 active:bg-amber-500/30 transition-colors text-left cursor-pointer group"
+                      id="menu-item-admin-claims"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-amber-500/20 border-2 border-[#1B2036] flex items-center justify-center shadow-[1.5px_1.5px_0px_#1B2036] shrink-0">
+                          <ShieldCheck className="w-4 h-4 text-[#1B2036]" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold font-sans text-[#1B2036]">
+                            {isPT ? 'Reivindicações de Locais' : 'Venue Owner Claims'}
+                          </div>
+                          <p className="text-[10px] text-[#1B2036]/70 font-mono truncate">
+                            {isPT ? 'Aprovar proprietários' : 'Approve venue owners'}
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-[#1B2036]/50 group-hover:text-[#1B2036] transition-all shrink-0" />
+                    </button>
+                  )}
                 </div>
               )}
             </div>

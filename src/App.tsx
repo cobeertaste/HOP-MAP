@@ -11,7 +11,7 @@ import {
   Navigation, CheckCircle, ArrowRight, Instagram, Facebook, Youtube,
   X, Compass, Filter, Share2, Flame, RefreshCcw, Smile, Check, Zap, CheckSquare, Square,
   Camera, LogOut, Trophy, ChevronDown, ChevronUp, Plus, Lock, Globe, Languages, History, FileText, Edit3, MessageSquare,
-  Clock, Trash2, ArrowDownAZ, List, LayoutGrid, Boxes, Key, HelpCircle
+  Clock, Trash2, ArrowDownAZ, List, LayoutGrid, Boxes, Key, HelpCircle, Store
 } from 'lucide-react';
 
 import { t, Language, getBarDescription, getBarWorkingHours, getEventDescription, getEventDate, getBarBeerNews } from './lib/i18n';
@@ -36,6 +36,9 @@ import PixelCheckinAnimation from './components/PixelCheckinAnimation';
 import RetroSpotShareModal from './components/RetroSpotShareModal';
 import MonthlyReportModal from './components/MonthlyReportModal';
 import AdminPinsDashboardModal from './components/AdminPinsDashboardModal';
+import AdminOwnerClaimsModal from './components/AdminOwnerClaimsModal';
+import OwnerMetricsDashboard from './components/OwnerMetricsDashboard';
+import { getClaimedSpotIds, submitOwnerClaim } from './lib/ownerUtils';
 import BeerStyleSelectModal from './components/BeerStyleSelectModal';
 import RetroPinModal from './components/RetroPinModal';
 import RetroStageClearCelebration from './components/RetroStageClearCelebration';
@@ -695,7 +698,14 @@ export default function App() {
       checkedInFestivals: [],
       shareCheckinsEnabled: savedShareCheckins,
       notificationsEnabled: savedNotificationsEnabled,
-      user_language: (localStorage.getItem('hop_app_language') as Language) || 'PT'
+      user_language: (localStorage.getItem('hop_app_language') as Language) || 'PT',
+      role: 'user',
+      isOwner: false,
+      ownedSpotId: undefined,
+      ownerClaimPending: false,
+      ownerClaimApproved: false,
+      ownerClaimSpotId: undefined,
+      ownerClaimSpotName: undefined
     };
   });
 
@@ -774,9 +784,30 @@ export default function App() {
   const [loginConfirmPassword, setLoginConfirmPassword] = useState('');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [isOver18, setIsOver18] = useState(false);
+  const [isOwnerRegister, setIsOwnerRegister] = useState(false);
+  const [selectedOwnerSpotId, setSelectedOwnerSpotId] = useState('');
+  const [claimedSpotIds, setClaimedSpotIds] = useState<Set<string>>(new Set());
+  const [profileSubTab, setProfileSubTab] = useState<'profile' | 'owner_metrics'>('profile');
+  const [isAdminOwnerClaimsModalOpen, setIsAdminOwnerClaimsModalOpen] = useState(false);
   const [authError, setAuthError] = useState('');
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const isLocalAuthFallback = false;
+
+  // Load claimed spot IDs whenever registering to ensure uniqueness in spot selection
+  useEffect(() => {
+    if (isRegisterMode) {
+      getClaimedSpotIds()
+        .then(ids => setClaimedSpotIds(ids))
+        .catch(err => console.warn('Notice loading claimed spots:', err));
+    }
+  }, [isRegisterMode]);
+
+  // Spots available for claiming (excluding any spots already claimed or pending)
+  const availableRegistrationSpots = React.useMemo(() => {
+    return bars
+      .filter(b => !claimedSpotIds.has(b.id))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [bars, claimedSpotIds]);
 
   // Password reset states
   const [showResetModal, setShowResetModal] = useState(false);
@@ -2474,6 +2505,13 @@ export default function App() {
         let savedBadges: any[] = [];
         let savedReferredBy: string | undefined = undefined;
         let savedHasCompletedFirstCheckin = localStorage.getItem(cacheKeyPrefix + 'hasCompletedFirstCheckin') === 'true';
+        let savedRole: 'admin' | 'owner' | 'user' = (firebaseUser.email?.toLowerCase() === 'cobeertaste@gmail.com') ? 'admin' : 'user';
+        let savedIsOwner = localStorage.getItem(cacheKeyPrefix + 'isOwner') === 'true';
+        let savedOwnedSpotId: string | undefined = localStorage.getItem(cacheKeyPrefix + 'ownedSpotId') || undefined;
+        let savedOwnerClaimPending = localStorage.getItem(cacheKeyPrefix + 'ownerClaimPending') === 'true';
+        let savedOwnerClaimApproved = localStorage.getItem(cacheKeyPrefix + 'ownerClaimApproved') === 'true';
+        let savedOwnerClaimSpotId: string | undefined = localStorage.getItem(cacheKeyPrefix + 'ownerClaimSpotId') || undefined;
+        let savedOwnerClaimSpotName: string | undefined = localStorage.getItem(cacheKeyPrefix + 'ownerClaimSpotName') || undefined;
 
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -2512,6 +2550,27 @@ export default function App() {
             if (typeof data.hasCompletedFirstCheckin === 'boolean') {
               savedHasCompletedFirstCheckin = data.hasCompletedFirstCheckin;
             }
+
+            // Extract owner and role fields
+            if (data.role) savedRole = data.role;
+            if (typeof data.isOwner === 'boolean') savedIsOwner = data.isOwner;
+            if (data.ownedSpotId) {
+              savedOwnedSpotId = data.ownedSpotId;
+              savedIsOwner = true;
+              if (savedRole !== 'admin') savedRole = 'owner';
+            }
+            if (typeof data.ownerClaimPending === 'boolean') savedOwnerClaimPending = data.ownerClaimPending;
+            if (typeof data.ownerClaimApproved === 'boolean') savedOwnerClaimApproved = data.ownerClaimApproved;
+            if (data.ownerClaimSpotId) savedOwnerClaimSpotId = data.ownerClaimSpotId;
+            if (data.ownerClaimSpotName) savedOwnerClaimSpotName = data.ownerClaimSpotName;
+
+            localStorage.setItem(cacheKeyPrefix + 'role', savedRole);
+            localStorage.setItem(cacheKeyPrefix + 'isOwner', String(savedIsOwner));
+            if (savedOwnedSpotId) localStorage.setItem(cacheKeyPrefix + 'ownedSpotId', savedOwnedSpotId);
+            localStorage.setItem(cacheKeyPrefix + 'ownerClaimPending', String(savedOwnerClaimPending));
+            localStorage.setItem(cacheKeyPrefix + 'ownerClaimApproved', String(savedOwnerClaimApproved));
+            if (savedOwnerClaimSpotId) localStorage.setItem(cacheKeyPrefix + 'ownerClaimSpotId', savedOwnerClaimSpotId);
+            if (savedOwnerClaimSpotName) localStorage.setItem(cacheKeyPrefix + 'ownerClaimSpotName', savedOwnerClaimSpotName);
 
             if (data.user_language === 'PT' || data.user_language === 'EN') {
               userLangVal = data.user_language as Language;
@@ -2575,11 +2634,25 @@ export default function App() {
           badges: savedBadges.length > 0 ? savedBadges : prev.badges,
           referredBy: savedReferredBy || prev.referredBy,
           hasCompletedFirstCheckin: savedHasCompletedFirstCheckin || prev.hasCompletedFirstCheckin,
+          role: savedRole,
+          isOwner: savedIsOwner,
+          ownedSpotId: savedOwnedSpotId,
+          ownerClaimPending: savedOwnerClaimPending,
+          ownerClaimApproved: savedOwnerClaimApproved,
+          ownerClaimSpotId: savedOwnerClaimSpotId,
+          ownerClaimSpotName: savedOwnerClaimSpotName,
           isLoggedIn: true
         }));
       } else {
         setUser(prev => ({
           ...prev,
+          role: 'user',
+          isOwner: false,
+          ownedSpotId: undefined,
+          ownerClaimPending: false,
+          ownerClaimApproved: false,
+          ownerClaimSpotId: undefined,
+          ownerClaimSpotName: undefined,
           isLoggedIn: false
         }));
       }
@@ -4048,6 +4121,14 @@ export default function App() {
                 onOpenHelpFaq={() => setIsHelpFaqOpen(true)}
                 isAdmin={isAdmin}
                 onOpenAdminReport={() => setIsMonthlyReportOpen(true)}
+                onOpenAdminClaims={() => setIsAdminOwnerClaimsModalOpen(true)}
+                isOwner={user.isOwner && !!user.ownedSpotId}
+                onOpenOwnerMetrics={() => {
+                  playPacmanSound();
+                  setActiveTab('profile');
+                  setProfileSubTab('owner_metrics');
+                  handleSelectBar(null);
+                }}
                 hasUnreadNotifications={notifications.some(n => !n.isRead)}
                 isChristmas={isChristmas}
               />
@@ -4225,6 +4306,64 @@ export default function App() {
                     </label>
                   </div>
                 )}
+
+                {/* Venue Owner Claim Checkbox & Dynamic Dropdown */}
+                {isRegisterMode && (
+                  <div className="pt-1 space-y-2">
+                    <label className={`flex items-center space-x-2.5 p-2.5 rounded-xl border-2 border-[#1B2036] cursor-pointer select-none transition-all ${
+                      isOwnerRegister 
+                        ? 'bg-amber-500/20 text-[#1B2036]' 
+                        : 'bg-[#EFE6CC] text-[#1B2036] hover:bg-[#F2A93B]/30'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={isOwnerRegister}
+                        onChange={e => {
+                          setIsOwnerRegister(e.target.checked);
+                          if (!e.target.checked) setSelectedOwnerSpotId('');
+                          if (authError) setAuthError('');
+                        }}
+                        className="w-4 h-4 rounded text-amber-600 accent-amber-600 focus:ring-amber-500 cursor-pointer shrink-0"
+                        id="checkbox-owner-register"
+                      />
+                      <span className="text-[10px] font-bold tracking-wide font-body">
+                        {lang === 'PT' ? 'É proprietário de um local?' : 'Are you a venue owner?'}
+                      </span>
+                    </label>
+
+                    {/* Dynamic Select Menu with Uniqueness Filter */}
+                    {isOwnerRegister && (
+                      <div className="p-3 rounded-xl border-2 border-[#1B2036] bg-white space-y-1.5 animate-fade-in text-left">
+                        <label className="text-[9px] font-bold uppercase tracking-wider text-[#1B2036]/80 pl-0.5 font-label block">
+                          {lang === 'PT' ? 'Seleciona o teu local / spot:' : 'Select your venue / spot:'}
+                        </label>
+                        <select
+                          value={selectedOwnerSpotId}
+                          onChange={e => {
+                            setSelectedOwnerSpotId(e.target.value);
+                            if (authError) setAuthError('');
+                          }}
+                          className="w-full px-3 py-2 text-xs rounded-xl border-2 border-[#1B2036] bg-[#FAF7F0] text-[#1B2036] outline-none focus:border-amber-600 font-body cursor-pointer"
+                          id="select-owner-spot"
+                        >
+                          <option value="">
+                            {lang === 'PT' ? '-- Escolhe o teu spot na lista --' : '-- Choose your spot from list --'}
+                          </option>
+                          {availableRegistrationSpots.map(s => (
+                            <option key={s.id} value={s.id}>
+                              {s.name} ({s.zone})
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-[8.5px] text-[#1B2036]/70 leading-tight">
+                          {lang === 'PT' 
+                            ? 'Locais já geridos ou com solicitação pendente não surgem na lista. O teu pedido fica pendente até aprovação pela administração.'
+                            : 'Venues already claimed or under review do not appear. Your claim will be pending until approved by admin.'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Error Alert Box */}
@@ -4278,6 +4417,14 @@ export default function App() {
                           lang === 'PT' 
                             ? 'Tens de confirmar que tens mais de 18 anos para criar conta.' 
                             : 'You must confirm that you are over 18 years old to create an account.'
+                        );
+                        return;
+                      }
+                      if (isOwnerRegister && !selectedOwnerSpotId) {
+                        setAuthError(
+                          lang === 'PT'
+                            ? 'Por favor seleciona o teu local no menu pendente.'
+                            : 'Please select your venue in the dropdown menu.'
                         );
                         return;
                       }
@@ -4362,6 +4509,11 @@ export default function App() {
                         
                         // Add newly registered user to Firebase Firestore collection 'users' with full profile & referral tracking
                         const pendingRef = localStorage.getItem('pendingRef');
+                        const selectedSpotObj = bars.find(b => b.id === selectedOwnerSpotId);
+                        const assignedRole: 'admin' | 'owner' | 'user' = cleanEmail.toLowerCase() === 'cobeertaste@gmail.com' 
+                          ? 'admin' 
+                          : (isOwnerRegister && selectedOwnerSpotId ? 'owner' : 'user');
+
                         const completeUserData: any = {
                           uid: uid,
                           email: cleanEmail,
@@ -4373,7 +4525,15 @@ export default function App() {
                           shareCheckinsEnabled: true,
                           user_language: lang,
                           hasCompletedFirstCheckin: false,
-                          createdAt: new Date().toISOString()
+                          createdAt: new Date().toISOString(),
+                          role: assignedRole,
+                          isOwner: false, // Remains pending until admin approves
+                          ownedSpotId: null,
+                          ownerClaimPending: isOwnerRegister && !!selectedOwnerSpotId,
+                          ownerClaimApproved: false,
+                          ownerClaimSpotId: isOwnerRegister && selectedOwnerSpotId ? selectedOwnerSpotId : null,
+                          ownerClaimSpotName: isOwnerRegister && selectedSpotObj ? selectedSpotObj.name : null,
+                          ownerClaimRequestedAt: isOwnerRegister && selectedOwnerSpotId ? new Date().toISOString() : null
                         };
                         if (pendingRef && pendingRef.trim() && pendingRef.trim() !== uid) {
                           completeUserData.referredBy = pendingRef.trim();
@@ -4389,6 +4549,22 @@ export default function App() {
                           console.warn('Notice creating user profile in Firestore:', uerr);
                         }
 
+                        // Submit claim in owner_claims collection if owner checkbox was checked
+                        if (isOwnerRegister && selectedOwnerSpotId) {
+                          try {
+                            await submitOwnerClaim(
+                              uid,
+                              cleanEmail,
+                              displayNameVal,
+                              selectedOwnerSpotId,
+                              selectedSpotObj?.name || selectedOwnerSpotId
+                            );
+                            console.log('Owner claim submitted successfully for spot:', selectedOwnerSpotId);
+                          } catch (claimErr) {
+                            console.warn('Notice submitting owner claim to Firestore:', claimErr);
+                          }
+                        }
+
                         // Local cache update
                         const cacheKeyPrefix = `hop_user_${uid}_`;
                         localStorage.setItem(cacheKeyPrefix + 'points', '0');
@@ -4397,6 +4573,14 @@ export default function App() {
                         localStorage.setItem(cacheKeyPrefix + 'checkedInFestivals', '[]');
                         localStorage.setItem(cacheKeyPrefix + 'shareCheckinsEnabled', 'true');
                         localStorage.setItem(cacheKeyPrefix + 'user_language', lang);
+                        localStorage.setItem(cacheKeyPrefix + 'role', assignedRole);
+                        localStorage.setItem(cacheKeyPrefix + 'isOwner', 'false');
+                        localStorage.setItem(cacheKeyPrefix + 'ownerClaimPending', String(isOwnerRegister && !!selectedOwnerSpotId));
+                        localStorage.setItem(cacheKeyPrefix + 'ownerClaimApproved', 'false');
+                        if (isOwnerRegister && selectedOwnerSpotId) {
+                          localStorage.setItem(cacheKeyPrefix + 'ownerClaimSpotId', selectedOwnerSpotId);
+                          if (selectedSpotObj) localStorage.setItem(cacheKeyPrefix + 'ownerClaimSpotName', selectedSpotObj.name);
+                        }
 
                         // Update in-memory user state immediately
                         setUser(prev => ({
@@ -4415,12 +4599,20 @@ export default function App() {
                           earnedBadges: [],
                           badges: [],
                           referredBy: pendingRef && pendingRef.trim() !== uid ? pendingRef.trim() : undefined,
-                          role: cleanEmail.toLowerCase() === 'cobeertaste@gmail.com' ? 'admin' : 'user'
+                          role: assignedRole,
+                          isOwner: false,
+                          ownedSpotId: undefined,
+                          ownerClaimPending: isOwnerRegister && !!selectedOwnerSpotId,
+                          ownerClaimApproved: false,
+                          ownerClaimSpotId: isOwnerRegister && selectedOwnerSpotId ? selectedOwnerSpotId : undefined,
+                          ownerClaimSpotName: isOwnerRegister && selectedSpotObj ? selectedSpotObj.name : undefined
                         }));
 
                         setLoginPassword('');
                         setLoginConfirmPassword('');
                         setIsRegisterMode(false);
+                        setIsOwnerRegister(false);
+                        setSelectedOwnerSpotId('');
                       }
 
                       triggerSelfPush(
@@ -5917,7 +6109,9 @@ export default function App() {
             )}
 
             {/* VIEW E: USER PROFILE & NOTIFICATION SIMULATOR */}
-            {activeTab === 'profile' && (
+            {activeTab === 'profile' && (() => {
+              const ownedSpot = (user.isOwner && user.ownedSpotId) ? bars.find(b => b.id === user.ownedSpotId) : undefined;
+              return (
               <motion.div 
                 key="profile-tab"
                 initial={{ opacity: 0, y: 10 }}
@@ -5925,6 +6119,103 @@ export default function App() {
                 exit={{ opacity: 0, y: -10 }}
                 className="p-4 space-y-4 font-sans"
               >
+                {/* Sub-tab switcher for verified venue owner */}
+                {user.isOwner && user.ownedSpotId && (
+                  <div className="flex items-center p-1 bg-[#EFE6CC] rounded-2xl border-2 border-zinc-700 shadow-xs mb-1">
+                    <button
+                      type="button"
+                      onClick={() => setProfileSubTab('profile')}
+                      className={`flex-1 py-2 text-xs font-black font-display rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                        profileSubTab === 'profile'
+                          ? 'bg-amber-500 text-black shadow-xs'
+                          : 'text-zinc-600 hover:text-black'
+                      }`}
+                      id="btn-subtab-profile"
+                    >
+                      <Smile className="w-3.5 h-3.5" />
+                      <span>{lang === 'PT' ? 'O Meu Perfil' : 'My Profile'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProfileSubTab('owner_metrics')}
+                      className={`flex-1 py-2 text-xs font-black font-display rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                        profileSubTab === 'owner_metrics'
+                          ? 'bg-amber-500 text-black shadow-xs'
+                          : 'text-zinc-600 hover:text-black'
+                      }`}
+                      id="btn-subtab-owner-metrics"
+                    >
+                      <Store className="w-3.5 h-3.5" />
+                      <span>{lang === 'PT' ? 'Métricas do Spot' : 'Spot Metrics'}</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* OWNER METRICS DASHBOARD VIEW (If Owner and sub-tab selected) */}
+                {profileSubTab === 'owner_metrics' && user.isOwner && user.ownedSpotId && ownedSpot ? (
+                  <OwnerMetricsDashboard
+                    spot={ownedSpot}
+                    user={user}
+                    lang={lang}
+                    darkMode={darkMode}
+                  />
+                ) : (
+                  <>
+                    {/* Pending Owner Claim Banner */}
+                    {user.ownerClaimPending && !user.ownerClaimApproved && (
+                      <div className="p-4 rounded-2xl border-2 border-amber-600 bg-amber-500/15 text-zinc-900 shadow-xs space-y-2 text-left animate-fade-in">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-amber-700 animate-pulse shrink-0" />
+                            <h4 className="text-xs font-black uppercase tracking-wider font-display text-amber-900">
+                              {lang === 'PT' ? 'Reivindicação de Local em Análise' : 'Venue Claim Pending Review'}
+                            </h4>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500 text-black font-mono font-black text-[8.5px]">
+                            PENDENTE
+                          </span>
+                        </div>
+                        <p className="text-[10.5px] leading-relaxed text-zinc-700 font-sans">
+                          {lang === 'PT' 
+                            ? `O teu pedido de associação ao local "${user.ownerClaimSpotName || user.ownerClaimSpotId || 'Spot'}" está a ser verificado pela administração (cobeertaste@gmail.com). Logo que aprovado, terás acesso imediato ao painel de métricas exclusivas e horários de pico!`
+                            : `Your claim for "${user.ownerClaimSpotName || user.ownerClaimSpotId || 'Spot'}" is being verified by administration (cobeertaste@gmail.com). Once approved, you will have immediate access to your venue's metrics and peak hours!`}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Verified Owner Quick Card */}
+                    {user.isOwner && user.ownedSpotId && ownedSpot && (
+                      <div className="p-3.5 rounded-2xl border-2 border-zinc-700 bg-amber-500/15 text-zinc-900 shadow-xs flex items-center justify-between gap-3 text-left animate-fade-in">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="p-2 rounded-xl bg-amber-500/20 border border-zinc-700 text-amber-800 shrink-0">
+                            <Store className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <h5 className="text-xs font-extrabold uppercase font-display text-zinc-900 truncate">
+                                {ownedSpot.name}
+                              </h5>
+                              <span className="px-1.5 py-0.5 rounded bg-amber-500 text-black text-[7.5px] font-mono font-black">
+                                PROPRIETÁRIO
+                              </span>
+                            </div>
+                            <p className="text-[9.5px] text-zinc-600 truncate">
+                              {lang === 'PT' ? 'Métricas exclusivas, visitantes e horários de pico' : 'Exclusive metrics, visitors & peak hours'}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setProfileSubTab('owner_metrics')}
+                          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[9.5px] rounded-xl flex items-center gap-1 transition font-display uppercase tracking-wider shrink-0 cursor-pointer border border-zinc-700 active:scale-95"
+                          id="btn-goto-owner-metrics"
+                        >
+                          <span>{lang === 'PT' ? 'Ver Métricas' : 'View Metrics'}</span>
+                          <span>&rarr;</span>
+                        </button>
+                      </div>
+                    )}
+
                 {isLocalAuthFallback && (
                   <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-[24px] text-left space-y-2 animate-fade-in">
                     <div className="flex items-center gap-2 text-amber-500">
@@ -6739,6 +7030,45 @@ export default function App() {
                   </div>
                 )}
 
+                {/* Owner Claims Management Card (Administrator Only) */}
+                {isAdmin && (
+                  <div className="p-4 rounded-2xl space-y-3 border-2 border-zinc-700 transition-all bg-amber-50/80 text-neutral-900 shadow-xs text-left">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <Store className="w-4 h-4 text-amber-600 shrink-0" />
+                          <h5 className="text-[11px] font-extrabold uppercase tracking-wider font-display text-amber-800">
+                            {lang === 'PT' ? 'Reivindicações de Locais' : 'Venue Owner Claims'}
+                          </h5>
+                          <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-800 border border-zinc-700 text-[7px] font-mono font-bold">
+                            ADMIN
+                          </span>
+                        </div>
+                        <p className="text-[9.5px] leading-relaxed text-zinc-600">
+                          {lang === 'PT'
+                            ? 'Aprova ou rejeita solicitações de proprietários para gestão de spots e acesso a estatísticas exclusivas.'
+                            : 'Approve or reject venue owner requests for spot management and exclusive analytics access.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 border-t border-zinc-700">
+                      <span className="text-[8.5px] font-mono text-zinc-600">
+                        Administrador: <strong className="text-amber-800">cobeertaste@gmail.com</strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsAdminOwnerClaimsModalOpen(true)}
+                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[9.5px] rounded-xl flex items-center gap-1.5 transition font-display uppercase tracking-wider shadow-sm active:scale-95 cursor-pointer border border-zinc-700"
+                        id="btn-open-admin-claims-profile"
+                      >
+                        <Store className="w-3 h-3 text-black" />
+                        <span>{lang === 'PT' ? 'Gerir Pedidos' : 'Manage Claims'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Language Preference Settings Card */}
                 <div className="p-4 rounded-2xl space-y-3 border-2 border-zinc-700 transition-all bg-[#F6EFDC] text-neutral-900 shadow-xs">
                   <div className="flex items-center justify-between">
@@ -6916,8 +7246,11 @@ export default function App() {
                     </button>
                   </div>
                 </div>
+                  </>
+                )}
               </motion.div>
-            )}
+              );
+            })()}
 
           </AnimatePresence>
 
@@ -8723,6 +9056,34 @@ export default function App() {
             darkMode={darkMode}
             onPinUpdated={(spotId, newPin) => {
               setBars(prev => prev.map(b => b.id === spotId ? { ...b, checkinPin: newPin } : b));
+            }}
+          />
+        )}
+
+        {/* --- MASTER ADMIN OWNER CLAIMS DASHBOARD MODAL (cobeertaste@gmail.com strictly) --- */}
+        {isAdminOwnerClaimsModalOpen && isAdmin && (
+          <AdminOwnerClaimsModal
+            isOpen={isAdminOwnerClaimsModalOpen && isAdmin}
+            onClose={() => setIsAdminOwnerClaimsModalOpen(false)}
+            allSpots={bars}
+            isAdmin={isAdmin}
+            userEmail={user.email || auth.currentUser?.email || ''}
+            lang={lang}
+            darkMode={darkMode}
+            onClaimApproved={(spotId, ownerUid) => {
+              if (user.id === ownerUid) {
+                const targetSpot = bars.find(b => b.id === spotId);
+                setUser(prev => ({
+                  ...prev,
+                  isOwner: true,
+                  ownedSpotId: spotId,
+                  ownerClaimPending: false,
+                  ownerClaimApproved: true,
+                  ownerClaimSpotId: spotId,
+                  ownerClaimSpotName: targetSpot ? targetSpot.name : spotId,
+                  role: 'owner'
+                }));
+              }
             }}
           />
         )}

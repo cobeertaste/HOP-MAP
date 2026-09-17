@@ -18,6 +18,14 @@
           "items": { "type": "string" }
         },
         "shareCheckinsEnabled": { "type": "boolean" },
+        "role": { "type": "string" },
+        "isOwner": { "type": "boolean" },
+        "ownedSpotId": { "type": "string" },
+        "ownerClaimPending": { "type": "boolean" },
+        "ownerClaimApproved": { "type": "boolean" },
+        "ownerClaimSpotId": { "type": "string" },
+        "ownerClaimSpotName": { "type": "string" },
+        "ownerClaimRequestedAt": { "type": "string", "format": "date-time" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email"]
