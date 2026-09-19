@@ -12,6 +12,7 @@ import {
 import { Bar, OwnerClaimRecord } from '../types';
 import { 
   getPendingOwnerClaims, 
+  getApprovedOwnerClaims,
   approveOwnerClaim, 
   rejectOwnerClaim 
 } from '../lib/ownerUtils';
@@ -41,7 +42,9 @@ export default function AdminOwnerClaimsModal({
   onClaimRejected
 }: AdminOwnerClaimsModalProps) {
   const isAuthorizedAdmin = isAdmin ?? isAdminUser(userEmail);
+  const [activeTab, setActiveTab] = useState<'pending' | 'approved'>('pending');
   const [claims, setClaims] = useState<OwnerClaimRecord[]>([]);
+  const [approvedClaims, setApprovedClaims] = useState<OwnerClaimRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,8 +54,12 @@ export default function AdminOwnerClaimsModal({
     if (!isAuthorizedAdmin) return;
     setIsLoading(true);
     try {
-      const data = await getPendingOwnerClaims();
-      setClaims(data);
+      const [pendingData, approvedData] = await Promise.all([
+        getPendingOwnerClaims(),
+        getApprovedOwnerClaims()
+      ]);
+      setClaims(pendingData);
+      setApprovedClaims(approvedData);
     } catch (e) {
       console.warn('Notice loading claims:', e);
     } finally {
@@ -69,13 +76,14 @@ export default function AdminOwnerClaimsModal({
   const handleApprove = async (claim: OwnerClaimRecord) => {
     setProcessingId(claim.userId);
     try {
-      await approveOwnerClaim(claim.userId, claim.spotId, claim.spotName);
+      await approveOwnerClaim(claim.userId, claim.spotId, claim.spotName, claim.userEmail, claim.username);
       setNotice(
         lang === 'PT'
-          ? `Local "${claim.spotName}" aprovado para ${claim.userEmail}!`
-          : `Venue "${claim.spotName}" approved for ${claim.userEmail}!`
+          ? `Local "${claim.spotName}" aprovado com sucesso para ${claim.userEmail}!`
+          : `Venue "${claim.spotName}" successfully approved for ${claim.userEmail}!`
       );
       setClaims(prev => prev.filter(c => c.userId !== claim.userId));
+      setApprovedClaims(prev => [{ ...claim, status: 'approved' }, ...prev.filter(c => c.spotId !== claim.spotId)]);
       onClaimApproved?.(claim.userId, claim.spotId);
     } catch (err: any) {
       setNotice(
@@ -111,6 +119,15 @@ export default function AdminOwnerClaimsModal({
   };
 
   const filteredClaims = claims.filter(c => {
+    const term = searchTerm.toLowerCase();
+    return (
+      c.spotName.toLowerCase().includes(term) ||
+      c.userEmail.toLowerCase().includes(term) ||
+      c.username.toLowerCase().includes(term)
+    );
+  });
+
+  const filteredApproved = approvedClaims.filter(c => {
     const term = searchTerm.toLowerCase();
     return (
       c.spotName.toLowerCase().includes(term) ||
@@ -177,6 +194,43 @@ export default function AdminOwnerClaimsModal({
             </div>
           )}
 
+          {/* Tabs: Pendentes vs Aprovados */}
+          <div className="flex border-b-2 border-zinc-700 bg-[#EFE6CC]/80 px-4 pt-2 gap-2 text-xs font-bold font-display">
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`px-4 py-2 rounded-t-xl border-t-2 border-x-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'pending'
+                  ? 'bg-[#F6EFDC] border-zinc-700 text-zinc-900 shadow-xs translate-y-[2px]'
+                  : 'bg-transparent border-transparent text-zinc-600 hover:text-zinc-900'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5 text-amber-700" />
+              <span>{lang === 'PT' ? 'Pedidos Pendentes' : 'Pending Requests'}</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                activeTab === 'pending' ? 'bg-amber-500 text-black font-black' : 'bg-zinc-300 text-zinc-700'
+              }`}>
+                {claims.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('approved')}
+              className={`px-4 py-2 rounded-t-xl border-t-2 border-x-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'approved'
+                  ? 'bg-[#F6EFDC] border-zinc-700 text-zinc-900 shadow-xs translate-y-[2px]'
+                  : 'bg-transparent border-transparent text-zinc-600 hover:text-zinc-900'
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span>{lang === 'PT' ? 'Proprietários Aprovados' : 'Approved Owners'}</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                activeTab === 'approved' ? 'bg-emerald-600 text-white font-black' : 'bg-zinc-300 text-zinc-700'
+              }`}>
+                {approvedClaims.length}
+              </span>
+            </button>
+          </div>
+
           {/* Search & Actions Bar */}
           <div className="p-4 border-b border-zinc-700 flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between bg-amber-50/50">
             <div className="relative flex-1">
@@ -214,104 +268,182 @@ export default function AdminOwnerClaimsModal({
                     : `This panel is strictly reserved for Administrator: ${OFFICIAL_REPORT_EMAIL}`}
                 </p>
               </div>
-            ) : filteredClaims.length === 0 ? (
-              <div className="p-8 rounded-2xl border-2 border-dashed border-zinc-700 text-center space-y-2 bg-white/40">
-                <UserCheck className="w-8 h-8 text-zinc-400 mx-auto" />
-                <h4 className="font-bold text-sm font-display text-zinc-700">
-                  {lang === 'PT' ? 'Nenhuma reivindicação pendente' : 'No pending claims'}
-                </h4>
-                <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-                  {lang === 'PT'
-                    ? 'Todos os pedidos de proprietários foram processados ou ainda não há novas solicitações.'
-                    : 'All owner claims have been processed or there are no new submissions yet.'}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="text-[11px] font-bold text-zinc-600 uppercase tracking-wider font-display">
-                  {lang === 'PT' ? 'Pedidos Pendentes' : 'Pending Requests'} ({filteredClaims.length})
+            ) : activeTab === 'pending' ? (
+              filteredClaims.length === 0 ? (
+                <div className="p-8 rounded-2xl border-2 border-dashed border-zinc-700 text-center space-y-2 bg-white/40">
+                  <UserCheck className="w-8 h-8 text-zinc-400 mx-auto" />
+                  <h4 className="font-bold text-sm font-display text-zinc-700">
+                    {lang === 'PT' ? 'Nenhuma reivindicação pendente' : 'No pending claims'}
+                  </h4>
+                  <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                    {lang === 'PT'
+                      ? 'Todos os pedidos de proprietários foram processados ou ainda não há novas solicitações.'
+                      : 'All owner claims have been processed or there are no new submissions yet.'}
+                  </p>
                 </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="text-[11px] font-bold text-zinc-600 uppercase tracking-wider font-display">
+                    {lang === 'PT' ? 'Pedidos Pendentes' : 'Pending Requests'} ({filteredClaims.length})
+                  </div>
 
-                {filteredClaims.map((claim) => {
-                  const spot = allSpots.find(b => b.id === claim.spotId);
-                  const isProcessing = processingId === claim.userId;
+                  {filteredClaims.map((claim) => {
+                    const spot = allSpots.find(b => b.id === claim.spotId);
+                    const isProcessing = processingId === claim.userId;
 
-                  return (
-                    <div
-                      key={claim.userId}
-                      className="p-4 rounded-2xl border-2 border-zinc-700 bg-white shadow-xs space-y-3 transition-all"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 pb-2.5">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-zinc-700 flex items-center justify-center font-bold text-base text-amber-800 shrink-0">
-                            🍻
+                    return (
+                      <div
+                        key={claim.userId}
+                        className="p-4 rounded-2xl border-2 border-zinc-700 bg-white shadow-xs space-y-3 transition-all"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 pb-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-zinc-700 flex items-center justify-center font-bold text-base text-amber-800 shrink-0">
+                              🍻
+                            </div>
+                            <div>
+                              <h4 className="font-extrabold text-sm font-display text-zinc-900 leading-tight">
+                                {claim.spotName}
+                              </h4>
+                              <p className="text-[10px] text-zinc-500 font-mono">
+                                ID: {claim.spotId} {spot?.zone ? `• ${spot.zone}` : ''}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-extrabold text-sm font-display text-zinc-900 leading-tight">
-                              {claim.spotName}
-                            </h4>
-                            <p className="text-[10px] text-zinc-500 font-mono">
-                              ID: {claim.spotId} {spot?.zone ? `• ${spot.zone}` : ''}
-                            </p>
+
+                          <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-mono">
+                            <Clock className="w-3 h-3 text-zinc-400" />
+                            <span>{new Date(claim.requestedAt).toLocaleDateString(lang === 'PT' ? 'pt-PT' : 'en-US')}</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-mono">
-                          <Clock className="w-3 h-3 text-zinc-400" />
-                          <span>{new Date(claim.requestedAt).toLocaleDateString(lang === 'PT' ? 'pt-PT' : 'en-US')}</span>
-                        </div>
-                      </div>
-
-                      {/* Applicant details */}
-                      <div className="bg-[#FBF8EF] p-2.5 rounded-xl border border-zinc-200 text-xs space-y-1">
-                        <div className="flex items-center justify-between text-zinc-700">
-                          <span className="text-[10px] font-bold uppercase tracking-wider font-display text-zinc-500">
-                            {lang === 'PT' ? 'Requerente' : 'Applicant'}:
-                          </span>
-                          <span className="font-bold text-zinc-900">{claim.username}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-zinc-700">
-                          <span className="text-[10px] font-bold uppercase tracking-wider font-display text-zinc-500">
-                            Email:
-                          </span>
-                          <span className="font-mono text-[11px] text-amber-800">{claim.userEmail}</span>
-                        </div>
-                        {spot?.address && (
-                          <div className="flex items-center justify-between text-zinc-600 text-[10px]">
-                            <span className="font-bold uppercase tracking-wider font-display text-zinc-500">
-                              {lang === 'PT' ? 'Morada' : 'Address'}:
+                        {/* Applicant details */}
+                        <div className="bg-[#FBF8EF] p-2.5 rounded-xl border border-zinc-200 text-xs space-y-1">
+                          <div className="flex items-center justify-between text-zinc-700">
+                            <span className="text-[10px] font-bold uppercase tracking-wider font-display text-zinc-500">
+                              {lang === 'PT' ? 'Requerente' : 'Applicant'}:
                             </span>
-                            <span className="truncate max-w-[280px]">{spot.address}</span>
+                            <span className="font-bold text-zinc-900">{claim.username}</span>
                           </div>
-                        )}
-                      </div>
+                          <div className="flex items-center justify-between text-zinc-700">
+                            <span className="text-[10px] font-bold uppercase tracking-wider font-display text-zinc-500">
+                              Email:
+                            </span>
+                            <span className="font-mono text-[11px] text-amber-800">{claim.userEmail}</span>
+                          </div>
+                          {spot?.address && (
+                            <div className="flex items-center justify-between text-zinc-600 text-[10px]">
+                              <span className="font-bold uppercase tracking-wider font-display text-zinc-500">
+                                {lang === 'PT' ? 'Morada' : 'Address'}:
+                              </span>
+                              <span className="truncate max-w-[280px]">{spot.address}</span>
+                            </div>
+                          )}
+                        </div>
 
-                      {/* Actions */}
-                      <div className="flex items-center justify-end gap-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => handleReject(claim)}
-                          disabled={isProcessing}
-                          className="px-3 py-1.5 rounded-xl border border-red-300 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold font-display flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                          <span>{lang === 'PT' ? 'Rejeitar' : 'Reject'}</span>
-                        </button>
+                        {/* Actions */}
+                        <div className="flex items-center justify-end gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleReject(claim)}
+                            disabled={isProcessing}
+                            className="px-3 py-1.5 rounded-xl border border-red-300 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold font-display flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span>{lang === 'PT' ? 'Rejeitar' : 'Reject'}</span>
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleApprove(claim)}
-                          disabled={isProcessing}
-                          className="px-4 py-1.5 rounded-xl border border-zinc-700 bg-amber-500 hover:bg-amber-400 text-black text-xs font-black font-display uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>{lang === 'PT' ? 'Aprovar Proprietário' : 'Approve Owner'}</span>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => handleApprove(claim)}
+                            disabled={isProcessing}
+                            className="px-4 py-1.5 rounded-xl border border-zinc-700 bg-amber-500 hover:bg-amber-400 text-black text-xs font-black font-display uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{lang === 'PT' ? 'Aprovar Proprietário' : 'Approve Owner'}</span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )
+            ) : (
+              /* Approved Owners List */
+              filteredApproved.length === 0 ? (
+                <div className="p-8 rounded-2xl border-2 border-dashed border-zinc-700 text-center space-y-2 bg-white/40">
+                  <Store className="w-8 h-8 text-zinc-400 mx-auto" />
+                  <h4 className="font-bold text-sm font-display text-zinc-700">
+                    {lang === 'PT' ? 'Nenhum proprietário aprovado encontrado' : 'No approved owners found'}
+                  </h4>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider font-display">
+                    {lang === 'PT' ? 'Proprietários Registados & Aprovados' : 'Registered & Approved Owners'} ({filteredApproved.length})
+                  </div>
+
+                  {filteredApproved.map((claim) => {
+                    const spot = allSpots.find(b => b.id === claim.spotId);
+
+                    return (
+                      <div
+                        key={claim.userId || claim.spotId}
+                        className="p-4 rounded-2xl border-2 border-emerald-600/40 bg-white shadow-xs space-y-3 transition-all"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-600 flex items-center justify-center font-bold text-base text-emerald-800 shrink-0">
+                              ✓
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-extrabold text-sm font-display text-zinc-900 leading-tight">
+                                  {claim.spotName}
+                                </h4>
+                                <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] font-bold font-mono border border-emerald-300">
+                                  {lang === 'PT' ? 'VERIFICADO' : 'VERIFIED'}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-zinc-500 font-mono">
+                                ID: {claim.spotId} {spot?.zone ? `• ${spot.zone}` : ''}
+                              </p>
+                            </div>
+                          </div>
+
+                          <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                            {lang === 'PT' ? 'Acesso Exclusivo a Métricas' : 'Exclusive Metrics Access'}
+                          </span>
+                        </div>
+
+                        {/* Owner details */}
+                        <div className="bg-[#FBF8EF] p-2.5 rounded-xl border border-zinc-200 text-xs space-y-1">
+                          <div className="flex items-center justify-between text-zinc-700">
+                            <span className="text-[10px] font-bold uppercase tracking-wider font-display text-zinc-500">
+                              {lang === 'PT' ? 'Proprietário' : 'Owner'}:
+                            </span>
+                            <span className="font-bold text-zinc-900">{claim.username}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-zinc-700">
+                            <span className="text-[10px] font-bold uppercase tracking-wider font-display text-zinc-500">
+                              Email:
+                            </span>
+                            <span className="font-mono text-[11px] text-emerald-800 font-bold">{claim.userEmail}</span>
+                          </div>
+                          {spot?.address && (
+                            <div className="flex items-center justify-between text-zinc-600 text-[10px]">
+                              <span className="font-bold uppercase tracking-wider font-display text-zinc-500">
+                                {lang === 'PT' ? 'Morada' : 'Address'}:
+                              </span>
+                              <span className="truncate max-w-[280px]">{spot.address}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
             )}
           </div>
 

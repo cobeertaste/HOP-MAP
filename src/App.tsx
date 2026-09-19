@@ -38,7 +38,7 @@ import MonthlyReportModal from './components/MonthlyReportModal';
 import AdminPinsDashboardModal from './components/AdminPinsDashboardModal';
 import AdminOwnerClaimsModal from './components/AdminOwnerClaimsModal';
 import OwnerMetricsDashboard from './components/OwnerMetricsDashboard';
-import { getClaimedSpotIds, submitOwnerClaim } from './lib/ownerUtils';
+import { getClaimedSpotIds, submitOwnerClaim, getVerifiedOwnerConfig } from './lib/ownerUtils';
 import BeerStyleSelectModal from './components/BeerStyleSelectModal';
 import RetroPinModal from './components/RetroPinModal';
 import RetroStageClearCelebration from './components/RetroStageClearCelebration';
@@ -2505,13 +2505,18 @@ export default function App() {
         let savedBadges: any[] = [];
         let savedReferredBy: string | undefined = undefined;
         let savedHasCompletedFirstCheckin = localStorage.getItem(cacheKeyPrefix + 'hasCompletedFirstCheckin') === 'true';
-        let savedRole: 'admin' | 'owner' | 'user' = (firebaseUser.email?.toLowerCase() === 'cobeertaste@gmail.com') ? 'admin' : 'user';
-        let savedIsOwner = localStorage.getItem(cacheKeyPrefix + 'isOwner') === 'true';
-        let savedOwnedSpotId: string | undefined = localStorage.getItem(cacheKeyPrefix + 'ownedSpotId') || undefined;
-        let savedOwnerClaimPending = localStorage.getItem(cacheKeyPrefix + 'ownerClaimPending') === 'true';
-        let savedOwnerClaimApproved = localStorage.getItem(cacheKeyPrefix + 'ownerClaimApproved') === 'true';
-        let savedOwnerClaimSpotId: string | undefined = localStorage.getItem(cacheKeyPrefix + 'ownerClaimSpotId') || undefined;
-        let savedOwnerClaimSpotName: string | undefined = localStorage.getItem(cacheKeyPrefix + 'ownerClaimSpotName') || undefined;
+        const userCleanEmail = (firebaseUser.email || '').toLowerCase().trim();
+        const verifiedOwnerConfig = getVerifiedOwnerConfig(userCleanEmail);
+
+        let savedRole: 'admin' | 'owner' | 'user' = (userCleanEmail === 'cobeertaste@gmail.com') 
+          ? 'admin' 
+          : (verifiedOwnerConfig ? 'owner' : 'user');
+        let savedIsOwner = verifiedOwnerConfig ? true : (localStorage.getItem(cacheKeyPrefix + 'isOwner') === 'true');
+        let savedOwnedSpotId: string | undefined = verifiedOwnerConfig ? verifiedOwnerConfig.spotId : (localStorage.getItem(cacheKeyPrefix + 'ownedSpotId') || undefined);
+        let savedOwnerClaimPending = verifiedOwnerConfig ? false : (localStorage.getItem(cacheKeyPrefix + 'ownerClaimPending') === 'true');
+        let savedOwnerClaimApproved = verifiedOwnerConfig ? true : (localStorage.getItem(cacheKeyPrefix + 'ownerClaimApproved') === 'true');
+        let savedOwnerClaimSpotId: string | undefined = verifiedOwnerConfig ? verifiedOwnerConfig.spotId : (localStorage.getItem(cacheKeyPrefix + 'ownerClaimSpotId') || undefined);
+        let savedOwnerClaimSpotName: string | undefined = verifiedOwnerConfig ? verifiedOwnerConfig.spotName : (localStorage.getItem(cacheKeyPrefix + 'ownerClaimSpotName') || undefined);
 
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -2564,6 +2569,30 @@ export default function App() {
             if (data.ownerClaimSpotId) savedOwnerClaimSpotId = data.ownerClaimSpotId;
             if (data.ownerClaimSpotName) savedOwnerClaimSpotName = data.ownerClaimSpotName;
 
+            // Enforce verified owner mapping (e.g. ricardo@marrafa.pt -> Marrafa (Jesufrei))
+            if (verifiedOwnerConfig) {
+              savedRole = 'owner';
+              savedIsOwner = true;
+              savedOwnedSpotId = verifiedOwnerConfig.spotId;
+              savedOwnerClaimApproved = true;
+              savedOwnerClaimPending = false;
+              savedOwnerClaimSpotId = verifiedOwnerConfig.spotId;
+              savedOwnerClaimSpotName = verifiedOwnerConfig.spotName;
+
+              // Ensure the Firestore user document is updated with owner privileges
+              if (!data.isOwner || data.ownedSpotId !== verifiedOwnerConfig.spotId) {
+                updateDoc(userDocRef, {
+                  role: 'owner',
+                  isOwner: true,
+                  ownedSpotId: verifiedOwnerConfig.spotId,
+                  ownerClaimApproved: true,
+                  ownerClaimPending: false,
+                  ownerClaimSpotId: verifiedOwnerConfig.spotId,
+                  ownerClaimSpotName: verifiedOwnerConfig.spotName
+                }).catch(e => console.warn('Notice updating verified owner in user document:', e));
+              }
+            }
+
             localStorage.setItem(cacheKeyPrefix + 'role', savedRole);
             localStorage.setItem(cacheKeyPrefix + 'isOwner', String(savedIsOwner));
             if (savedOwnedSpotId) localStorage.setItem(cacheKeyPrefix + 'ownedSpotId', savedOwnedSpotId);
@@ -2601,7 +2630,14 @@ export default function App() {
               shareCheckinsEnabled: savedShareCheckins,
               user_language: userLangVal,
               hasCompletedFirstCheckin: false,
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              role: savedRole,
+              isOwner: savedIsOwner,
+              ownedSpotId: savedOwnedSpotId || null,
+              ownerClaimPending: savedOwnerClaimPending,
+              ownerClaimApproved: savedOwnerClaimApproved,
+              ownerClaimSpotId: savedOwnerClaimSpotId || null,
+              ownerClaimSpotName: savedOwnerClaimSpotName || null
             };
             if (pendingRef && pendingRef.trim() && pendingRef.trim() !== firebaseUser.uid) {
               initialUserData.referredBy = pendingRef.trim();
@@ -4510,9 +4546,10 @@ export default function App() {
                         // Add newly registered user to Firebase Firestore collection 'users' with full profile & referral tracking
                         const pendingRef = localStorage.getItem('pendingRef');
                         const selectedSpotObj = bars.find(b => b.id === selectedOwnerSpotId);
+                        const verifiedOwnerConfig = getVerifiedOwnerConfig(cleanEmail);
                         const assignedRole: 'admin' | 'owner' | 'user' = cleanEmail.toLowerCase() === 'cobeertaste@gmail.com' 
                           ? 'admin' 
-                          : (isOwnerRegister && selectedOwnerSpotId ? 'owner' : 'user');
+                          : (verifiedOwnerConfig ? 'owner' : (isOwnerRegister && selectedOwnerSpotId ? 'owner' : 'user'));
 
                         const completeUserData: any = {
                           uid: uid,
@@ -4527,13 +4564,13 @@ export default function App() {
                           hasCompletedFirstCheckin: false,
                           createdAt: new Date().toISOString(),
                           role: assignedRole,
-                          isOwner: false, // Remains pending until admin approves
-                          ownedSpotId: null,
-                          ownerClaimPending: isOwnerRegister && !!selectedOwnerSpotId,
-                          ownerClaimApproved: false,
-                          ownerClaimSpotId: isOwnerRegister && selectedOwnerSpotId ? selectedOwnerSpotId : null,
-                          ownerClaimSpotName: isOwnerRegister && selectedSpotObj ? selectedSpotObj.name : null,
-                          ownerClaimRequestedAt: isOwnerRegister && selectedOwnerSpotId ? new Date().toISOString() : null
+                          isOwner: verifiedOwnerConfig ? true : false,
+                          ownedSpotId: verifiedOwnerConfig ? verifiedOwnerConfig.spotId : null,
+                          ownerClaimPending: verifiedOwnerConfig ? false : (isOwnerRegister && !!selectedOwnerSpotId),
+                          ownerClaimApproved: verifiedOwnerConfig ? true : false,
+                          ownerClaimSpotId: verifiedOwnerConfig ? verifiedOwnerConfig.spotId : (isOwnerRegister && selectedOwnerSpotId ? selectedOwnerSpotId : null),
+                          ownerClaimSpotName: verifiedOwnerConfig ? verifiedOwnerConfig.spotName : (isOwnerRegister && selectedSpotObj ? selectedSpotObj.name : null),
+                          ownerClaimRequestedAt: (verifiedOwnerConfig || (isOwnerRegister && selectedOwnerSpotId)) ? new Date().toISOString() : null
                         };
                         if (pendingRef && pendingRef.trim() && pendingRef.trim() !== uid) {
                           completeUserData.referredBy = pendingRef.trim();
@@ -4574,10 +4611,14 @@ export default function App() {
                         localStorage.setItem(cacheKeyPrefix + 'shareCheckinsEnabled', 'true');
                         localStorage.setItem(cacheKeyPrefix + 'user_language', lang);
                         localStorage.setItem(cacheKeyPrefix + 'role', assignedRole);
-                        localStorage.setItem(cacheKeyPrefix + 'isOwner', 'false');
-                        localStorage.setItem(cacheKeyPrefix + 'ownerClaimPending', String(isOwnerRegister && !!selectedOwnerSpotId));
-                        localStorage.setItem(cacheKeyPrefix + 'ownerClaimApproved', 'false');
-                        if (isOwnerRegister && selectedOwnerSpotId) {
+                        localStorage.setItem(cacheKeyPrefix + 'isOwner', String(verifiedOwnerConfig ? true : false));
+                        localStorage.setItem(cacheKeyPrefix + 'ownerClaimPending', String(verifiedOwnerConfig ? false : (isOwnerRegister && !!selectedOwnerSpotId)));
+                        localStorage.setItem(cacheKeyPrefix + 'ownerClaimApproved', String(verifiedOwnerConfig ? true : false));
+                        if (verifiedOwnerConfig) {
+                          localStorage.setItem(cacheKeyPrefix + 'ownedSpotId', verifiedOwnerConfig.spotId);
+                          localStorage.setItem(cacheKeyPrefix + 'ownerClaimSpotId', verifiedOwnerConfig.spotId);
+                          localStorage.setItem(cacheKeyPrefix + 'ownerClaimSpotName', verifiedOwnerConfig.spotName);
+                        } else if (isOwnerRegister && selectedOwnerSpotId) {
                           localStorage.setItem(cacheKeyPrefix + 'ownerClaimSpotId', selectedOwnerSpotId);
                           if (selectedSpotObj) localStorage.setItem(cacheKeyPrefix + 'ownerClaimSpotName', selectedSpotObj.name);
                         }
@@ -4600,12 +4641,12 @@ export default function App() {
                           badges: [],
                           referredBy: pendingRef && pendingRef.trim() !== uid ? pendingRef.trim() : undefined,
                           role: assignedRole,
-                          isOwner: false,
-                          ownedSpotId: undefined,
-                          ownerClaimPending: isOwnerRegister && !!selectedOwnerSpotId,
-                          ownerClaimApproved: false,
-                          ownerClaimSpotId: isOwnerRegister && selectedOwnerSpotId ? selectedOwnerSpotId : undefined,
-                          ownerClaimSpotName: isOwnerRegister && selectedSpotObj ? selectedSpotObj.name : undefined
+                          isOwner: verifiedOwnerConfig ? true : false,
+                          ownedSpotId: verifiedOwnerConfig ? verifiedOwnerConfig.spotId : undefined,
+                          ownerClaimPending: verifiedOwnerConfig ? false : (isOwnerRegister && !!selectedOwnerSpotId),
+                          ownerClaimApproved: verifiedOwnerConfig ? true : false,
+                          ownerClaimSpotId: verifiedOwnerConfig ? verifiedOwnerConfig.spotId : (isOwnerRegister && selectedOwnerSpotId ? selectedOwnerSpotId : undefined),
+                          ownerClaimSpotName: verifiedOwnerConfig ? verifiedOwnerConfig.spotName : (isOwnerRegister && selectedSpotObj ? selectedSpotObj.name : undefined)
                         }));
 
                         setLoginPassword('');

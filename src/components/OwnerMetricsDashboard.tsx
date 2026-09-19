@@ -32,9 +32,13 @@ export default function OwnerMetricsDashboard({
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => getPreviousMonthKey());
 
+  // Strict spot access check: owners can ONLY access metrics for their designated spot (admin has master access)
+  const isAuthorized = user.role === 'admin' || (user.isOwner && user.ownedSpotId === spot.id);
+
   const spotPin = getSpotCheckinPin(spot);
 
   const loadSpotMetrics = async (month?: string) => {
+    if (!isAuthorized) return;
     setIsLoading(true);
     try {
       const data = await compileOwnerSpotMonthlyMetrics(spot.id, spot.name, month || selectedMonth);
@@ -47,8 +51,26 @@ export default function OwnerMetricsDashboard({
   };
 
   useEffect(() => {
-    loadSpotMetrics(selectedMonth);
-  }, [spot.id, selectedMonth]);
+    if (isAuthorized) {
+      loadSpotMetrics(selectedMonth);
+    }
+  }, [spot.id, selectedMonth, isAuthorized]);
+
+  if (!isAuthorized) {
+    return (
+      <div className="p-6 rounded-3xl border-2 border-red-500/40 bg-red-500/10 text-center space-y-3 font-sans" id="owner-metrics-unauthorized">
+        <ShieldCheck className="w-10 h-10 text-red-600 mx-auto" />
+        <h3 className="font-extrabold text-sm font-display text-red-900 uppercase">
+          {lang === 'PT' ? 'Acesso Não Autorizado' : 'Unauthorized Access'}
+        </h3>
+        <p className="text-xs text-red-800 max-w-md mx-auto leading-relaxed">
+          {lang === 'PT'
+            ? `Como proprietário, apenas tens acesso às métricas exclusivas do teu spot associado.`
+            : `As an owner, you only have access to the exclusive metrics of your designated spot.`}
+        </p>
+      </div>
+    );
+  }
 
   const previousMonthLabel = getMonthLabel(selectedMonth);
   const dispatchLabel = getDispatchDateLabel(selectedMonth);
