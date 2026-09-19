@@ -12,43 +12,60 @@ interface SpotFeatureBadgesProps {
 
 export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFeatureBadgesProps) {
   const features = getBarFeatures(bar, lang);
+  const isProst = bar.id === 'prost-guimaraes' || (bar.name && bar.name.toLowerCase().includes('prost'));
 
   const chips = [
     {
       id: 'taps',
       show: true,
       iconName: 'tap' as const,
-      label: `${features.taps} Taps`
+      label: isProst 
+        ? (lang === 'PT' ? 'Torneiras: 7' : 'Taps: 7')
+        : `${features.taps} Taps`,
+      isNegative: false
     },
     {
       id: 'food',
-      show: features.hasFood,
+      show: isProst ? true : features.hasFood,
       iconName: 'food' as const,
-      label: lang === 'PT' ? 'Comida / Petiscos' : 'Food & Snacks'
+      label: isProst
+        ? (lang === 'PT' ? 'Comida: Sim' : 'Food: Yes')
+        : (lang === 'PT' ? 'Comida / Petiscos' : 'Food & Snacks'),
+      isNegative: false
     },
     {
       id: 'pet',
-      show: features.petFriendly,
+      show: isProst ? true : features.petFriendly,
       iconName: 'pet' as const,
-      label: 'Pet Friendly'
+      label: isProst
+        ? (lang === 'PT' ? 'Pet friendly: Sim' : 'Pet friendly: Yes')
+        : 'Pet Friendly',
+      isNegative: false
     },
     {
       id: 'terrace',
-      show: features.hasTerrace,
+      show: isProst ? true : features.hasTerrace,
       iconName: 'terrace' as const,
-      label: lang === 'PT' ? 'Esplanada' : 'Terrace'
+      label: isProst
+        ? (lang === 'PT' ? 'Esplanada: Sim' : 'Terrace: Yes')
+        : (lang === 'PT' ? 'Esplanada' : 'Terrace'),
+      isNegative: false
     },
     {
       id: 'parking',
-      show: features.hasParking,
+      show: isProst || features.hasParking || bar.hasParking === false,
       iconName: 'parking' as const,
-      label: lang === 'PT' ? 'Estacionamento' : 'Parking'
+      label: isProst || bar.hasParking === false
+        ? (features.hasParking ? (lang === 'PT' ? 'Estacionamento: Sim' : 'Parking: Yes') : (lang === 'PT' ? 'Estacionamento: Não' : 'Parking: No'))
+        : (lang === 'PT' ? 'Estacionamento' : 'Parking'),
+      isNegative: !features.hasParking
     },
     {
       id: 'beershop',
-      show: features.hasBeerShop,
+      show: !isProst && features.hasBeerShop,
       iconName: 'beershop' as const,
-      label: 'Beer Shop / Take-away'
+      label: 'Beer Shop / Take-away',
+      isNegative: false
     }
   ];
 
@@ -59,8 +76,12 @@ export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFea
           key={chip.id} 
           className={`inline-flex items-center gap-1 rounded-lg border-2 border-[#1B2036] transition-colors ${
             compact 
-              ? 'px-1.5 py-0.5 text-[8.5px] bg-[#F6EFDC] text-[#1B2036] shadow-[1.5px_1.5px_0px_#1B2036]' 
-              : 'px-2 py-0.5 text-[9.5px] bg-[#F6EFDC] text-[#1B2036] shadow-[2px_2px_0px_#1B2036]'
+              ? 'px-1.5 py-0.5 text-[8.5px]' 
+              : 'px-2 py-0.5 text-[9.5px]'
+          } ${
+            chip.isNegative 
+              ? 'bg-[#FEE2E2] text-[#991B1B] shadow-[1.5px_1.5px_0px_#1B2036]' 
+              : 'bg-[#F6EFDC] text-[#1B2036] shadow-[1.5px_1.5px_0px_#1B2036]'
           }`}
         >
           <PixelIcon name={chip.iconName} size={compact ? 12 : 14} className="shrink-0" />

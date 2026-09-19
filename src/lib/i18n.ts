@@ -105,7 +105,7 @@ export const SPOT_DESCRIPTIONS_EN_BY_ID: Record<string, string> = {
   "pils-lisboa-lisboa": "Historic Lisbon destination dedicated to crisp, perfectly executed Lager and Pilsner styles.",
   "musa-da-praia-colares": "Musa bar set in a former water tower in Colares (Sintra), serving 10 taps alongside local food trucks.",
   "letraria-craft-beer-vinyl-ponte-de-lima": "Letra space combining 150+ craft beer varieties, burgers, and tapas with vinyl record listening.",
-  "prost-guimaraes": "Specialized craft beer bar in Guimarães on historic Praça de São Tiago with 40 beer taps.",
+  "prost-guimaraes": "Specialized craft beer bar in Guimarães on historic Praça de São Tiago with 7 beer taps.",
   "beberico-senhora-da-hora": "Craft beer shop and bar in Senhora da Hora (Greater Porto) with wide bottle and tap choices.",
   "j-agora-v-n-gaia": "Specialized craft beer haven and bar in Vila Nova de Gaia.",
   "surviaria-amarante": "The craft beer embassy in Amarante, offering top Portuguese craft beers in a warm interior haven.",

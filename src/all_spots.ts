@@ -2077,9 +2077,9 @@ export const ALL_SPOTS: Bar[] = [
     workingHoursPT: "Seg: 14:00h às 00:00h Qua a Sáb: 14:00h às 02:00h Dom: 15:00h às 00:00h Fechado: Ter",
     workingHoursEN: "Seg: 14:00h às 00:00h Qua a Sáb: 14:00h às 02:00h Dom: 15:00h às 00:00h Fechado: Ter",
     styles: ["Hazy IPA","APA","Double IPA","Gose"],
-    description: "Bar especializado em cerveja artesanal em Guimarães, na histórica Praça de São Tiago, com 40 torneiras de cerveja.",
-    descriptionPT: "Bar especializado em cerveja artesanal em Guimarães, na histórica Praça de São Tiago, com 40 torneiras de cerveja.",
-    descriptionEN: "Bar especializado em cerveja artesanal em Guimarães, na histórica Praça de São Tiago, com 40 torneiras de cerveja.",
+    description: "Bar especializado em cerveja artesanal em Guimarães, na histórica Praça de São Tiago, com 7 torneiras de cerveja.",
+    descriptionPT: "Bar especializado em cerveja artesanal em Guimarães, na histórica Praça de São Tiago, com 7 torneiras de cerveja.",
+    descriptionEN: "Specialized craft beer bar in Guimarães on historic Praça de São Tiago with 7 beer taps.",
     rating: 4.9,
     reviewsCount: 383,
     coverPhoto: "/spots_pics/17N.jpg",
@@ -2087,7 +2087,13 @@ export const ALL_SPOTS: Bar[] = [
     facebookUrl: "https://www.facebook.com/p/PROST-100086242280709/?locale=pt_BR",
     latitude: 41.44362147784739,
     longitude: -8.293120436800848,
-    hasApplePay: true
+    hasApplePay: true,
+    taps: 7,
+    hasFood: true,
+    petFriendly: true,
+    hasTerrace: true,
+    hasParking: false,
+    hasBeerShop: false
   },
   {
     id: "beberico-senhora-da-hora",

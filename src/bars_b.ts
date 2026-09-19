@@ -754,6 +754,12 @@ export const BARS_B: Bar[] = [
     "facebookUrl": "https://www.facebook.com/p/PROST-100086242280709/?locale=pt_BR",
     "latitude": 41.44362147784739,
     "longitude": -8.293120436800848,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 7,
+    "hasFood": true,
+    "petFriendly": true,
+    "hasTerrace": true,
+    "hasParking": false,
+    "hasBeerShop": false
   }
 ];
