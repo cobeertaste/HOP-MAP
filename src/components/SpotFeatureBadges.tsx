@@ -13,56 +13,80 @@ interface SpotFeatureBadgesProps {
 export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFeatureBadgesProps) {
   const features = getBarFeatures(bar, lang);
   const isProst = bar.id === 'prost-guimaraes' || (bar.name && bar.name.toLowerCase().includes('prost'));
+  const isDeusesDoMalte = bar.id === 'deuses-do-malte-v-n-gaia' || bar.id === 'deuses-do-malte' || (bar.name && bar.name.toLowerCase().includes('deuses do malte'));
+  const isVerified = isProst || isDeusesDoMalte;
+
+  let tapsLabel = `${features.taps} Taps`;
+  if (isProst) tapsLabel = lang === 'PT' ? 'Torneiras: 7' : 'Taps: 7';
+  else if (isDeusesDoMalte) tapsLabel = lang === 'PT' ? 'Torneiras: 10' : 'Taps: 10';
+
+  let foodLabel = lang === 'PT' ? 'Comida / Petiscos' : 'Food & Snacks';
+  if (isVerified) foodLabel = lang === 'PT' ? 'Comida: Sim' : 'Food: Yes';
+
+  let petLabel = 'Pet Friendly';
+  if (isVerified) petLabel = lang === 'PT' ? 'Pet friendly: Sim' : 'Pet friendly: Yes';
+
+  let terraceLabel = lang === 'PT' ? 'Esplanada' : 'Terrace';
+  let terraceNegative = false;
+  if (isProst) {
+    terraceLabel = lang === 'PT' ? 'Esplanada: Sim' : 'Terrace: Yes';
+  } else if (isDeusesDoMalte) {
+    terraceLabel = lang === 'PT' ? 'Esplanada: Não' : 'Terrace: No';
+    terraceNegative = true;
+  }
+
+  let parkingLabel = lang === 'PT' ? 'Estacionamento' : 'Parking';
+  let parkingNegative = !features.hasParking;
+  if (isProst) {
+    parkingLabel = lang === 'PT' ? 'Estacionamento: Não' : 'Parking: No';
+    parkingNegative = true;
+  } else if (isDeusesDoMalte) {
+    parkingLabel = lang === 'PT' ? 'Estacionamento: Sim' : 'Parking: Yes';
+    parkingNegative = false;
+  } else if (bar.hasParking === false) {
+    parkingLabel = lang === 'PT' ? 'Estacionamento: Não' : 'Parking: No';
+    parkingNegative = true;
+  }
 
   const chips = [
     {
       id: 'taps',
       show: true,
       iconName: 'tap' as const,
-      label: isProst 
-        ? (lang === 'PT' ? 'Torneiras: 7' : 'Taps: 7')
-        : `${features.taps} Taps`,
+      label: tapsLabel,
       isNegative: false
     },
     {
       id: 'food',
-      show: isProst ? true : features.hasFood,
+      show: isVerified ? true : features.hasFood,
       iconName: 'food' as const,
-      label: isProst
-        ? (lang === 'PT' ? 'Comida: Sim' : 'Food: Yes')
-        : (lang === 'PT' ? 'Comida / Petiscos' : 'Food & Snacks'),
+      label: foodLabel,
       isNegative: false
     },
     {
       id: 'pet',
-      show: isProst ? true : features.petFriendly,
+      show: isVerified ? true : features.petFriendly,
       iconName: 'pet' as const,
-      label: isProst
-        ? (lang === 'PT' ? 'Pet friendly: Sim' : 'Pet friendly: Yes')
-        : 'Pet Friendly',
+      label: petLabel,
       isNegative: false
     },
     {
       id: 'terrace',
-      show: isProst ? true : features.hasTerrace,
+      show: isVerified ? true : features.hasTerrace,
       iconName: 'terrace' as const,
-      label: isProst
-        ? (lang === 'PT' ? 'Esplanada: Sim' : 'Terrace: Yes')
-        : (lang === 'PT' ? 'Esplanada' : 'Terrace'),
-      isNegative: false
+      label: terraceLabel,
+      isNegative: terraceNegative
     },
     {
       id: 'parking',
-      show: isProst || features.hasParking || bar.hasParking === false,
+      show: isVerified || features.hasParking || bar.hasParking === false,
       iconName: 'parking' as const,
-      label: isProst || bar.hasParking === false
-        ? (features.hasParking ? (lang === 'PT' ? 'Estacionamento: Sim' : 'Parking: Yes') : (lang === 'PT' ? 'Estacionamento: Não' : 'Parking: No'))
-        : (lang === 'PT' ? 'Estacionamento' : 'Parking'),
-      isNegative: !features.hasParking
+      label: parkingLabel,
+      isNegative: parkingNegative
     },
     {
       id: 'beershop',
-      show: !isProst && features.hasBeerShop,
+      show: !isVerified && features.hasBeerShop,
       iconName: 'beershop' as const,
       label: 'Beer Shop / Take-away',
       isNegative: false

@@ -1783,9 +1783,9 @@ export const ALL_SPOTS: Bar[] = [
     workingHoursPT: "Todas as sextas das 18h às 00h",
     workingHoursEN: "Todas as sextas das 18h às 00h",
     styles: ["IPA","Lager","Stout","Sour"],
-    description: "Um ambiente rustico e intimista ideal para convívio entre apreciadores. No tap room estão 8 torneiras que são rotativas. Para acompanhar, uma seleção de excelentes iguarias para não haver fome!!",
-    descriptionPT: "Um ambiente rustico e intimista ideal para convívio entre apreciadores. No tap room estão 8 torneiras que são rotativas. Para acompanhar, uma seleção de excelentes iguarias para não haver fome!!",
-    descriptionEN: "Um ambiente rustico e intimista ideal para convívio entre apreciadores. No tap room estão 8 torneiras que são rotativas. Para acompanhar, uma seleção de excelentes iguarias para não haver fome!!",
+    description: "Um ambiente rustico e intimista ideal para convívio entre apreciadores. No tap room estão 10 torneiras que são rotativas. Para acompanhar, uma seleção de excelentes iguarias para não haver fome!!",
+    descriptionPT: "Um ambiente rustico e intimista ideal para convívio entre apreciadores. No tap room estão 10 torneiras que são rotativas. Para acompanhar, uma seleção de excelentes iguarias para não haver fome!!",
+    descriptionEN: "A rustic and intimate atmosphere ideal for craft beer lovers. The taproom features 10 rotating taps with savory pairing dishes.",
     rating: 4.5,
     reviewsCount: 285,
     coverPhoto: "/spots_pics/10P.jpg",
@@ -1793,7 +1793,13 @@ export const ALL_SPOTS: Bar[] = [
     facebookUrl: "https://pt-pt.facebook.com/deusesdomalte",
     latitude: 41.11192838226133,
     longitude: -8.605115584522384,
-    hasApplePay: true
+    hasApplePay: true,
+    taps: 10,
+    hasFood: true,
+    petFriendly: true,
+    hasTerrace: false,
+    hasParking: true,
+    hasBeerShop: false
   },
   {
     id: "12-marias-fermela",

@@ -7477,7 +7477,7 @@ export default function App() {
                 {/* Spot Feature Badges in Drawer */}
                 <div className="mt-3.5">
                   <span className="text-[#1B2036] block font-bold uppercase tracking-widest text-[8.5px] mb-1.5 font-display">
-                    {(selectedBar.id === 'prost-guimaraes' || selectedBar.name?.toLowerCase().includes('prost'))
+                    {(selectedBar.id === 'prost-guimaraes' || selectedBar.name?.toLowerCase().includes('prost') || selectedBar.id === 'deuses-do-malte-v-n-gaia' || selectedBar.id === 'deuses-do-malte' || selectedBar.name?.toLowerCase().includes('deuses do malte'))
                       ? (lang === 'PT' ? 'COMODIDADES DO SPOT (VERIFICADO)' : 'SPOT AMENITIES (VERIFIED)')
                       : (lang === 'PT' ? 'Comodidades do Spot' : 'Spot Amenities')}
                   </span>

@@ -91,7 +91,7 @@ export const SPOT_DESCRIPTIONS_EN_BY_ID: Record<string, string> = {
   "taverna-lusitana-monsanto": "Cozy tavern in historical Monsanto offering Portuguese dishes and craft beer with outdoor seating.",
   "vadia-brewpub-oliveira-de-azemeis": "Vadia Brewpub harmonizes fresh craft beer, guided brewery tours, and artisanal food with live music.",
   "letraria-downtown-porto": "Craft beer bar and restaurant in Porto with 22 rotating taps, beer garden, and delicious pairings.",
-  "deuses-do-malte-v-n-gaia": "Rustic, intimate taproom in Vila Nova de Gaia with 8 rotating taps and savory pairing dishes.",
+  "deuses-do-malte-v-n-gaia": "Rustic, intimate taproom in Vila Nova de Gaia with 10 rotating taps and savory pairing dishes.",
   "12-marias-fermela": "Tasting room at the brewery in Fermelã for enjoying craft beers with snacks in an intimate vibe.",
   "monja-penafiel": "Modern historic center bar in Penafiel serving craft beer, signature pastries, toasts, and burgers.",
   "letraria-braga": "Cerveja Letra bar in Braga by the Sé, offering 23 craft beer taps, cheese boards, and book exchange.",
