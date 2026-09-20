@@ -65,7 +65,7 @@ export const SPOT_DESCRIPTIONS_EN_BY_ID: Record<string, string> = {
   "catraio-craft-beer-shop-bar-porto": "Iconic craft beer shop and bar in Cedofeita featuring a rotating taplist and a lovely beer garden.",
   "cerveja-nortada-porto": "Cerveja Nortada is a landmark brewery and brewpub in the heart of Porto.",
   "armazem-da-cerveja-porto": "Specialized craft beer bar and shop with an excellent taplist, BYOF-friendly atmosphere.",
-  "a-fabrica-da-picaria-brew-pub-porto": "A Fábrica da Picaria is a celebrated brewpub where you drink beer brewed right in front of you.",
+  "a-fabrica-da-picaria-brew-pub-porto": "A Fábrica da Picaria is a celebrated brewpub with 9 taps where beer is brewed right in front of you.",
   "cerveja-artesanal-levare-brewpub-porto": "Multifaceted space: brewery, bar, and restaurant in the center of Porto.",
   "magnifica-beer-house-evora": "Home of Cerveja Magnífica, focusing on Alentejo artisanal beers and regional tapas in Évora.",
   "barona-craft-beer-house-castelo-de-vide": "Taproom of BARONA Brewing Company, serving premier Alentejo craft beers in Castelo de Vide.",

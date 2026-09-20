@@ -10,39 +10,82 @@ interface SpotFeatureBadgesProps {
   compact?: boolean;
 }
 
+export function isSpotVerified(bar?: Bar | null): boolean {
+  if (!bar) return false;
+  if (bar.isVerified) return true;
+  const id = bar.id || '';
+  const name = (bar.name || '').toLowerCase();
+  return (
+    id === 'prost-guimaraes' ||
+    name.includes('prost') ||
+    id === 'deuses-do-malte-v-n-gaia' ||
+    id === 'deuses-do-malte' ||
+    name.includes('deuses do malte') ||
+    id === 'a-fabrica-da-picaria-brew-pub-porto' ||
+    id === 'fabrica-da-picaria' ||
+    name.includes('picaria') ||
+    id === 'musa-das-virtudes-porto' ||
+    id === 'musa-virtudes' ||
+    name.includes('virtudes')
+  );
+}
+
 export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFeatureBadgesProps) {
   const features = getBarFeatures(bar, lang);
   const isProst = bar.id === 'prost-guimaraes' || (bar.name && bar.name.toLowerCase().includes('prost'));
   const isDeusesDoMalte = bar.id === 'deuses-do-malte-v-n-gaia' || bar.id === 'deuses-do-malte' || (bar.name && bar.name.toLowerCase().includes('deuses do malte'));
-  const isVerified = isProst || isDeusesDoMalte;
+  const isPicaria = bar.id === 'a-fabrica-da-picaria-brew-pub-porto' || bar.id === 'fabrica-da-picaria' || (bar.name && bar.name.toLowerCase().includes('picaria'));
+  const isVirtudes = bar.id === 'musa-das-virtudes-porto' || bar.id === 'musa-virtudes' || (bar.name && bar.name.toLowerCase().includes('virtudes'));
+  const isVerified = isSpotVerified(bar);
 
   let tapsLabel = `${features.taps} Taps`;
-  if (isProst) tapsLabel = lang === 'PT' ? 'Torneiras: 7' : 'Taps: 7';
-  else if (isDeusesDoMalte) tapsLabel = lang === 'PT' ? 'Torneiras: 10' : 'Taps: 10';
+  if (isVerified) {
+    tapsLabel = lang === 'PT' ? `Torneiras: ${features.taps}` : `Taps: ${features.taps}`;
+  }
 
   let foodLabel = lang === 'PT' ? 'Comida / Petiscos' : 'Food & Snacks';
-  if (isVerified) foodLabel = lang === 'PT' ? 'Comida: Sim' : 'Food: Yes';
+  if (isVerified) {
+    foodLabel = lang === 'PT' ? (features.hasFood ? 'Comida: Sim' : 'Comida: Não') : (features.hasFood ? 'Food: Yes' : 'Food: No');
+  }
 
   let petLabel = 'Pet Friendly';
-  if (isVerified) petLabel = lang === 'PT' ? 'Pet friendly: Sim' : 'Pet friendly: Yes';
+  if (isVerified) {
+    petLabel = lang === 'PT' ? (features.petFriendly ? 'Pet friendly: Sim' : 'Pet friendly: Não') : (features.petFriendly ? 'Pet friendly: Yes' : 'Pet friendly: No');
+  }
 
   let terraceLabel = lang === 'PT' ? 'Esplanada' : 'Terrace';
   let terraceNegative = false;
-  if (isProst) {
-    terraceLabel = lang === 'PT' ? 'Esplanada: Sim' : 'Terrace: Yes';
-  } else if (isDeusesDoMalte) {
-    terraceLabel = lang === 'PT' ? 'Esplanada: Não' : 'Terrace: No';
-    terraceNegative = true;
+  if (isVerified) {
+    if (features.hasTerrace) {
+      terraceLabel = lang === 'PT' ? 'Esplanada: Sim' : 'Terrace: Yes';
+      terraceNegative = false;
+    } else {
+      terraceLabel = lang === 'PT' ? 'Esplanada: Não' : 'Terrace: No';
+      terraceNegative = true;
+    }
   }
 
   let parkingLabel = lang === 'PT' ? 'Estacionamento' : 'Parking';
   let parkingNegative = !features.hasParking;
-  if (isProst) {
+  if (isPicaria || isVirtudes || bar.parkingNotePT) {
+    parkingLabel = lang === 'PT'
+      ? `Estacionamento: ${bar.parkingNotePT || 'Sim (público)'}`
+      : `Parking: ${bar.parkingNoteEN || 'Yes (public)'}`;
+    parkingNegative = false;
+  } else if (isProst) {
     parkingLabel = lang === 'PT' ? 'Estacionamento: Não' : 'Parking: No';
     parkingNegative = true;
   } else if (isDeusesDoMalte) {
     parkingLabel = lang === 'PT' ? 'Estacionamento: Sim' : 'Parking: Yes';
     parkingNegative = false;
+  } else if (isVerified) {
+    if (features.hasParking) {
+      parkingLabel = lang === 'PT' ? 'Estacionamento: Sim' : 'Parking: Yes';
+      parkingNegative = false;
+    } else {
+      parkingLabel = lang === 'PT' ? 'Estacionamento: Não' : 'Parking: No';
+      parkingNegative = true;
+    }
   } else if (bar.hasParking === false) {
     parkingLabel = lang === 'PT' ? 'Estacionamento: Não' : 'Parking: No';
     parkingNegative = true;

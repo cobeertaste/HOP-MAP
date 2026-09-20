@@ -129,7 +129,16 @@ export const BARS_B: Bar[] = [
     "facebookUrl": "https://www.facebook.com/musadasvirtudes/%3Flocale%3Dpt_BR",
     "latitude": 41.143976745673676,
     "longitude": -8.61815821947602,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 15,
+    "hasFood": true,
+    "petFriendly": true,
+    "hasTerrace": true,
+    "hasParking": true,
+    "hasBeerShop": false,
+    "isVerified": true,
+    "parkingNotePT": "Sim (público)",
+    "parkingNoteEN": "Yes (public)"
   },
   {
     "id": "catraio",
@@ -233,7 +242,16 @@ export const BARS_B: Bar[] = [
     "facebookUrl": "https://www.facebook.com/afabricadapicaria/%3Flocale%3Dpt_PT",
     "latitude": 41.14956020504939,
     "longitude": -8.61286721472359,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 9,
+    "hasFood": true,
+    "petFriendly": true,
+    "hasTerrace": true,
+    "hasParking": true,
+    "hasBeerShop": false,
+    "isVerified": true,
+    "parkingNotePT": "Sim (público)",
+    "parkingNoteEN": "Yes (public)"
   },
   {
     "id": "levare-brewpub",
@@ -318,7 +336,8 @@ export const BARS_B: Bar[] = [
     "petFriendly": true,
     "hasTerrace": false,
     "hasParking": true,
-    "hasBeerShop": false
+    "hasBeerShop": false,
+    "isVerified": true
   },
   {
     "id": "cerveja-dos-diabos",
@@ -741,9 +760,9 @@ export const BARS_B: Bar[] = [
     "name": "Cobo Taproom (Guimarães)",
     "zone": BarZone.GUIMARAES,
     "address": "Praça de São Tiago 11, 4800-445",
-    "workingHours": "Quarta a Domingo: 18:00h às 01:00h",
-    "workingHoursPT": "Quarta a Domingo: 18:00h às 01:00h",
-    "workingHoursEN": "Wednesday to Sunday: 18:00 to 01:00",
+    "workingHours": "Aberto todos os dias das 14:00h - 02:00h\nDomingo aberto das 15:00h - 02:00h\nTerça-feira: Fechado",
+    "workingHoursPT": "Aberto todos os dias das 14:00h - 02:00h\nDomingo aberto das 15:00h - 02:00h\nTerça-feira: Fechado",
+    "workingHoursEN": "Open every day from 14:00 - 02:00\nSunday open from 15:00 - 02:00\nTuesday: Closed",
     "styles": [
       "Lager",
       "NEIPA",
@@ -766,6 +785,7 @@ export const BARS_B: Bar[] = [
     "petFriendly": true,
     "hasTerrace": true,
     "hasParking": false,
-    "hasBeerShop": false
+    "hasBeerShop": false,
+    "isVerified": true
   }
 ];

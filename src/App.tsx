@@ -16,7 +16,7 @@ import {
 
 import { t, Language, getBarDescription, getBarWorkingHours, getEventDescription, getEventDate, getBarBeerNews } from './lib/i18n';
 import { getBarOpenStatus } from './lib/openingHours';
-import { SpotFeatureBadges } from './components/SpotFeatureBadges';
+import { SpotFeatureBadges, isSpotVerified } from './components/SpotFeatureBadges';
 import { HopCrawlRoute } from './components/HopCrawlRoute';
 import { HopCommunityChatModal } from './components/HopCommunityChatModal';
 import { SpotVibeCheck, CompactSpotVibeBadge } from './components/SpotVibeCheck';
@@ -7477,7 +7477,7 @@ export default function App() {
                 {/* Spot Feature Badges in Drawer */}
                 <div className="mt-3.5">
                   <span className="text-[#1B2036] block font-bold uppercase tracking-widest text-[8.5px] mb-1.5 font-display">
-                    {(selectedBar.id === 'prost-guimaraes' || selectedBar.name?.toLowerCase().includes('prost') || selectedBar.id === 'deuses-do-malte-v-n-gaia' || selectedBar.id === 'deuses-do-malte' || selectedBar.name?.toLowerCase().includes('deuses do malte'))
+                    {isSpotVerified(selectedBar)
                       ? (lang === 'PT' ? 'COMODIDADES DO SPOT (VERIFICADO)' : 'SPOT AMENITIES (VERIFIED)')
                       : (lang === 'PT' ? 'Comodidades do Spot' : 'Spot Amenities')}
                   </span>

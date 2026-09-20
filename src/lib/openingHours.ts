@@ -19,12 +19,12 @@ export interface BarFeaturesResult {
 
 const DAY_MAP: Record<string, number> = {
   dom: 0, domingo: 0, sun: 0, sunday: 0,
-  seg: 1, segunda: 1, mon: 1, monday: 1,
-  ter: 2, terça: 2, tue: 2, tuesday: 2,
-  qua: 3, quarta: 3, wed: 3, wednesday: 3,
-  qui: 4, quinta: 4, thu: 4, thursday: 4,
-  sex: 5, sexta: 5, fri: 5, friday: 5,
-  sáb: 6, sab: 6, sábado: 6, sat: 6, saturday: 6
+  seg: 1, segunda: 1, 'segunda-feira': 1, mon: 1, monday: 1,
+  ter: 2, terça: 2, 'terça-feira': 2, terca: 2, 'terca-feira': 2, tue: 2, tuesday: 2,
+  qua: 3, quarta: 3, 'quarta-feira': 3, wed: 3, wednesday: 3,
+  qui: 4, quinta: 4, 'quinta-feira': 4, thu: 4, thursday: 4,
+  sex: 5, sexta: 5, 'sexta-feira': 5, fri: 5, friday: 5,
+  sáb: 6, sab: 6, sábado: 6, sabado: 6, sat: 6, saturday: 6
 };
 
 const DAY_NAMES_PT = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
@@ -67,7 +67,8 @@ export function getBarOpenStatus(bar: Bar, lang: Language = 'PT'): OpenStatusRes
     let targetDays: number[] = [];
     const lowerLine = line.toLowerCase();
 
-    if (lowerLine.includes('diariamente') || lowerLine.includes('daily') || lowerLine.includes('todos os dias') || lowerLine.includes('dom a sáb') || lowerLine.includes('sun to sat')) {
+    const isAllDays = lowerLine.includes('diariamente') || lowerLine.includes('daily') || lowerLine.includes('todos os dias') || lowerLine.includes('dom a sáb') || lowerLine.includes('sun to sat');
+    if (isAllDays) {
       targetDays = [0, 1, 2, 3, 4, 5, 6];
     } else {
       // Check day ranges e.g. "Ter a Qui", "Seg a Sex", "Dom a Qua", "Qua a Dom", "Wed to Sun"
@@ -121,11 +122,15 @@ export function getBarOpenStatus(bar: Bar, lang: Language = 'PT'): OpenStatusRes
       }
 
       for (const d of targetDays) {
-        schedulePerDay[d].push({ start: startMin, end: endMin, isClosed: false });
+        if (!isAllDays && targetDays.length < 7) {
+          schedulePerDay[d] = [{ start: startMin, end: endMin, isClosed: false }];
+        } else {
+          schedulePerDay[d].push({ start: startMin, end: endMin, isClosed: false });
+        }
       }
     } else if (isClosed) {
       for (const d of targetDays) {
-        schedulePerDay[d].push({ start: 0, end: 0, isClosed: true });
+        schedulePerDay[d] = [{ start: 0, end: 0, isClosed: true }];
       }
     }
   }
@@ -149,7 +154,8 @@ export function getBarOpenStatus(bar: Bar, lang: Language = 'PT'): OpenStatusRes
   }
 
   const todayShifts = schedulePerDay[currentDay] || [];
-  if (todayShifts.length > 0) {
+  const isTodayClosed = todayShifts.some(s => s.isClosed);
+  if (todayShifts.length > 0 && !isTodayClosed) {
     for (const shift of todayShifts) {
       if (shift.isClosed) continue;
 

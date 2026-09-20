@@ -1156,9 +1156,9 @@ export const ALL_SPOTS: Bar[] = [
     workingHoursPT: "Seg a Qui: 15:00h às 23:30h\nSex: 15:00h às 00:30h\nSáb: 12:30h às 00:30h\nDom: 12:30h às 23:30h",
     workingHoursEN: "Seg a Qui: 15:00h às 23:30h\nSex: 15:00h às 00:30h\nSáb: 12:30h às 00:30h\nDom: 12:30h às 23:30h",
     styles: ["IPA","Lager","Stout","Sour"],
-    description: "Tap Room da Musa com vista espetacular sobre o Douro. 15 torneiras de cerveja.",
-    descriptionPT: "Tap Room da Musa com vista espetacular sobre o Douro. 15 torneiras de cerveja.",
-    descriptionEN: "Tap Room da Musa com vista espetacular sobre o Douro. 15 torneiras de cerveja.",
+    description: "Tap Room da Musa com vista espetacular sobre o Douro. 15 torneiras de cerveja artesanal.",
+    descriptionPT: "Tap Room da Musa com vista espetacular sobre o Douro. 15 torneiras de cerveja artesanal.",
+    descriptionEN: "Musa Taproom with spectacular views over the Douro River. 15 craft beer taps.",
     rating: 4.5,
     reviewsCount: 75,
     coverPhoto: "/spots_pics/03P.jpg",
@@ -1166,7 +1166,16 @@ export const ALL_SPOTS: Bar[] = [
     facebookUrl: "https://www.facebook.com/musadasvirtudes/%3Flocale%3Dpt_BR",
     latitude: 41.143976745673676,
     longitude: -8.61815821947602,
-    hasApplePay: true
+    hasApplePay: true,
+    taps: 15,
+    hasFood: true,
+    petFriendly: true,
+    hasTerrace: true,
+    hasParking: true,
+    hasBeerShop: false,
+    isVerified: true,
+    parkingNotePT: "Sim (público)",
+    parkingNoteEN: "Yes (public)"
   },
   {
     id: "catraio-craft-beer-shop-bar-porto",
@@ -1240,9 +1249,9 @@ export const ALL_SPOTS: Bar[] = [
     workingHoursPT: "Seg a Qui: 11:30h às 00:00h\nSex e Sáb: 11:30h às 02:00h Brewpub onde a cerveja é produzida e servida no mesmo local. Ótimo para ver o processo e provar tapas.",
     workingHoursEN: "Seg a Qui: 11:30h às 00:00h\nSex e Sáb: 11:30h às 02:00h Brewpub onde a cerveja é produzida e servida no mesmo local. Ótimo para ver o processo e provar tapas.",
     styles: ["Hazy IPA","APA","Double IPA","Gose"],
-    description: "A Fábrica da Picaria Brew Pub é um ponto de referência para os amantes de cerveja artesanal em Porto.",
-    descriptionPT: "A Fábrica da Picaria Brew Pub é um ponto de referência para os amantes de cerveja artesanal em Porto.",
-    descriptionEN: "A Fábrica da Picaria Brew Pub is a craft beer spot in Porto.",
+    description: "Brewpub onde a cerveja é produzida e servida no mesmo local com 9 torneiras de cerveja. Ótimo para ver o processo e provar tapas.",
+    descriptionPT: "Brewpub onde a cerveja é produzida e servida no mesmo local com 9 torneiras de cerveja. Ótimo para ver o processo e provar tapas.",
+    descriptionEN: "Celebrated brewpub where beer is brewed and served on-site with 9 taps of fresh craft beer. Great for watching the process and enjoying tapas.",
     rating: 4.9,
     reviewsCount: 103,
     coverPhoto: "/spots_pics/08P.jpg",
@@ -1250,7 +1259,16 @@ export const ALL_SPOTS: Bar[] = [
     facebookUrl: "https://www.facebook.com/afabricadapicaria/%3Flocale%3Dpt_PT",
     latitude: 41.14956020504939,
     longitude: -8.61286721472359,
-    hasApplePay: true
+    hasApplePay: true,
+    taps: 9,
+    hasFood: true,
+    petFriendly: true,
+    hasTerrace: true,
+    hasParking: true,
+    hasBeerShop: false,
+    isVerified: true,
+    parkingNotePT: "Sim (público)",
+    parkingNoteEN: "Yes (public)"
   },
   {
     id: "cerveja-artesanal-levare-brewpub-porto",
@@ -1799,7 +1817,8 @@ export const ALL_SPOTS: Bar[] = [
     petFriendly: true,
     hasTerrace: false,
     hasParking: true,
-    hasBeerShop: false
+    hasBeerShop: false,
+    isVerified: true
   },
   {
     id: "12-marias-fermela",
@@ -2079,9 +2098,9 @@ export const ALL_SPOTS: Bar[] = [
     name: "Prost! (Guimarães)",
     zone: BarZone.GUIMARAES,
     address: "Praça de São Tiago 11, 4800-445",
-    workingHours: "Seg: 14:00h às 00:00h Qua a Sáb: 14:00h às 02:00h Dom: 15:00h às 00:00h Fechado: Ter",
-    workingHoursPT: "Seg: 14:00h às 00:00h Qua a Sáb: 14:00h às 02:00h Dom: 15:00h às 00:00h Fechado: Ter",
-    workingHoursEN: "Seg: 14:00h às 00:00h Qua a Sáb: 14:00h às 02:00h Dom: 15:00h às 00:00h Fechado: Ter",
+    workingHours: "Aberto todos os dias das 14:00h - 02:00h\nDomingo aberto das 15:00h - 02:00h\nTerça-feira: Fechado",
+    workingHoursPT: "Aberto todos os dias das 14:00h - 02:00h\nDomingo aberto das 15:00h - 02:00h\nTerça-feira: Fechado",
+    workingHoursEN: "Open every day from 14:00 - 02:00\nSunday open from 15:00 - 02:00\nTuesday: Closed",
     styles: ["Hazy IPA","APA","Double IPA","Gose"],
     description: "Bar especializado em cerveja artesanal em Guimarães, na histórica Praça de São Tiago, com 7 torneiras de cerveja.",
     descriptionPT: "Bar especializado em cerveja artesanal em Guimarães, na histórica Praça de São Tiago, com 7 torneiras de cerveja.",
@@ -2099,7 +2118,8 @@ export const ALL_SPOTS: Bar[] = [
     petFriendly: true,
     hasTerrace: true,
     hasParking: false,
-    hasBeerShop: false
+    hasBeerShop: false,
+    isVerified: true
   },
   {
     id: "beberico-senhora-da-hora",

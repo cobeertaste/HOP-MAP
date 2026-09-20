@@ -89,6 +89,9 @@ export interface Bar {
   hasTerrace?: boolean;
   hasParking?: boolean;
   hasBeerShop?: boolean;
+  isVerified?: boolean;
+  parkingNotePT?: string;
+  parkingNoteEN?: string;
   latestBeerRelease?: string;
   latestBeerReleasePT?: string;
   latestBeerReleaseEN?: string;
