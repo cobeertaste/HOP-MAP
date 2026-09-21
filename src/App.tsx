@@ -500,6 +500,15 @@ export function getSpotTier(taps: number): SpotTierDetails {
 }
 
 export function getDeterministicBaseTaps(barId: string): number {
+  if (barId === 'brew-portugal-lisboa' || barId === 'brew-portugal') return 23;
+  if (barId === 'a-fabrica-da-picaria-brew-pub-porto' || barId === 'fabrica-da-picaria') return 9;
+  if (barId === 'musa-das-virtudes-porto' || barId === 'musa-virtudes') return 15;
+  if (barId === 'prost-guimaraes') return 7;
+  if (barId === 'deuses-do-malte-v-n-gaia' || barId === 'deuses-do-malte') return 10;
+  const found = BARS_DATA.find(b => b.id === barId);
+  if (found && typeof found.taps === 'number' && found.taps > 0) {
+    return found.taps;
+  }
   return 0;
 }
 
@@ -545,7 +554,7 @@ export default function App() {
       rating: 0,
       reviewsCount: 0,
       reviews: [],
-      taps: getDeterministicBaseTaps(bar.id)
+      taps: (typeof bar.taps === 'number' && bar.taps > 0) ? bar.taps : getDeterministicBaseTaps(bar.id)
     }))
   );
   const [events, setEvents] = useState<BeerEvent[]>(EVENTS_DATA);
@@ -2359,12 +2368,13 @@ export default function App() {
         // Reset/Clean bars
         const resetBars = BARS_DATA.map(b => {
           const prevBar = prevBars.find(pb => pb.id === b.id);
+          const baseTaps = (typeof b.taps === 'number' && b.taps > 0) ? b.taps : getDeterministicBaseTaps(b.id);
           return {
             ...b,
             rating: 0,
             reviewsCount: 0,
             reviews: [],
-            taps: prevBar && prevBar.taps !== undefined ? prevBar.taps : getDeterministicBaseTaps(b.id)
+            taps: prevBar && typeof prevBar.taps === 'number' && prevBar.taps > 0 ? prevBar.taps : baseTaps
           };
         });
 
@@ -2845,11 +2855,12 @@ export default function App() {
     // First, load from localStorage to be instantly fast and robust
     setBars(prevBars => prevBars.map(b => {
       const cached = localStorage.getItem(`spot_taps_${b.id}`);
+      const baseTaps = (typeof b.taps === 'number' && b.taps > 0) ? b.taps : getDeterministicBaseTaps(b.id);
       if (cached !== null) {
         const parsed = parseInt(cached, 10);
-        return { ...b, taps: isNaN(parsed) ? 0 : parsed };
+        return { ...b, taps: isNaN(parsed) ? baseTaps : parsed };
       }
-      return { ...b, taps: 0 };
+      return { ...b, taps: baseTaps };
     }));
 
     let unsubscribe: (() => void) | undefined;
@@ -2868,12 +2879,13 @@ export default function App() {
           });
 
           setBars(prevBars => prevBars.map(b => {
+            const baseTaps = (typeof b.taps === 'number' && b.taps > 0) ? b.taps : getDeterministicBaseTaps(b.id);
             if (firestoreTaps[b.id] !== undefined) {
               // Also update localStorage cache
               localStorage.setItem(`spot_taps_${b.id}`, String(firestoreTaps[b.id]));
               return { ...b, taps: firestoreTaps[b.id] };
             }
-            return { ...b, taps: b.taps !== undefined ? b.taps : 0 };
+            return { ...b, taps: (typeof b.taps === 'number' && b.taps > 0) ? b.taps : baseTaps };
           }));
         }, (err) => {
           console.warn("Could not load spots taps from Firestore, using local cached taps:", err);

@@ -219,9 +219,31 @@ export function getBarOpenStatus(bar: Bar, lang: Language = 'PT'): OpenStatusRes
 export function getBarFeatures(bar: Bar, _lang: Language = 'PT'): BarFeaturesResult {
   const desc = (bar.description || '').toLowerCase();
   const name = (bar.name || '').toLowerCase();
+  const id = bar.id || '';
 
   // Deduce or use explicit attributes
-  const taps = bar.taps || (desc.includes('torneiras') ? 12 : 10);
+  let taps = (typeof bar.taps === 'number' && bar.taps > 0) ? bar.taps : 0;
+  if (!taps) {
+    if (id === 'brew-portugal-lisboa' || id === 'brew-portugal' || name.includes('brew portugal') || (name.startsWith('brew') && !name.includes('brewpub'))) {
+      taps = 23;
+    } else if (id === 'a-fabrica-da-picaria-brew-pub-porto' || id === 'fabrica-da-picaria' || name.includes('picaria')) {
+      taps = 9;
+    } else if (id === 'musa-das-virtudes-porto' || id === 'musa-virtudes' || name.includes('virtudes')) {
+      taps = 15;
+    } else if (id === 'prost-guimaraes' || name.includes('prost')) {
+      taps = 7;
+    } else if (id === 'deuses-do-malte-v-n-gaia' || id === 'deuses-do-malte' || name.includes('deuses do malte')) {
+      taps = 10;
+    } else {
+      const matchTaps = desc.match(/(\d+)\s*torneiras/i);
+      if (matchTaps && matchTaps[1]) {
+        taps = parseInt(matchTaps[1], 10);
+      } else {
+        taps = desc.includes('torneiras') ? 12 : 10;
+      }
+    }
+  }
+
   const hasFood = bar.hasFood !== undefined ? bar.hasFood : true;
   const petFriendly = bar.petFriendly !== undefined ? bar.petFriendly : true;
   const hasTerrace = bar.hasTerrace !== undefined ? bar.hasTerrace : true;

@@ -45,9 +45,22 @@ export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFea
   const isBrew = bar.id === 'brew-portugal-lisboa' || bar.id === 'brew-portugal' || (bar.name && bar.name.toLowerCase().includes('brew portugal')) || (bar.name && (bar.name.toLowerCase().startsWith('brew') && !bar.name.toLowerCase().includes('brewpub')));
   const isVerified = isSpotVerified(bar);
 
-  let tapsLabel = `${features.taps} Taps`;
+  let tapsCount = features.taps;
+  if (isBrew) {
+    tapsCount = 23;
+  } else if (isPicaria) {
+    tapsCount = 9;
+  } else if (isVirtudes) {
+    tapsCount = 15;
+  } else if (isProst) {
+    tapsCount = 7;
+  } else if (isDeusesDoMalte) {
+    tapsCount = 10;
+  }
+
+  let tapsLabel = `${tapsCount} Taps`;
   if (isVerified) {
-    tapsLabel = lang === 'PT' ? `Torneiras: ${features.taps}` : `Taps: ${features.taps}`;
+    tapsLabel = lang === 'PT' ? `Torneiras: ${tapsCount}` : `Taps: ${tapsCount}`;
   }
 
   let foodLabel = lang === 'PT' ? 'Comida / Petiscos' : 'Food & Snacks';
