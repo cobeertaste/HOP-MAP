@@ -26,7 +26,13 @@ export function isSpotVerified(bar?: Bar | null): boolean {
     name.includes('picaria') ||
     id === 'musa-das-virtudes-porto' ||
     id === 'musa-virtudes' ||
-    name.includes('virtudes')
+    name.includes('virtudes') ||
+    id === 'brew-portugal-lisboa' ||
+    id === 'brew-portugal' ||
+    name.includes('brew portugal') ||
+    name === 'brew' ||
+    name.startsWith('brew (') ||
+    name.startsWith('brew!')
   );
 }
 
@@ -36,6 +42,7 @@ export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFea
   const isDeusesDoMalte = bar.id === 'deuses-do-malte-v-n-gaia' || bar.id === 'deuses-do-malte' || (bar.name && bar.name.toLowerCase().includes('deuses do malte'));
   const isPicaria = bar.id === 'a-fabrica-da-picaria-brew-pub-porto' || bar.id === 'fabrica-da-picaria' || (bar.name && bar.name.toLowerCase().includes('picaria'));
   const isVirtudes = bar.id === 'musa-das-virtudes-porto' || bar.id === 'musa-virtudes' || (bar.name && bar.name.toLowerCase().includes('virtudes'));
+  const isBrew = bar.id === 'brew-portugal-lisboa' || bar.id === 'brew-portugal' || (bar.name && bar.name.toLowerCase().includes('brew portugal')) || (bar.name && (bar.name.toLowerCase().startsWith('brew') && !bar.name.toLowerCase().includes('brewpub')));
   const isVerified = isSpotVerified(bar);
 
   let tapsLabel = `${features.taps} Taps`;
@@ -67,10 +74,16 @@ export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFea
 
   let parkingLabel = lang === 'PT' ? 'Estacionamento' : 'Parking';
   let parkingNegative = !features.hasParking;
-  if (isPicaria || isVirtudes || bar.parkingNotePT) {
+  if (bar.parkingNotePT) {
     parkingLabel = lang === 'PT'
-      ? `Estacionamento: ${bar.parkingNotePT || 'Sim (público)'}`
-      : `Parking: ${bar.parkingNoteEN || 'Yes (public)'}`;
+      ? `Estacionamento: ${bar.parkingNotePT}`
+      : `Parking: ${bar.parkingNoteEN || bar.parkingNotePT}`;
+    parkingNegative = bar.hasParking === false || bar.parkingNotePT.toLowerCase().includes('não') || bar.parkingNotePT.toLowerCase().includes('nao');
+  } else if (isBrew) {
+    parkingLabel = lang === 'PT' ? 'Estacionamento: Não (público)' : 'Parking: No (public)';
+    parkingNegative = true;
+  } else if (isPicaria || isVirtudes) {
+    parkingLabel = lang === 'PT' ? 'Estacionamento: Sim (público)' : 'Parking: Yes (public)';
     parkingNegative = false;
   } else if (isProst) {
     parkingLabel = lang === 'PT' ? 'Estacionamento: Não' : 'Parking: No';

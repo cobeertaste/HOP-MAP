@@ -708,7 +708,15 @@ export const BARS_C: Bar[] = [
     "facebookUrl": "https://www.facebook.com/profile.php%3Fid%3D61554924194530",
     "latitude": 38.70929201001924,
     "longitude": -9.138374115379479,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 23,
+    "hasFood": true,
+    "petFriendly": true,
+    "hasTerrace": false,
+    "hasParking": false,
+    "isVerified": true,
+    "parkingNotePT": "Não (público)",
+    "parkingNoteEN": "No (public)"
   },
   {
     "id": "crafty-corner-alfama",
