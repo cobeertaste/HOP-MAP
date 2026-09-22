@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Bar } from '../types';
+import { Bar, UserProfile } from '../types';
 import { Language, t } from '../lib/i18n';
 import { getDistanceInKm } from '../App';
 import { getBarGoogleMapsUrl } from '../maps_utils';
@@ -8,13 +8,15 @@ import { SpotFeatureBadges } from './SpotFeatureBadges';
 import { PixelIcon } from './PixelIcons';
 import MapInteractive from './MapInteractive';
 import { motion } from 'motion/react';
-import { MapPin, Navigation, Footprints, Clock, ExternalLink, RefreshCw, Compass } from 'lucide-react';
+import { MapPin, Navigation, Footprints, Clock, ExternalLink, RefreshCw, Compass, Trophy, CheckCircle2 } from 'lucide-react';
 
 interface HopCrawlRouteProps {
   bars: Bar[];
   userLocation: { latitude: number; longitude: number };
   lang: Language;
   darkMode: boolean;
+  user?: UserProfile;
+  onCompleteRoute?: (routeId: string, routeName: string) => void;
   onSelectBar: (bar: Bar) => void;
   selectedBar?: Bar | null;
   proximitySort?: boolean;
@@ -26,6 +28,8 @@ export function HopCrawlRoute({
   userLocation,
   lang,
   darkMode,
+  user,
+  onCompleteRoute,
   onSelectBar,
   selectedBar = null,
   proximitySort = false,
@@ -87,6 +91,33 @@ export function HopCrawlRoute({
 
     return { totalKm: parseFloat(totalKm.toFixed(1)), totalMins, openCount };
   }, [routeBars, lang]);
+
+  // Route unique ID and title for completion tracking
+  const routeId = useMemo(() => {
+    if (routeBars.length === 0) return '';
+    return `route_${routeBars.map(b => b.id).sort().join('_')}`;
+  }, [routeBars]);
+
+  const routeName = useMemo(() => {
+    if (routeBars.length === 0) return '';
+    const firstZone = routeBars[0].zone || 'Craft';
+    return lang === 'PT' ? `Rota Artesanal (${firstZone})` : `${firstZone} Craft Hop Crawl`;
+  }, [routeBars, lang]);
+
+  const isRouteCompleted = useMemo(() => {
+    if (!user || !user.completedRoutes) return false;
+    return user.completedRoutes.includes(routeId);
+  }, [user, routeId]);
+
+  const visitedStopsCount = useMemo(() => {
+    if (!user) return 0;
+    return routeBars.filter(bar => {
+      const inChecked = user.checkedInBars && user.checkedInBars.includes(bar.id);
+      const inStamps = user.stamps && (user.stamps[bar.id] || 0) > 0;
+      const inHistory = user.checkinHistory && user.checkinHistory.some(ch => ch.barId === bar.id);
+      return inChecked || inStamps || inHistory;
+    }).length;
+  }, [user, routeBars]);
 
   // Generate Google Maps multi-destination direction URL
   const googleMapsRouteUrl = useMemo(() => {
@@ -222,6 +253,56 @@ export function HopCrawlRoute({
               <span>{lang === 'PT' ? 'Abrir Rota no Google Maps' : 'Open Route in Google Maps'}</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
+          </div>
+
+          {/* Route Completion & Reward Card (+5 HOPS / 5 pontos) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl border-2 border-[#1B2036] bg-[#F6EFDC] text-[#1B2036] shadow-[3px_3px_0px_#1B2036] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#F2A93B] border-2 border-[#1B2036] flex items-center justify-center shrink-0 shadow-[1.5px_1.5px_0px_#1B2036]">
+                <Trophy className="w-5 h-5 text-[#1B2036]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-press text-xs uppercase font-bold text-[#1B2036]">
+                    {routeName}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md text-[9px] font-bold font-mono bg-[#E85B41] text-white border-2 border-[#1B2036] shadow-[1px_1px_0px_#1B2036]">
+                    +5 HOPS
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#1B2036]/80 font-body mt-0.5">
+                  {lang === 'PT'
+                    ? `Progresso da rota: ${visitedStopsCount} de ${routeBars.length} spots visitados`
+                    : `Route progress: ${visitedStopsCount} of ${routeBars.length} spots visited`}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                if (onCompleteRoute && routeId) {
+                  onCompleteRoute(routeId, routeName);
+                }
+              }}
+              disabled={isRouteCompleted}
+              className={`w-full sm:w-auto px-4 py-2 rounded-xl border-2 border-[#1B2036] font-bold text-xs uppercase font-label transition-all shadow-[2px_2px_0px_#1B2036] flex items-center justify-center gap-1.5 cursor-pointer select-none ${
+                isRouteCompleted
+                  ? 'bg-[#12908C]/20 text-[#12908C] border-[#12908C] cursor-default'
+                  : 'bg-[#F2A93B] hover:bg-[#E09425] text-[#1B2036] active:translate-x-[1px] active:translate-y-[1px]'
+              }`}
+            >
+              {isRouteCompleted ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-[#12908C]" />
+                  <span>{lang === 'PT' ? 'Rota Concluída (+5 HOPS)' : 'Route Completed (+5 HOPS)'}</span>
+                </>
+              ) : (
+                <>
+                  <Trophy className="w-4 h-4 text-[#1B2036]" />
+                  <span>{lang === 'PT' ? 'Concluir Rota (+5 HOPS)' : 'Complete Route (+5 HOPS)'}</span>
+                </>
+              )}
+            </button>
           </div>
 
           {/* Timeline of 3-4 Stops */}

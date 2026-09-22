@@ -33,7 +33,12 @@ export default function OwnerMetricsDashboard({
   const [selectedMonth, setSelectedMonth] = useState<string>(() => getPreviousMonthKey());
 
   // Strict spot access check: owners can ONLY access metrics for their designated spot (admin has master access)
-  const isAuthorized = user.role === 'admin' || (user.isOwner && user.ownedSpotId === spot.id);
+  const isAuthorized = user.role === 'admin' || (
+    Boolean(user.isOwner && user.ownedSpotId && spot.id) && (
+      user.ownedSpotId === spot.id ||
+      user.ownedSpotId.replace(/-porto$|-cascais$|-guimaraes$/, '') === spot.id.replace(/-porto$|-cascais$|-guimaraes$/, '')
+    )
+  );
 
   const spotPin = getSpotCheckinPin(spot);
 

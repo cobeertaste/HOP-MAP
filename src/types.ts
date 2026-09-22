@@ -201,6 +201,7 @@ export interface UserProfile {
   tenStampsDates?: Record<string, string>; // barId -> 'YYYY-MM-DD'
   checkinHistory?: Array<{ id: string; barId: string; barName: string; location: string; date: string; timestamp?: string; beerStyle?: string }>;
   checkedInFestivals?: string[]; // festivalId[]
+  completedRoutes?: string[]; // routeId[]
   earnedBadges?: string[]; // badge ids
   badges?: Array<{ id: string; unlockedAt?: any } | string>; // rich badge records
   customBadges?: Array<{ id: string; unlockedAt?: any } | string>;

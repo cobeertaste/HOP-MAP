@@ -52,8 +52,8 @@ const FAQ_ITEMS: FaqItem[] = [
     category: 'hops',
     questionPT: 'Como acumular pontos HOPS e subir de nível?',
     questionEN: 'How to earn HOPS points and level up?',
-    answerPT: 'Os pontos HOPS medem a tua jornada! Ganhas pontos ao fazer check-ins (+2 ou +5 HOPS), ao avaliar cervejas e spots, ao completar rotas cervejeiras e ao participar em festivais. Mais pontos desbloqueiam novos escalões de cervejeiro na Tabela de Classificações.',
-    answerEN: 'HOPS points track your exploration! Earn points with check-ins (+2 or +5 HOPS), writing reviews, finishing hop crawl routes, and attending beer festivals. More points level up your brewer tier on the Leaderboard.',
+    answerPT: 'Os pontos HOPS medem a tua jornada! Ganhas pontos ao fazer check-in num spot (+1 HOP / 1 ponto), ao submeter uma avaliação de um spot (+1 HOP / 1 ponto), ao fazer check-in num festival (+3 HOPS / 3 pontos) e ao completar uma rota cervejeira (+5 HOPS / 5 pontos). Do lado dos spots, por cada utilizador que faça check-in num spot, esse spot acumula 1 TAP (1 ponto). Mais pontos desbloqueiam novos escalões na Tabela de Classificações.',
+    answerEN: 'HOPS points measure your craft exploration! Earn points with spot check-ins (+1 HOP / 1 point), submitting a spot review (+1 HOP / 1 point), festival check-ins (+3 HOPS / 3 points), and completing a hop crawl route (+5 HOPS / 5 points). For spots, every user check-in accumulates 1 TAP (1 point). More points unlock higher brewer tiers on the Leaderboard.',
     icon: <Trophy className="w-4 h-4 text-[#F2A93B]" />
   },
   {

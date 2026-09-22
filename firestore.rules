@@ -15,6 +15,18 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.email.lower() == 'cobeertaste@gmail.com';
     }
 
+    function isVerifiedOwnerForSpot(spotId) {
+      return isSignedIn() && (
+        (request.auth.token.email.lower() == 'roberto@bahcraftbeer.com' && spotId == 'bah-craft-beer-cascais') ||
+        (request.auth.token.email.lower() == 'afabricadapicaria@gmail.com' && (spotId == 'a-fabrica-da-picaria-brew-pub-porto' || spotId == 'a-fabrica-da-picaria-brew-pub')) ||
+        (request.auth.token.email.lower() == 'kkruckenhauser@gmail.com' && spotId == 'prost-guimaraes') ||
+        (request.auth.token.email.lower() == 'ricardo@marrafa.pt' && spotId == 'marrafa-jesufrei') ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownedSpotId == spotId 
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownerClaimApproved == true)
+      );
+    }
+
     function isValidUser(user) {
       return user.uid is string && user.uid.size() <= 128
         && user.email is string && user.email.size() <= 100
@@ -86,7 +98,7 @@ service cloud.firestore {
 
     // 10. Analytics Events Collection (Creation by app, Read by Administrator or Verified Spot Owner for their own spot)
     match /analytics_events/{eventId} {
-      allow read: if isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownedSpotId == resource.data.spotId && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownerClaimApproved == true);
+      allow read: if isAdmin() || isVerifiedOwnerForSpot(resource.data.spotId);
       allow create: if request.resource.data.eventType is string 
                     && request.resource.data.spotId is string 
                     && request.resource.data.month is string;

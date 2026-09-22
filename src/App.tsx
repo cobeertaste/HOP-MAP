@@ -786,6 +786,8 @@ export default function App() {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [scoreSubTab, setScoreSubTab] = useState<'global' | 'friends' | 'tiers' | 'spots'>('global');
+  const [globalScorePage, setGlobalScorePage] = useState(0);
+  const [spotsScorePage, setSpotsScorePage] = useState(0);
   const [customAvatarUrl, setCustomAvatarUrl] = useState('');
   const [loginName, setLoginName] = useState('');
   const [loginEmail, setLoginEmail] = useState('');
@@ -1178,19 +1180,6 @@ export default function App() {
   const [biometricsReason, setBiometricsReason] = useState('');
   
   // Friends and Global Leaderboard State & Logic
-  const LOCAL_MOCK_USERS = [
-    { id: 'mock_1', username: 'MestreCervejeiro', points: 345 },
-    { id: 'mock_2', username: 'RitaSourLover', points: 280 },
-    { id: 'mock_3', username: 'HopKing_88', points: 215 },
-    { id: 'mock_4', username: 'AnaStout', points: 195 },
-    { id: 'mock_5', username: 'PedroNEIPA', points: 150 },
-    { id: 'mock_6', username: 'CervejaEAmigos', points: 95 },
-    { id: 'mock_7', username: 'DianaLager', points: 75 },
-    { id: 'mock_8', username: 'TomasPilsner', points: 60 },
-    { id: 'mock_9', username: 'SofiaGose', points: 40 },
-    { id: 'mock_10', username: 'BebedorIniciante', points: 20 },
-  ];
-
   const [friendSearchQuery, setFriendSearchQuery] = useState('');
   const [friendSearchResults, setFriendSearchResults] = useState<{ id: string; username: string; points: number }[]>([]);
   const [isFriendSearching, setIsFriendSearching] = useState(false);
@@ -1241,11 +1230,10 @@ export default function App() {
       }
       if (isLocalAuthFallback) {
         const details = friendIds.map(fid => {
-          const mockF = LOCAL_MOCK_USERS.find(u => u.id === fid);
           return {
             id: fid,
-            username: mockF ? mockF.username : `Amigo (${fid.substring(0, 5)})`,
-            points: mockF ? mockF.points : 10
+            username: `Amigo (${fid.substring(0, 5)})`,
+            points: 0
           };
         });
         if (active) {
@@ -1288,15 +1276,13 @@ export default function App() {
           }
         }
 
-        // Add mock users if any of friendIds match mock uids
         const foundIds = new Set(details.map(d => d.id));
         friendIds.forEach(fid => {
           if (!foundIds.has(fid)) {
-            const mockF = LOCAL_MOCK_USERS.find(u => u.id === fid);
             details.push({
               id: fid,
-              username: mockF ? mockF.username : `Amigo (${fid.substring(0, 5)})`,
-              points: mockF ? mockF.points : 15
+              username: `Amigo (${fid.substring(0, 5)})`,
+              points: 0
             });
           }
         });
@@ -1305,13 +1291,12 @@ export default function App() {
           setFriendsDetails(details);
         }
       } catch (err) {
-        console.error("Error fetching friends details, falling back to mock mapping:", err);
+        console.error("Error fetching friends details:", err);
         const details = friendIds.map(fid => {
-          const mockF = LOCAL_MOCK_USERS.find(u => u.id === fid);
           return {
             id: fid,
-            username: mockF ? mockF.username : `Amigo (${fid.substring(0, 5)})`,
-            points: mockF ? mockF.points : 10
+            username: `Amigo (${fid.substring(0, 5)})`,
+            points: 0
           };
         });
         if (active) {
@@ -1630,94 +1615,67 @@ export default function App() {
   }, [user.isLoggedIn, user.id, lang]);
 
   // Fetch all users for global scores - strictly only registered users with points > 0
+  // Fetch all users for global scores - strictly only registered users from Firestore
   const fetchScoresAndUsers = async () => {
     setIsScoresLoading(true);
-    if (isLocalAuthFallback) {
-      const fallbackList = [
-        { id: 'seed_1', username: 'MestreCervejeiro', points: 345 },
-        { id: 'seed_2', username: 'RitaSourLover', points: 280 },
-        { id: 'seed_3', username: 'HopKing_88', points: 215 },
-        { id: 'seed_4', username: 'AnaStout', points: 195 },
-        { id: 'seed_5', username: 'PedroNEIPA', points: 150 },
-      ];
-      
-      let userUpdatedInFallback = false;
-      const updatedFallbackList = fallbackList.map(item => {
-        if (user.isLoggedIn && (item.id === user.id || item.username.toLowerCase() === user.username.toLowerCase())) {
-          userUpdatedInFallback = true;
-          return { ...item, id: user.id, username: user.username, points: user.points };
-        }
-        return item;
-      });
-
-      if (user.isLoggedIn && user.points > 0 && !userUpdatedInFallback) {
-        updatedFallbackList.push({ id: user.id, username: user.username, points: user.points });
+    if (isLocalAuthFallback || !isFirebaseConfigured || !db) {
+      if (user.isLoggedIn && user.username) {
+        setGlobalScores([{ id: user.id, username: user.username, points: user.points || 0 }]);
+      } else {
+        setGlobalScores([]);
       }
-      updatedFallbackList.sort((a, b) => b.points - a.points);
-      setGlobalScores(updatedFallbackList);
       setIsScoresLoading(false);
       return;
     }
     try {
-      const q = query(
-        collection(db, 'users'), 
-        where('points', '>', 0), 
-        orderBy('points', 'desc'), 
-        limit(50)
-      );
-      const querySnapshot = await getDocs(q);
+      const usersRef = collection(db, 'users');
+      const querySnapshot = await getDocs(usersRef);
       const dbUsers: { id: string; username: string; points: number }[] = [];
       querySnapshot.forEach((docSnap) => {
+        // Exclude any mock, seed, or temporary local placeholder IDs
+        if (docSnap.id.startsWith('mock_') || docSnap.id.startsWith('seed_') || docSnap.id.startsWith('local-user-')) {
+          return;
+        }
         const data = docSnap.data();
-        dbUsers.push({
-          id: docSnap.id,
-          username: data.username || 'utilizador',
-          points: typeof data.points === 'number' ? data.points : 0
-        });
+        const uname = data.username || data.displayName;
+        if (typeof uname === 'string' && uname.trim().length > 0) {
+          dbUsers.push({
+            id: docSnap.id,
+            username: uname.trim(),
+            points: typeof data.points === 'number' ? data.points : 0
+          });
+        }
       });
 
-      // Map dbUsers to ensure the current user's points match user.points if logged in
+      // Synchronize currently logged-in user if logged in
+      let currentUserFound = false;
       const list = dbUsers.map(u => {
-        if (user.isLoggedIn && u.id === user.id) {
-          return { ...u, points: user.points };
+        if (user.isLoggedIn && (u.id === user.id || u.username.toLowerCase() === user.username.toLowerCase())) {
+          currentUserFound = true;
+          return { ...u, id: user.id, username: user.username, points: user.points || 0 };
         }
         return u;
       });
-      // Include current user in ranking fallback if they are logged in and have points > 0
-      if (user.isLoggedIn && user.points > 0 && !list.some(u => u.id === user.id)) {
+
+      if (user.isLoggedIn && !currentUserFound && user.username) {
         list.push({
           id: user.id,
           username: user.username,
-          points: user.points
+          points: user.points || 0
         });
       }
 
+      // Sort strictly in descending order of points
       const sorted = list.sort((a, b) => b.points - a.points);
       setGlobalScores(sorted);
     } catch (err) {
-      console.warn("Could not fetch global scores, using registered user fallback list:", err);
-      const fallbackList = [
-        { id: 'seed_1', username: 'MestreCervejeiro', points: 345 },
-        { id: 'seed_2', username: 'RitaSourLover', points: 280 },
-        { id: 'seed_3', username: 'HopKing_88', points: 215 },
-        { id: 'seed_4', username: 'AnaStout', points: 195 },
-        { id: 'seed_5', username: 'PedroNEIPA', points: 150 },
-      ];
-      
-      let userUpdatedInFallback = false;
-      const updatedFallbackList = fallbackList.map(item => {
-        if (user.isLoggedIn && (item.id === user.id || item.username.toLowerCase() === user.username.toLowerCase())) {
-          userUpdatedInFallback = true;
-          return { ...item, id: user.id, username: user.username, points: user.points };
-        }
-        return item;
-      });
-
-      if (user.isLoggedIn && user.points > 0 && !userUpdatedInFallback) {
-        updatedFallbackList.push({ id: user.id, username: user.username, points: user.points });
+      console.warn("Could not fetch global scores for registered users:", err);
+      // Fallback: strictly only the current authenticated user if logged in, never fictional users
+      if (user.isLoggedIn && user.username) {
+        setGlobalScores([{ id: user.id, username: user.username, points: user.points || 0 }]);
+      } else {
+        setGlobalScores([]);
       }
-      updatedFallbackList.sort((a, b) => b.points - a.points);
-      setGlobalScores(updatedFallbackList);
     } finally {
       setIsScoresLoading(false);
     }
@@ -2603,6 +2561,39 @@ export default function App() {
               }
             }
 
+            // Check if there is an approved owner claim in owner_claims collection (auto-sync)
+            if (!verifiedOwnerConfig && !savedIsOwner && isFirebaseConfigured) {
+              try {
+                const claimsRef = collection(db, 'owner_claims');
+                const qOwner = query(claimsRef, where('userEmail', '==', userCleanEmail), where('status', '==', 'approved'));
+                const snapOwner = await getDocs(qOwner);
+                if (!snapOwner.empty) {
+                  const claimDoc = snapOwner.docs[0].data();
+                  if (claimDoc.spotId) {
+                    savedRole = 'owner';
+                    savedIsOwner = true;
+                    savedOwnedSpotId = claimDoc.spotId;
+                    savedOwnerClaimApproved = true;
+                    savedOwnerClaimPending = false;
+                    savedOwnerClaimSpotId = claimDoc.spotId;
+                    savedOwnerClaimSpotName = claimDoc.spotName || claimDoc.spotId;
+
+                    updateDoc(userDocRef, {
+                      role: 'owner',
+                      isOwner: true,
+                      ownedSpotId: claimDoc.spotId,
+                      ownerClaimApproved: true,
+                      ownerClaimPending: false,
+                      ownerClaimSpotId: claimDoc.spotId,
+                      ownerClaimSpotName: claimDoc.spotName || claimDoc.spotId
+                    }).catch(() => {});
+                  }
+                }
+              } catch (e) {
+                console.warn('Notice checking approved claim in owner_claims:', e);
+              }
+            }
+
             localStorage.setItem(cacheKeyPrefix + 'role', savedRole);
             localStorage.setItem(cacheKeyPrefix + 'isOwner', String(savedIsOwner));
             if (savedOwnedSpotId) localStorage.setItem(cacheKeyPrefix + 'ownedSpotId', savedOwnedSpotId);
@@ -2705,6 +2696,29 @@ export default function App() {
     });
     return () => unsubscribe();
   }, [isLocalAuthFallback]);
+
+  // Real-time synchronization when owner is approved
+  useEffect(() => {
+    const handleOwnerApproved = (e: any) => {
+      const { userId, spotId, spotName, userEmail } = e.detail || {};
+      const cleanTargetEmail = (userEmail || '').toLowerCase().trim();
+      const currentEmail = (user.email || '').toLowerCase().trim();
+      if ((user.id && user.id === userId) || (cleanTargetEmail && currentEmail && cleanTargetEmail === currentEmail)) {
+        setUser(prev => ({
+          ...prev,
+          isOwner: true,
+          ownedSpotId: spotId,
+          ownerClaimPending: false,
+          ownerClaimApproved: true,
+          ownerClaimSpotId: spotId,
+          ownerClaimSpotName: spotName || spotId,
+          role: 'owner'
+        }));
+      }
+    };
+    window.addEventListener('hop_owner_approved', handleOwnerApproved);
+    return () => window.removeEventListener('hop_owner_approved', handleOwnerApproved);
+  }, [user.id, user.email]);
 
   // Real-time GPS location tracking when logged in
   useEffect(() => {
@@ -3644,7 +3658,7 @@ export default function App() {
     setTimeout(() => setAnimatingCheckinEventId(null), 3500);
 
     const newCheckedInFestivals = [...(user.checkedInFestivals || []), eventId];
-    const newPoints = (user.points || 0) + 2;
+    const newPoints = (user.points || 0) + 3;
     const levelInfo = getLevelDetails(newPoints);
 
     setUser(prev => ({
@@ -3662,7 +3676,7 @@ export default function App() {
 
     triggerSelfPush(
       'Check-in no Festival! 🍻',
-      `Check-in efetuado com sucesso no ${ev.title}! Ganhaste +2 HOPS.`,
+      `Check-in efetuado com sucesso no ${ev.title}! Ganhaste +3 HOPS.`,
       'loyalty'
     );
 
@@ -3671,8 +3685,8 @@ export default function App() {
       id: `toast_${Date.now()}`,
       title: lang === 'PT' ? 'Check-in no Festival' : 'Festival Check-in',
       barName: ev.title,
-      pointsEarned: 2,
-      subtitle: lang === 'PT' ? '2 HOPS Ganhos' : '2 HOPS Earned'
+      pointsEarned: 3,
+      subtitle: lang === 'PT' ? '3 HOPS Ganhos' : '3 HOPS Earned'
     });
 
     // Notify friends if check-in sharing is enabled
@@ -3682,7 +3696,7 @@ export default function App() {
     setCheckinPopupModal({
       isOpen: true,
       title: 'HOP-MAP',
-      message: `Parabéns, ganhaste 2 HOPS por check-in no festival ${ev.title}. Desfruta do festival e das cervejas!!`,
+      message: `Parabéns, ganhaste 3 HOPS por check-in no festival ${ev.title}. Desfruta do festival e das cervejas!!`,
       website: 'www.cobeertaste.com'
     });
 
@@ -3700,6 +3714,88 @@ export default function App() {
 
     // Process referral attribution on first festival check-in
     await processReferralFirstCheckin();
+  };
+
+  // Complete a Hop Crawl Craft Beer Route (+5 HOPS / 5 pontos)
+  const handleCompleteRoute = async (routeId: string, routeName: string) => {
+    if (!user.isLoggedIn) {
+      triggerSelfPush(
+        lang === 'PT' ? 'Iniciar Sessão' : 'Sign In',
+        lang === 'PT' ? 'Inicia sessão para completares rotas e ganhares pontos HOPS!' : 'Sign in to complete craft beer routes and earn HOPS!',
+        'system'
+      );
+      return;
+    }
+
+    const currentCompleted = user.completedRoutes || [];
+    if (currentCompleted.includes(routeId)) {
+      triggerSelfPush(
+        lang === 'PT' ? 'Rota Já Concluída ⚠️' : 'Route Already Completed ⚠️',
+        lang === 'PT' ? `Já concluíste a "${routeName}" anteriormente!` : `You already completed "${routeName}" previously!`,
+        'system'
+      );
+      return;
+    }
+
+    const newCompletedRoutes = [...currentCompleted, routeId];
+    const newPoints = (user.points || 0) + 5;
+    const levelInfo = getLevelDetails(newPoints);
+
+    setUser(prev => ({
+      ...prev,
+      points: newPoints,
+      level: levelInfo.title,
+      avatarUrl: levelInfo.avatarUrl,
+      completedRoutes: newCompletedRoutes
+    }));
+
+    // Play retro fanfare chime
+    try {
+      playRewardChime();
+    } catch (err) {}
+
+    triggerSelfPush(
+      lang === 'PT' ? 'Rota Cervejeira Concluída! 🏆' : 'Hop Route Conquered! 🏆',
+      lang === 'PT'
+        ? `Parabéns! Concluíste com sucesso a "${routeName}" e ganhaste +5 HOPS!`
+        : `Congratulations! You conquered "${routeName}" and earned +5 HOPS!`,
+      'reward'
+    );
+
+    // iOS System Toast
+    setIosToast({
+      id: `toast_${Date.now()}`,
+      title: lang === 'PT' ? 'Rota Concluída' : 'Route Completed',
+      barName: routeName,
+      pointsEarned: 5,
+      subtitle: lang === 'PT' ? '5 HOPS Ganhos (+5 Pontos)' : '5 HOPS Earned (+5 Points)'
+    });
+
+    // Checkin Popup Modal
+    setCheckinPopupModal({
+      isOpen: true,
+      title: 'HOP-MAP',
+      message: lang === 'PT'
+        ? `Parabéns, ganhaste 5 HOPS por completar a rota cervejeira "${routeName}"! Continua a tua aventura artesanal!`
+        : `Congratulations, you earned 5 HOPS for completing "${routeName}"! Keep exploring craft beer!`,
+      website: 'www.cobeertaste.com'
+    });
+
+    // Sync to Firestore & Local Storage
+    const cachePrefix = `hop_user_${user.id}_`;
+    localStorage.setItem(cachePrefix + 'points', String(newPoints));
+    localStorage.setItem(cachePrefix + 'completedRoutes', JSON.stringify(newCompletedRoutes));
+
+    if (!isLocalAuthFallback && auth.currentUser) {
+      try {
+        await setDoc(doc(db, 'users', user.id), {
+          points: newPoints,
+          completedRoutes: newCompletedRoutes
+        }, { merge: true });
+      } catch (err) {
+        console.warn("Could not sync completed route to Firestore:", err);
+      }
+    }
   };
 
   // Adding Custom Review
@@ -5407,6 +5503,8 @@ export default function App() {
                 userLocation={userLocation}
                 lang={lang}
                 darkMode={darkMode}
+                user={user}
+                onCompleteRoute={handleCompleteRoute}
                 onSelectBar={(bar) => handleSelectBar(bar)}
                 selectedBar={selectedBar}
                 proximitySort={proximitySort}
@@ -8241,63 +8339,150 @@ export default function App() {
                 <div className="flex-1 overflow-y-auto space-y-2 my-2 pr-1">
                   
                   {scoreSubTab === 'global' && (
-                    <div className="space-y-1.5">
-                      <div className="grid grid-cols-12 text-[8.5px] text-[#1B2036] pb-1.5 border-b-2 border-[#1B2036] font-bold uppercase tracking-wider font-mono">
-                        <div className="col-span-2 text-center">RANK</div>
-                        <div className="col-span-1"></div>
-                        <div className="col-span-6">PLAYER</div>
-                        <div className="col-span-3 text-right">HOPS</div>
-                      </div>
+                    <div className="space-y-2">
+                      {(() => {
+                        const sortedGlobalScores = [...globalScores].sort((a, b) => b.points - a.points);
+                        const globalPageSize = 10;
+                        const globalTotalPages = Math.max(1, Math.ceil(sortedGlobalScores.length / globalPageSize));
+                        const currentGlobalPage = Math.min(globalScorePage, globalTotalPages - 1);
+                        const globalStartIdx = currentGlobalPage * globalPageSize;
+                        const currentGlobalItems = sortedGlobalScores.slice(globalStartIdx, globalStartIdx + globalPageSize);
 
-                      {isScoresLoading ? (
-                        <div className="text-center py-8 text-xs text-[#1B2036]/60 font-mono">LOADING DATA...</div>
-                      ) : (
-                        globalScores.slice(0, 10).map((player, index) => {
-                          const isCurrentUser = player.username.toLowerCase() === user.username.toLowerCase();
-                          const isFriendOfUser = (user.friends || []).includes(player.id);
-                          const isRank1 = index === 0;
+                        if (isScoresLoading) {
+                          return <div className="text-center py-8 text-xs text-[#1B2036]/60 font-mono">LOADING DATA...</div>;
+                        }
 
+                        if (sortedGlobalScores.length === 0) {
                           return (
-                            <div 
-                              key={player.id || player.username}
-                              className={`grid grid-cols-12 text-xs items-center py-2 px-1.5 rounded-xl border-2 transition ${
-                                isRank1
-                                  ? 'bg-[#F2A93B]/25 text-[#1B2036] font-black border-[#1B2036] shadow-[2px_2px_0px_#1B2036]'
-                                  : isCurrentUser 
-                                    ? 'bg-[#12908C]/20 text-[#1B2036] font-bold border-[#12908C] shadow-[1.5px_1.5px_0px_#1B2036]' 
-                                    : 'bg-white border-[#1B2036]/20 text-[#1B2036] shadow-[1px_1px_0px_#1B2036]'
-                              }`}
-                            >
-                              {/* Rank position */}
-                              <div className="col-span-2 text-center font-bold font-mono text-xs flex items-center justify-center gap-0.5">
-                                {isRank1 && <span className="text-[10px] select-none">👑</span>}
-                                <span>{index + 1}º</span>
-                              </div>
-
-                              {/* Small Pac-Man pointer if it's the current user */}
-                              <div className="col-span-1 flex items-center justify-center">
-                                {isCurrentUser && (
-                                  <div className="scale-75 animate-bounce">
-                                    <PixelPacman size={10} />
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Username */}
-                              <div className="col-span-6 truncate font-semibold uppercase tracking-wider text-xs flex items-center gap-1 text-left text-[#1B2036]">
-                                <span className={isRank1 ? 'font-black' : ''}>{player.username}</span>
-                                {isFriendOfUser && <span className="text-[8.5px] font-mono text-[#12908C] font-bold lowercase">[amigo]</span>}
-                                {isCurrentUser && <span className="text-[8.5px] font-mono text-[#E85B41] font-bold lowercase">[tu]</span>}
-                              </div>
-
-                              {/* Points */}
-                              <div className="col-span-3 text-right font-mono text-xs text-[#1B2036] pr-1 font-bold">
-                                {isCurrentUser ? user.points : player.points} PTS
-                              </div>
+                            <div className="text-center py-8 px-2 space-y-2 bg-white rounded-xl border-2 border-[#1B2036] p-4 shadow-[2px_2px_0px_#1B2036] my-2">
+                              <p className="text-[10px] text-[#1B2036] font-mono font-bold leading-relaxed uppercase">
+                                {lang === 'PT' ? 'SEM UTILIZADORES REGISTADOS' : 'NO REGISTERED USERS'}
+                              </p>
+                              <p className="text-[9px] text-[#1B2036]/70 leading-normal font-sans">
+                                {lang === 'PT' 
+                                  ? 'Apenas os utilizadores registados aparecem na classificação global.' 
+                                  : 'Only registered users appear in the global leaderboard.'}
+                              </p>
                             </div>
                           );
-                        })
-                      )}
+                        }
+
+                        return (
+                          <>
+                            {/* Window Pagination Bar (10 em 10) */}
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 p-2 bg-white border-2 border-[#1B2036] rounded-xl shadow-[2px_2px_0px_#1B2036] shrink-0">
+                              <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
+                                <button
+                                  type="button"
+                                  onClick={() => setGlobalScorePage(p => Math.max(0, p - 1))}
+                                  disabled={currentGlobalPage === 0}
+                                  className={`px-2 py-1 text-[8.5px] font-bold font-mono rounded-lg border-2 border-[#1B2036] transition flex items-center gap-0.5 ${
+                                    currentGlobalPage === 0
+                                      ? 'opacity-40 bg-gray-100 cursor-not-allowed text-gray-500'
+                                      : 'bg-[#F6EFDC] hover:bg-[#F2A93B] text-[#1B2036] shadow-[1px_1px_0px_#1B2036] cursor-pointer active:translate-x-[0.5px]'
+                                  }`}
+                                >
+                                  ◀ 10 Ant.
+                                </button>
+                                <div className="text-[8.5px] font-press uppercase tracking-tight text-[#1B2036] px-1">
+                                  {globalStartIdx + 1}-{Math.min(globalStartIdx + globalPageSize, sortedGlobalScores.length)} / {sortedGlobalScores.length}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setGlobalScorePage(p => Math.min(globalTotalPages - 1, p + 1))}
+                                  disabled={currentGlobalPage >= globalTotalPages - 1}
+                                  className={`px-2 py-1 text-[8.5px] font-bold font-mono rounded-lg border-2 border-[#1B2036] transition flex items-center gap-0.5 ${
+                                    currentGlobalPage >= globalTotalPages - 1
+                                      ? 'opacity-40 bg-gray-100 cursor-not-allowed text-gray-500'
+                                      : 'bg-[#F6EFDC] hover:bg-[#F2A93B] text-[#1B2036] shadow-[1px_1px_0px_#1B2036] cursor-pointer active:translate-x-[0.5px]'
+                                  }`}
+                                >
+                                  Seg. 10 ▶
+                                </button>
+                              </div>
+
+                              {/* Quick Window Selectors */}
+                              <div className="flex items-center gap-1 overflow-x-auto max-w-full pb-0.5 scrollbar-none">
+                                {Array.from({ length: globalTotalPages }).map((_, pIdx) => {
+                                  const pStart = pIdx * 10 + 1;
+                                  const pEnd = Math.min((pIdx + 1) * 10, sortedGlobalScores.length);
+                                  const isActive = pIdx === currentGlobalPage;
+                                  return (
+                                    <button
+                                      key={pIdx}
+                                      type="button"
+                                      onClick={() => setGlobalScorePage(pIdx)}
+                                      className={`px-1.5 py-0.5 text-[8px] font-mono font-bold rounded-md border transition whitespace-nowrap cursor-pointer ${
+                                        isActive
+                                          ? 'bg-[#F2A93B] text-black border-[#1B2036] shadow-[1px_1px_0px_#1B2036] font-extrabold'
+                                          : 'bg-[#FAF6EB] text-[#1B2036]/70 border-[#1B2036]/30 hover:bg-[#EFE6CC]'
+                                      }`}
+                                    >
+                                      {pStart}-{pEnd}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-12 text-[8.5px] text-[#1B2036] pb-1.5 border-b-2 border-[#1B2036] font-bold uppercase tracking-wider font-mono">
+                              <div className="col-span-2 text-center">RANK</div>
+                              <div className="col-span-1"></div>
+                              <div className="col-span-6">PLAYER</div>
+                              <div className="col-span-3 text-right">HOPS</div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              {currentGlobalItems.map((player, index) => {
+                                const absoluteRank = globalStartIdx + index + 1;
+                                const isCurrentUser = player.username.toLowerCase() === user.username.toLowerCase();
+                                const isFriendOfUser = (user.friends || []).includes(player.id);
+                                const isRank1 = absoluteRank === 1;
+
+                                return (
+                                  <div 
+                                    key={player.id || player.username}
+                                    className={`grid grid-cols-12 text-xs items-center py-2 px-1.5 rounded-xl border-2 transition ${
+                                      isRank1
+                                        ? 'bg-[#F2A93B]/25 text-[#1B2036] font-black border-[#1B2036] shadow-[2px_2px_0px_#1B2036]'
+                                        : isCurrentUser 
+                                          ? 'bg-[#12908C]/20 text-[#1B2036] font-bold border-[#12908C] shadow-[1.5px_1.5px_0px_#1B2036]' 
+                                          : 'bg-white border-[#1B2036]/20 text-[#1B2036] shadow-[1px_1px_0px_#1B2036]'
+                                    }`}
+                                  >
+                                    {/* Rank position */}
+                                    <div className="col-span-2 text-center font-bold font-mono text-xs flex items-center justify-center gap-0.5">
+                                      {isRank1 && <span className="text-[10px] select-none">👑</span>}
+                                      <span>{absoluteRank}º</span>
+                                    </div>
+
+                                    {/* Small Pac-Man pointer if it's the current user */}
+                                    <div className="col-span-1 flex items-center justify-center">
+                                      {isCurrentUser && (
+                                        <div className="scale-75 animate-bounce">
+                                          <PixelPacman size={10} />
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Username */}
+                                    <div className="col-span-6 truncate font-semibold uppercase tracking-wider text-xs flex items-center gap-1 text-left text-[#1B2036]">
+                                      <span className={isRank1 ? 'font-black' : ''}>{player.username}</span>
+                                      {isFriendOfUser && <span className="text-[8.5px] font-mono text-[#12908C] font-bold lowercase">[amigo]</span>}
+                                      {isCurrentUser && <span className="text-[8.5px] font-mono text-[#E85B41] font-bold lowercase">[tu]</span>}
+                                    </div>
+
+                                    {/* Points */}
+                                    <div className="col-span-3 text-right font-mono text-xs text-[#1B2036] pr-1 font-bold">
+                                      {isCurrentUser ? user.points : player.points} PTS
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
 
@@ -8478,59 +8663,125 @@ export default function App() {
                   )}
 
                   {scoreSubTab === 'spots' && (
-                    <div className="space-y-1.5">
-                      <div className="grid grid-cols-12 text-[8.5px] text-[#1B2036] pb-1.5 border-b-2 border-[#1B2036] font-bold uppercase tracking-wider font-mono">
-                        <div className="col-span-2 text-center font-mono">RANK</div>
-                        <div className="col-span-1"></div>
-                        <div className="col-span-6">BAR SPOT</div>
-                        <div className="col-span-3 text-right">TAPS</div>
-                      </div>
-
+                    <div className="space-y-2">
                       {(() => {
-                        const topSpots = [...bars]
-                          .sort((a, b) => (b.taps || 0) - (a.taps || 0))
-                          .slice(0, 10);
+                        const sortedSpots = [...bars].sort((a, b) => (b.taps || 0) - (a.taps || 0));
+                        const spotsPageSize = 10;
+                        const spotsTotalPages = Math.max(1, Math.ceil(sortedSpots.length / spotsPageSize));
+                        const currentSpotsPage = Math.min(spotsScorePage, spotsTotalPages - 1);
+                        const spotsStartIdx = currentSpotsPage * spotsPageSize;
+                        const currentSpotsItems = sortedSpots.slice(spotsStartIdx, spotsStartIdx + spotsPageSize);
 
-                        return topSpots.map((spot, index) => {
-                          const spotTaps = spot.taps || 0;
-                          const isRank1 = index === 0;
-
-                          return (
-                            <div 
-                              key={spot.id}
-                              onClick={() => {
-                                handleSelectBar(spot);
-                                setShowScoreModal(false);
-                                setActiveTab('explore');
-                              }}
-                              className={`grid grid-cols-12 text-xs items-center py-2 px-1.5 rounded-xl border-2 transition cursor-pointer ${
-                                isRank1 
-                                  ? 'bg-[#F2A93B]/25 text-[#1B2036] font-black border-[#1B2036] shadow-[2px_2px_0px_#1B2036]' 
-                                  : 'bg-white border-[#1B2036]/20 text-[#1B2036] shadow-[1px_1px_0px_#1B2036] hover:bg-[#F6EFDC]'
-                              }`}
-                            >
-                              {/* Rank position */}
-                              <div className="col-span-2 text-center font-bold font-mono text-xs">
-                                {index + 1}º
+                        return (
+                          <>
+                            {/* Window Pagination Bar for SPOTS (10 em 10) */}
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 p-2 bg-white border-2 border-[#1B2036] rounded-xl shadow-[2px_2px_0px_#1B2036] shrink-0">
+                              <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
+                                <button
+                                  type="button"
+                                  onClick={() => setSpotsScorePage(p => Math.max(0, p - 1))}
+                                  disabled={currentSpotsPage === 0}
+                                  className={`px-2 py-1 text-[8.5px] font-bold font-mono rounded-lg border-2 border-[#1B2036] transition flex items-center gap-0.5 ${
+                                    currentSpotsPage === 0
+                                      ? 'opacity-40 bg-gray-100 cursor-not-allowed text-gray-500'
+                                      : 'bg-[#F6EFDC] hover:bg-[#4EBD3A] text-[#1B2036] shadow-[1px_1px_0px_#1B2036] cursor-pointer active:translate-x-[0.5px]'
+                                  }`}
+                                >
+                                  ◀ 10 Ant.
+                                </button>
+                                <div className="text-[8.5px] font-press uppercase tracking-tight text-[#1B2036] px-1">
+                                  {spotsStartIdx + 1}-{Math.min(spotsStartIdx + spotsPageSize, sortedSpots.length)} / {sortedSpots.length}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setSpotsScorePage(p => Math.min(spotsTotalPages - 1, p + 1))}
+                                  disabled={currentSpotsPage >= spotsTotalPages - 1}
+                                  className={`px-2 py-1 text-[8.5px] font-bold font-mono rounded-lg border-2 border-[#1B2036] transition flex items-center gap-0.5 ${
+                                    currentSpotsPage >= spotsTotalPages - 1
+                                      ? 'opacity-40 bg-gray-100 cursor-not-allowed text-gray-500'
+                                      : 'bg-[#F6EFDC] hover:bg-[#4EBD3A] text-[#1B2036] shadow-[1px_1px_0px_#1B2036] cursor-pointer active:translate-x-[0.5px]'
+                                  }`}
+                                >
+                                  Seg. 10 ▶
+                                </button>
                               </div>
 
-                              {/* Small icon indicator */}
-                              <div className="col-span-1 flex items-center justify-center text-xs">
-                                {index === 0 ? '🏆' : '🍻'}
-                              </div>
-
-                              {/* Spot Name */}
-                              <div className="col-span-6 truncate font-semibold uppercase tracking-wider text-xs text-left text-[#1B2036]">
-                                {spot.name}
-                              </div>
-
-                              {/* Taps count */}
-                              <div className="col-span-3 text-right font-mono text-xs text-[#1B2036] pr-1 font-bold">
-                                {spotTaps} TAPS
+                              {/* Quick Window Selectors */}
+                              <div className="flex items-center gap-1 overflow-x-auto max-w-full pb-0.5 scrollbar-none">
+                                {Array.from({ length: spotsTotalPages }).map((_, pIdx) => {
+                                  const pStart = pIdx * 10 + 1;
+                                  const pEnd = Math.min((pIdx + 1) * 10, sortedSpots.length);
+                                  const isActive = pIdx === currentSpotsPage;
+                                  return (
+                                    <button
+                                      key={pIdx}
+                                      type="button"
+                                      onClick={() => setSpotsScorePage(pIdx)}
+                                      className={`px-1.5 py-0.5 text-[8px] font-mono font-bold rounded-md border transition whitespace-nowrap cursor-pointer ${
+                                        isActive
+                                          ? 'bg-[#4EBD3A] text-black border-[#1B2036] shadow-[1px_1px_0px_#1B2036] font-extrabold'
+                                          : 'bg-[#FAF6EB] text-[#1B2036]/70 border-[#1B2036]/30 hover:bg-[#EFE6CC]'
+                                      }`}
+                                    >
+                                      {pStart}-{pEnd}
+                                    </button>
+                                  );
+                                })}
                               </div>
                             </div>
-                          );
-                        });
+
+                            <div className="grid grid-cols-12 text-[8.5px] text-[#1B2036] pb-1.5 border-b-2 border-[#1B2036] font-bold uppercase tracking-wider font-mono">
+                              <div className="col-span-2 text-center font-mono">RANK</div>
+                              <div className="col-span-1"></div>
+                              <div className="col-span-6">BAR SPOT</div>
+                              <div className="col-span-3 text-right">TAPS</div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              {currentSpotsItems.map((spot, index) => {
+                                const absoluteRank = spotsStartIdx + index + 1;
+                                const spotTaps = spot.taps || 0;
+                                const isRank1 = absoluteRank === 1;
+
+                                return (
+                                  <div 
+                                    key={spot.id}
+                                    onClick={() => {
+                                      handleSelectBar(spot);
+                                      setShowScoreModal(false);
+                                      setActiveTab('explore');
+                                    }}
+                                    className={`grid grid-cols-12 text-xs items-center py-2 px-1.5 rounded-xl border-2 transition cursor-pointer ${
+                                      isRank1 
+                                        ? 'bg-[#F2A93B]/25 text-[#1B2036] font-black border-[#1B2036] shadow-[2px_2px_0px_#1B2036]' 
+                                        : 'bg-white border-[#1B2036]/20 text-[#1B2036] shadow-[1px_1px_0px_#1B2036] hover:bg-[#F6EFDC]'
+                                    }`}
+                                  >
+                                    {/* Rank position */}
+                                    <div className="col-span-2 text-center font-bold font-mono text-xs">
+                                      {absoluteRank}º
+                                    </div>
+
+                                    {/* Small icon indicator */}
+                                    <div className="col-span-1 flex items-center justify-center text-xs">
+                                      {isRank1 ? '🏆' : '🍻'}
+                                    </div>
+
+                                    {/* Spot Name */}
+                                    <div className="col-span-6 truncate font-semibold uppercase tracking-wider text-xs text-left text-[#1B2036]">
+                                      {spot.name}
+                                    </div>
+
+                                    {/* Taps count */}
+                                    <div className="col-span-3 text-right font-mono text-xs text-[#1B2036] pr-1 font-bold">
+                                      {spotTaps} TAPS
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        );
                       })()}
                     </div>
                   )}
@@ -9125,17 +9376,20 @@ export default function App() {
             userEmail={user.email || auth.currentUser?.email || ''}
             lang={lang}
             darkMode={darkMode}
-            onClaimApproved={(spotId, ownerUid) => {
-              if (user.id === ownerUid) {
-                const targetSpot = bars.find(b => b.id === spotId);
+            onClaimApproved={(approvedUserId, approvedSpotId, approvedUserEmail) => {
+              if (
+                user.id === approvedUserId ||
+                (user.email && approvedUserEmail && user.email.toLowerCase() === approvedUserEmail.toLowerCase())
+              ) {
+                const targetSpot = bars.find(b => b.id === approvedSpotId);
                 setUser(prev => ({
                   ...prev,
                   isOwner: true,
-                  ownedSpotId: spotId,
+                  ownedSpotId: approvedSpotId,
                   ownerClaimPending: false,
                   ownerClaimApproved: true,
-                  ownerClaimSpotId: spotId,
-                  ownerClaimSpotName: targetSpot ? targetSpot.name : spotId,
+                  ownerClaimSpotId: approvedSpotId,
+                  ownerClaimSpotName: targetSpot ? targetSpot.name : approvedSpotId,
                   role: 'owner'
                 }));
               }

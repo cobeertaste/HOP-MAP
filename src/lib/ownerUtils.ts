@@ -28,13 +28,32 @@ const APPROVED_OWNERS_REGISTRY_KEY = 'hop_approved_owners_registry';
 /**
  * Pre-approved & verified venue owners registry
  * Maps owner email to their assigned spot ID and spot Name.
- * Specifically, ricardo@marrafa.pt is the verified owner of "Marrafa (Jesufrei)" (id: 'marrafa-jesufrei').
+ * Specifically:
+ * - ricardo@marrafa.pt -> "Marrafa (Jesufrei)" (id: 'marrafa-jesufrei')
+ * - roberto@bahcraftbeer.com -> "BAH Craft Beer (Cascais)" (id: 'bah-craft-beer-cascais')
+ * - afabricadapicaria@gmail.com -> "A Fábrica da Picaria Brew Pub" (id: 'a-fabrica-da-picaria-brew-pub-porto')
+ * - kkruckenhauser@gmail.com -> "Prost! (Guimarães)" (id: 'prost-guimaraes')
  */
 export const VERIFIED_OWNER_MAPPINGS: Record<string, { spotId: string; spotName: string; username?: string }> = {
   'ricardo@marrafa.pt': {
     spotId: 'marrafa-jesufrei',
     spotName: 'Marrafa (Jesufrei)',
     username: 'Ricardo (Marrafa)'
+  },
+  'roberto@bahcraftbeer.com': {
+    spotId: 'bah-craft-beer-cascais',
+    spotName: 'BAH Craft Beer (Cascais)',
+    username: 'Roberto (BAH Craft Beer)'
+  },
+  'afabricadapicaria@gmail.com': {
+    spotId: 'a-fabrica-da-picaria-brew-pub-porto',
+    spotName: 'A Fábrica da Picaria Brew Pub',
+    username: 'A Fábrica da Picaria'
+  },
+  'kkruckenhauser@gmail.com': {
+    spotId: 'prost-guimaraes',
+    spotName: 'Prost! (Guimarães)',
+    username: 'Prost! (Guimarães)'
   }
 };
 
@@ -365,7 +384,29 @@ export async function getApprovedOwnerClaims(): Promise<OwnerClaimRecord[]> {
         }
       });
     } catch (e) {
-      console.warn('Notice loading approved claims from Firestore:', e);
+      console.warn('Notice loading approved claims from Firestore users:', e);
+    }
+
+    try {
+      const claimsRef = collection(db, 'owner_claims');
+      const qClaims = query(claimsRef, where('status', '==', 'approved'));
+      const snapClaims = await getDocs(qClaims);
+      snapClaims.forEach(docSnap => {
+        const d = docSnap.data();
+        if (d.spotId) {
+          approvedMap.set(d.spotId, {
+            userId: d.userId || docSnap.id,
+            userEmail: d.userEmail || '',
+            username: d.username || d.userEmail || 'Proprietário',
+            spotId: d.spotId,
+            spotName: d.spotName || d.spotId,
+            requestedAt: d.approvedAt || d.requestedAt || new Date().toISOString(),
+            status: 'approved'
+          });
+        }
+      });
+    } catch (e) {
+      console.warn('Notice loading approved claims from owner_claims:', e);
     }
   }
 
@@ -386,77 +427,151 @@ export async function approveOwnerClaim(
   username?: string
 ): Promise<void> {
   const approvedAt = new Date().toISOString();
+  const cleanEmail = (userEmail || '').toLowerCase().trim();
+  const effectiveUserId = (userId && userId.trim()) ? userId.trim() : (cleanEmail ? `owner_${cleanEmail.replace(/[^a-z0-9]/g, '_')}` : `owner_${Date.now()}`);
 
   // 1. Update local claims
   const local = getLocalClaims();
-  if (local[userId]) {
-    local[userId].status = 'approved';
-    local[userId].spotId = spotId;
-    local[userId].spotName = spotName;
-    if (userEmail) local[userId].userEmail = userEmail;
-    if (username) local[userId].username = username;
-  } else {
-    local[userId] = {
-      status: 'approved',
-      spotId,
-      spotName,
-      userEmail: userEmail || '',
-      username: username || '',
-      requestedAt: approvedAt
-    };
+  const claimRecord = {
+    status: 'approved' as const,
+    spotId,
+    spotName,
+    userEmail: cleanEmail,
+    username: username || '',
+    requestedAt: approvedAt
+  };
+
+  local[effectiveUserId] = claimRecord;
+  if (cleanEmail) {
+    local[cleanEmail] = claimRecord;
   }
   saveLocalClaims(local);
 
   // Save in approved owners registry cache
-  saveApprovedOwnerLocally(userEmail, userId, spotId, spotName, username);
+  saveApprovedOwnerLocally(cleanEmail, effectiveUserId, spotId, spotName, username);
 
-  // 2. Update Firestore
+  // 2. Update Firestore thoroughly
   if (isFirebaseConfigured) {
     // A. Update dedicated owner_claims document
     try {
-      const claimRef = doc(db, 'owner_claims', userId);
+      const claimRef = doc(db, 'owner_claims', effectiveUserId);
       await setDoc(claimRef, {
-        userId,
+        userId: effectiveUserId,
         spotId,
         spotName,
-        userEmail: userEmail || local[userId]?.userEmail || '',
-        username: username || local[userId]?.username || '',
+        userEmail: cleanEmail,
+        username: username || '',
         status: 'approved',
         approvedAt,
         approvedBy: 'cobeertaste@gmail.com'
       }, { merge: true });
+
+      // Also ensure email-based claim key is saved in owner_claims
+      if (cleanEmail) {
+        const emailClaimRef = doc(db, 'owner_claims', `claim_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`);
+        await setDoc(emailClaimRef, {
+          userId: effectiveUserId,
+          spotId,
+          spotName,
+          userEmail: cleanEmail,
+          username: username || '',
+          status: 'approved',
+          approvedAt,
+          approvedBy: 'cobeertaste@gmail.com'
+        }, { merge: true });
+      }
+
+      // Query and update any pending claims in owner_claims collection for this user or email
+      if (cleanEmail) {
+        try {
+          const claimsRef = collection(db, 'owner_claims');
+          const qClaims = query(claimsRef, where('userEmail', '==', cleanEmail));
+          const snapClaims = await getDocs(qClaims);
+          snapClaims.forEach(docSnap => {
+            setDoc(docSnap.ref, {
+              status: 'approved',
+              spotId,
+              spotName,
+              approvedAt,
+              approvedBy: 'cobeertaste@gmail.com'
+            }, { merge: true }).catch(() => {});
+          });
+        } catch (qErr) {
+          console.warn('Notice updating matching owner_claims:', qErr);
+        }
+      }
     } catch (claimErr) {
       console.warn('Notice saving approved status in owner_claims:', claimErr);
     }
 
-    // B. Update user document (resilient against Firestore cross-user permission restrictions)
-    try {
-      const userRef = doc(db, 'users', userId);
-      await setDoc(userRef, {
-        role: 'owner',
-        isOwner: true,
-        ownedSpotId: spotId,
-        ownerClaimApproved: true,
-        ownerClaimPending: false,
-        ownerClaimApprovedAt: approvedAt,
-        ownerClaimSpotId: spotId,
-        ownerClaimSpotName: spotName
-      }, { merge: true });
-    } catch (err: any) {
-      console.warn('Notice updating user doc in Firestore (cross-user permission fallback):', err?.message || err);
-      // We do not rethrow the error here, ensuring the administrator approval action succeeds without false alerts!
+    // B. Update user documents in Firestore
+    // Query users collection by email to find the registered user document!
+    if (cleanEmail) {
+      try {
+        const usersRef = collection(db, 'users');
+        const qUsers = query(usersRef, where('email', '==', cleanEmail));
+        const snapUsers = await getDocs(qUsers);
+        snapUsers.forEach(docSnap => {
+          setDoc(docSnap.ref, {
+            role: 'owner',
+            isOwner: true,
+            ownedSpotId: spotId,
+            ownerClaimApproved: true,
+            ownerClaimPending: false,
+            ownerClaimApprovedAt: approvedAt,
+            ownerClaimSpotId: spotId,
+            ownerClaimSpotName: spotName
+          }, { merge: true }).catch(() => {});
+        });
+      } catch (err: any) {
+        console.warn('Notice updating users by email query:', err?.message || err);
+      }
+    }
+
+    // Also update by direct userId if valid
+    if (effectiveUserId) {
+      try {
+        const userRef = doc(db, 'users', effectiveUserId);
+        await setDoc(userRef, {
+          role: 'owner',
+          isOwner: true,
+          ownedSpotId: spotId,
+          ownerClaimApproved: true,
+          ownerClaimPending: false,
+          ownerClaimApprovedAt: approvedAt,
+          ownerClaimSpotId: spotId,
+          ownerClaimSpotName: spotName
+        }, { merge: true });
+      } catch (err: any) {
+        console.warn('Notice updating user doc by ID in Firestore:', err?.message || err);
+      }
     }
   }
 
-  // Update localStorage user cache
-  const cacheKeyPrefix = `hop_user_${userId}_`;
-  localStorage.setItem(cacheKeyPrefix + 'role', 'owner');
-  localStorage.setItem(cacheKeyPrefix + 'isOwner', 'true');
-  localStorage.setItem(cacheKeyPrefix + 'ownedSpotId', spotId);
-  localStorage.setItem(cacheKeyPrefix + 'ownerClaimApproved', 'true');
-  localStorage.setItem(cacheKeyPrefix + 'ownerClaimPending', 'false');
-  localStorage.setItem(cacheKeyPrefix + 'ownerClaimSpotId', spotId);
-  localStorage.setItem(cacheKeyPrefix + 'ownerClaimSpotName', spotName);
+  // Update localStorage user cache for this user
+  const cachePrefixes = [`hop_user_${effectiveUserId}_`];
+  if (cleanEmail) {
+    cachePrefixes.push(`hop_user_${cleanEmail}_`);
+  }
+
+  cachePrefixes.forEach(prefix => {
+    try {
+      localStorage.setItem(prefix + 'role', 'owner');
+      localStorage.setItem(prefix + 'isOwner', 'true');
+      localStorage.setItem(prefix + 'ownedSpotId', spotId);
+      localStorage.setItem(prefix + 'ownerClaimApproved', 'true');
+      localStorage.setItem(prefix + 'ownerClaimPending', 'false');
+      localStorage.setItem(prefix + 'ownerClaimSpotId', spotId);
+      localStorage.setItem(prefix + 'ownerClaimSpotName', spotName);
+    } catch (e) {}
+  });
+
+  // Notify active components in the current window
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('hop_owner_approved', {
+      detail: { userId: effectiveUserId, spotId, spotName, userEmail: cleanEmail }
+    }));
+  }
 }
 
 /**
