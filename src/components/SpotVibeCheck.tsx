@@ -138,10 +138,11 @@ export function SpotVibeCheck({
   // Compute precise distance in meters
   const computedDistance = (spotLatitude !== undefined && spotLongitude !== undefined && userLocation?.latitude !== undefined && userLocation?.longitude !== undefined)
     ? calculateHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, spotLatitude, spotLongitude)
-    : distanceMeters;
+    : (distanceMeters !== undefined ? distanceMeters : 999999);
 
-  // Proximity is strictly valid ONLY when within 50 meters (strictly matches check-in rule)
-  const canVoteByProximity = (isWithin50m || isWithin50m === undefined) && computedDistance <= 50;
+  // Proximity is strictly valid ONLY when user is less than 50 meters (< 50m) from the spot
+  const canVoteByProximity = computedDistance < 50;
+  const [isLocatingGps, setIsLocatingGps] = useState(false);
 
   // Real-time listener for this spot's vibes
   useEffect(() => {
@@ -266,7 +267,69 @@ export function SpotVibeCheck({
     }
   };
 
+  const handleRefreshLiveGps = () => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setFeedbackMsg({
+        text: lang === 'PT' ? 'Geolocalização indisponível no navegador.' : 'Geolocation not available in browser.',
+        type: 'warning'
+      });
+      setTimeout(() => setFeedbackMsg(null), 3500);
+      return;
+    }
+
+    setIsLocatingGps(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setIsLocatingGps(false);
+        const preciseLat = position.coords.latitude;
+        const preciseLng = position.coords.longitude;
+        if (onUserLocationChange) {
+          onUserLocationChange({ latitude: preciseLat, longitude: preciseLng });
+        }
+        if (spotLatitude !== undefined && spotLongitude !== undefined) {
+          const liveDist = calculateHaversineDistanceInMeters(preciseLat, preciseLng, spotLatitude, spotLongitude);
+          if (liveDist < 50) {
+            setFeedbackMsg({
+              text: lang === 'PT'
+                ? `GPS confirmado! Estás a ${Math.round(liveDist)}m do spot. Botões de ambiente desbloqueados!`
+                : `GPS verified! You are ${Math.round(liveDist)}m away. Vibe buttons unlocked!`,
+              type: 'success'
+            });
+          } else {
+            setFeedbackMsg({
+              text: lang === 'PT'
+                ? `Estás a ${Math.round(liveDist)}m do local. Os botões apenas desbloqueiam a menos de 50 metros.`
+                : `You are ${Math.round(liveDist)}m away. Buttons unlock only within 50 meters.`,
+              type: 'warning'
+            });
+          }
+          setTimeout(() => setFeedbackMsg(null), 4500);
+        }
+      },
+      (error) => {
+        setIsLocatingGps(false);
+        setFeedbackMsg({
+          text: lang === 'PT' ? 'Não foi possível obter coordenadas GPS precisas.' : 'Could not obtain precise GPS coordinates.',
+          type: 'warning'
+        });
+        setTimeout(() => setFeedbackMsg(null), 3500);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+    );
+  };
+
   const handleVote = async (vibeKey: SpotVibeKey) => {
+    if (!canVoteByProximity || computedDistance >= 50) {
+      setFeedbackMsg({
+        text: lang === 'PT' 
+          ? `Classificação bloqueada: precisas de estar a menos de 50 metros do local (estás a ${Math.round(computedDistance)}m).` 
+          : `Rating locked: you must be within 50 meters of the spot (you are ${Math.round(computedDistance)}m away).`,
+        type: 'warning'
+      });
+      setTimeout(() => setFeedbackMsg(null), 4500);
+      return;
+    }
+
     if (!user.isLoggedIn) {
       setFeedbackMsg({
         text: lang === 'PT' ? 'Inicia sessão para classificar o ambiente!' : 'Log in to rate the vibe!',
@@ -298,7 +361,7 @@ export function SpotVibeCheck({
             onUserLocationChange({ latitude: preciseLat, longitude: preciseLng });
           }
           const liveDist = calculateHaversineDistanceInMeters(preciseLat, preciseLng, spotLatitude, spotLongitude);
-          if (liveDist > 50) {
+          if (liveDist >= 50) {
             setIsSubmitting(false);
             setFeedbackMsg({
               text: lang === 'PT'
@@ -312,7 +375,7 @@ export function SpotVibeCheck({
           performVoteSubmission(vibeKey);
         },
         (error) => {
-          if (computedDistance > 50 || !canVoteByProximity) {
+          if (computedDistance >= 50 || !canVoteByProximity) {
             setIsSubmitting(false);
             setFeedbackMsg({
               text: lang === 'PT'
@@ -327,17 +390,6 @@ export function SpotVibeCheck({
         },
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
       );
-      return;
-    }
-
-    if (!canVoteByProximity || computedDistance > 50) {
-      setFeedbackMsg({
-        text: lang === 'PT' 
-          ? `Classificação bloqueada: precisas de estar a menos de 50m do spot (estás a ${Math.round(computedDistance)}m).` 
-          : `Rating locked: you must be within 50m of the spot (you are ${Math.round(computedDistance)}m away).`,
-        type: 'warning'
-      });
-      setTimeout(() => setFeedbackMsg(null), 4500);
       return;
     }
 
@@ -400,10 +452,15 @@ export function SpotVibeCheck({
           <p className="text-[9px] font-bold uppercase tracking-wider text-[#1B2036]/75 font-display">
             {lang === 'PT' ? 'Como está o ambiente agora?' : 'How is the vibe right now?'}
           </p>
-          {!canVoteByProximity && (
-            <span className="text-[8px] font-mono font-bold text-rose-600 flex items-center gap-1">
-              <Lock className="w-2.5 h-2.5" />
-              {lang === 'PT' ? `Apenas a <50m (${Math.round(computedDistance)}m)` : `Only <50m (${Math.round(computedDistance)}m)`}
+          {canVoteByProximity ? (
+            <span className="text-[8.5px] font-mono font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md border border-emerald-300 flex items-center gap-1 shadow-xs">
+              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+              {lang === 'PT' ? `Desbloqueado (<50m)` : `Unlocked (<50m)`}
+            </span>
+          ) : (
+            <span className="text-[8.5px] font-mono font-bold text-rose-700 bg-rose-100/90 px-2 py-0.5 rounded-md border border-rose-300 flex items-center gap-1 shadow-xs">
+              <Lock className="w-2.5 h-2.5 text-rose-600" />
+              {lang === 'PT' ? `Bloqueado (${Math.round(computedDistance)}m)` : `Locked (${Math.round(computedDistance)}m)`}
             </span>
           )}
         </div>
@@ -412,7 +469,7 @@ export function SpotVibeCheck({
           {SPOT_VIBE_OPTIONS.map((opt) => {
             const isUserSelection = userRecentVote?.vibe === opt.key;
             const count = voteCounts[opt.key];
-            const isDisabled = isSubmitting || !user.isLoggedIn || !!userRecentVote || !canVoteByProximity;
+            const isDisabled = !canVoteByProximity || isSubmitting || !user.isLoggedIn || !!userRecentVote;
 
             return (
               <button
@@ -424,17 +481,24 @@ export function SpotVibeCheck({
                   isUserSelection 
                     ? 'bg-[#F2A93B] text-black font-extrabold ring-2 ring-black' 
                     : !canVoteByProximity
-                      ? 'bg-[#EFE6CC] text-zinc-400 opacity-60 cursor-not-allowed border-[#1B2036]/40 shadow-none'
-                      : 'bg-[#F6EFDC] hover:bg-[#EFE6CC] text-[#1B2036]'
+                      ? 'bg-[#E5E0D0] text-[#1B2036]/40 cursor-not-allowed border-zinc-400 opacity-60 shadow-none'
+                      : 'bg-[#F6EFDC] hover:bg-[#F2A93B] text-[#1B2036]'
                 } ${userRecentVote ? 'opacity-80 cursor-default' : (!canVoteByProximity ? 'cursor-not-allowed' : 'cursor-pointer active:translate-x-[1px] active:translate-y-[1px]')}`}
                 id={`btn-vibe-${spotId}-${opt.key}`}
                 title={
                   !canVoteByProximity
-                    ? (lang === 'PT' ? `Votação bloqueada: estás a ${Math.round(computedDistance)}m do spot (necessário <50m)` : `Voting locked: you are ${Math.round(computedDistance)}m from spot (must be <50m)`)
+                    ? (lang === 'PT' ? `Classificação bloqueada: estás a ${Math.round(computedDistance)}m do local (apenas desbloqueia a menos de 50 metros)` : `Rating locked: you are ${Math.round(computedDistance)}m away (unlocks only at <50m)`)
                     : (lang === 'PT' ? `${opt.titlePT}: ${opt.descPT}` : `${opt.titleEN}: ${opt.descEN}`)
                 }
               >
-                <span className="text-lg mb-0.5">{opt.emoji}</span>
+                <div className="relative mb-0.5">
+                  <span className={`text-lg transition-transform ${!canVoteByProximity ? 'opacity-40 grayscale' : 'group-hover:scale-110'}`}>{opt.emoji}</span>
+                  {!canVoteByProximity && (
+                    <span className="absolute -top-1 -right-1 bg-white/95 rounded-full p-0.5 shadow-xs border border-[#1B2036]/50">
+                      <Lock className="w-2.5 h-2.5 text-rose-600" />
+                    </span>
+                  )}
+                </div>
                 <span className="text-[8px] font-extrabold tracking-tight font-display text-center truncate w-full">
                   {lang === 'PT' ? opt.titlePT : opt.titleEN}
                 </span>
@@ -449,15 +513,28 @@ export function SpotVibeCheck({
         </div>
       </div>
 
-      {/* Geofence Notice when outside 50m */}
+      {/* Geofence Lock Notice when outside 50m */}
       {!canVoteByProximity && (
-        <div className="mt-2.5 flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/25 text-[8.5px] text-rose-600 font-mono">
-          <MapPin className="w-3 h-3 text-rose-600 shrink-0 animate-pulse" />
-          <span>
-            {lang === 'PT'
-              ? `Votação bloqueada: estás a ${Math.round(computedDistance)}m do local. Só podes votar a menos de 50 metros.`
-              : `Voting locked: you are ${Math.round(computedDistance)}m away. You must be within 50 meters to vote.`}
-          </span>
+        <div className="mt-2.5 flex items-center justify-between gap-2 p-2.5 rounded-xl bg-rose-50 border-2 border-rose-200 text-[9.5px] text-[#1B2036] font-medium shadow-xs">
+          <div className="flex items-center space-x-2">
+            <Lock className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+            <span>
+              {lang === 'PT'
+                ? `Classificação bloqueada: estás a ${Math.round(computedDistance)}m do local. Os botões apenas desbloqueiam a menos de 50 metros.`
+                : `Rating locked: you are ${Math.round(computedDistance)}m away. Buttons only unlock within 50 meters of the spot.`}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleRefreshLiveGps}
+            disabled={isLocatingGps}
+            className="shrink-0 px-2.5 py-1 rounded-lg bg-[#FAF6EB] hover:bg-[#F6EFDC] border border-[#1B2036] text-[8.5px] font-bold font-mono text-[#1B2036] flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-xs"
+            id={`btn-refresh-gps-${spotId}`}
+            title={lang === 'PT' ? 'Atualizar localização GPS para desbloquear' : 'Update GPS location to unlock'}
+          >
+            <MapPin className={`w-3 h-3 text-rose-600 ${isLocatingGps ? 'animate-spin' : ''}`} />
+            <span>{isLocatingGps ? (lang === 'PT' ? 'A ler GPS...' : 'Reading GPS...') : (lang === 'PT' ? 'Validar GPS' : 'Verify GPS')}</span>
+          </button>
         </div>
       )}
 

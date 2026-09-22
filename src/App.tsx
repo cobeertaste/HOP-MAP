@@ -681,7 +681,7 @@ export default function App() {
       if (cachedNotif !== null) savedNotificationsEnabled = cachedNotif === 'true';
     } catch (e) {}
 
-    let savedFriends: string[] = ['mock_1', 'mock_2'];
+    let savedFriends: string[] = [];
     try {
       const cachedFriends = localStorage.getItem('hop_user_1_friends');
       if (cachedFriends) savedFriends = JSON.parse(cachedFriends);
@@ -1637,22 +1637,34 @@ export default function App() {
           return;
         }
         const data = docSnap.data();
-        const uname = data.username || data.displayName;
+        let uname = data.username || data.displayName;
+        let points = typeof data.points === 'number' ? data.points : 0;
+        const userEmail = (data.email || '').toLowerCase().trim();
+        if (userEmail === 'cobeertaste@gmail.com' || uname === 'cobeer taste TEST' || uname?.toLowerCase() === 'cobeer taste test') {
+          uname = 'Cobeer Taste';
+          points = 0;
+        }
         if (typeof uname === 'string' && uname.trim().length > 0) {
           dbUsers.push({
             id: docSnap.id,
             username: uname.trim(),
-            points: typeof data.points === 'number' ? data.points : 0
+            points
           });
         }
       });
 
       // Synchronize currently logged-in user if logged in
       let currentUserFound = false;
+      const isCurrentCobeer = (user.email || '').toLowerCase().trim() === 'cobeertaste@gmail.com';
       const list = dbUsers.map(u => {
         if (user.isLoggedIn && (u.id === user.id || u.username.toLowerCase() === user.username.toLowerCase())) {
           currentUserFound = true;
-          return { ...u, id: user.id, username: user.username, points: user.points || 0 };
+          return { 
+            ...u, 
+            id: user.id, 
+            username: isCurrentCobeer ? 'Cobeer Taste' : user.username, 
+            points: isCurrentCobeer ? 0 : (user.points || 0) 
+          };
         }
         return u;
       });
@@ -1660,8 +1672,8 @@ export default function App() {
       if (user.isLoggedIn && !currentUserFound && user.username) {
         list.push({
           id: user.id,
-          username: user.username,
-          points: user.points || 0
+          username: isCurrentCobeer ? 'Cobeer Taste' : user.username,
+          points: isCurrentCobeer ? 0 : (user.points || 0)
         });
       }
 
@@ -2230,6 +2242,145 @@ export default function App() {
   const [editBeerStyle, setEditBeerStyle] = useState('');
   const [ratingsHistory, setRatingsHistory] = useState<any[]>([]);
 
+  // Helper to ensure 'cobeertaste@gmail.com' username is strictly 'Cobeer Taste' and all reviews and check-ins are purged
+  const purgeAndSyncCobeerTaste = async (currentFirebaseUser?: any) => {
+    try {
+      const cobeerEmail = 'cobeertaste@gmail.com';
+      let cobeerUid = currentFirebaseUser?.uid;
+
+      // 1. If currently signed in user is cobeertaste@gmail.com, update Auth profile
+      if (currentFirebaseUser && (currentFirebaseUser.email || '').toLowerCase().trim() === cobeerEmail) {
+        if (currentFirebaseUser.displayName !== 'Cobeer Taste') {
+          try {
+            await updateProfile(currentFirebaseUser, { displayName: 'Cobeer Taste' });
+          } catch (e) {
+            console.warn('Notice updating Auth profile displayName:', e);
+          }
+        }
+      }
+
+      if (!isFirebaseConfigured || !db) return;
+
+      // 2. Locate Firestore user document for cobeertaste@gmail.com
+      const usersRef = collection(db, 'users');
+      let targetDocId = cobeerUid;
+      if (!targetDocId) {
+        try {
+          const qUser = query(usersRef, where('email', '==', cobeerEmail));
+          const snapUser = await getDocs(qUser);
+          if (!snapUser.empty) {
+            targetDocId = snapUser.docs[0].id;
+          }
+        } catch (e) {}
+      }
+
+      // Also find any doc in 'users' where username matches 'cobeer taste TEST'
+      try {
+        const qOldName = query(usersRef, where('username', '==', 'cobeer taste TEST'));
+        const snapOldName = await getDocs(qOldName);
+        snapOldName.forEach(d => {
+          targetDocId = targetDocId || d.id;
+          updateDoc(doc(db, 'users', d.id), {
+            username: 'Cobeer Taste',
+            points: 0,
+            checkinHistory: [],
+            checkedInBars: [],
+            stamps: {},
+            tenStampsDates: {},
+            lastCheckinDates: {}
+          }).catch(() => {});
+        });
+      } catch (e) {}
+
+      if (targetDocId) {
+        cobeerUid = cobeerUid || targetDocId;
+        // Purge checkins and ratings in user document
+        updateDoc(doc(db, 'users', targetDocId), {
+          username: 'Cobeer Taste',
+          points: 0,
+          checkinHistory: [],
+          checkedInBars: [],
+          stamps: {},
+          tenStampsDates: {},
+          lastCheckinDates: {}
+        }).catch(() => {});
+
+        // Clear local storage keys for this user
+        const prefix = `hop_user_${targetDocId}_`;
+        localStorage.setItem(prefix + 'username', 'Cobeer Taste');
+        localStorage.setItem(prefix + 'points', '0');
+        localStorage.setItem(prefix + 'checkinHistory', '[]');
+        localStorage.setItem(prefix + 'stamps', '{}');
+        localStorage.setItem(prefix + 'lastCheckinDates', '{}');
+        localStorage.setItem(prefix + 'tenStampsDates', '{}');
+      }
+
+      // 3. Purge ratings in Firestore by cobeer taste
+      const ratingsRef = collection(db, 'ratings');
+      const ratingsQueries = [
+        query(ratingsRef, where('userName', '==', 'cobeer taste TEST')),
+        query(ratingsRef, where('userName', '==', 'Cobeer Taste')),
+        query(ratingsRef, where('userName', '==', 'cobeertaste')),
+        query(ratingsRef, where('userName', '==', 'cobeertaste@gmail.com'))
+      ];
+      if (cobeerUid) {
+        ratingsQueries.push(query(ratingsRef, where('userId', '==', cobeerUid)));
+      }
+
+      for (const qR of ratingsQueries) {
+        try {
+          const snapR = await getDocs(qR);
+          const deletions = snapR.docs.map(d => deleteDoc(doc(db, 'ratings', d.id)));
+          await Promise.all(deletions);
+        } catch (rErr) {
+          console.warn('Notice purging ratings for cobeertaste:', rErr);
+        }
+      }
+
+      // 4. Purge checkins in Firestore by cobeer taste
+      if (cobeerUid) {
+        try {
+          const qCheckins = query(collection(db, 'checkins'), where('userId', '==', cobeerUid));
+          const snapC = await getDocs(qCheckins);
+          const cDeletions = snapC.docs.map(d => deleteDoc(doc(db, 'checkins', d.id)));
+          await Promise.all(cDeletions);
+        } catch (cErr) {
+          console.warn('Notice purging checkins for cobeertaste:', cErr);
+        }
+
+        try {
+          const qCheckinNotifs = query(collection(db, 'checkin_notifications'), where('userId', '==', cobeerUid));
+          const snapCN = await getDocs(qCheckinNotifs);
+          const cnDeletions = snapCN.docs.map(d => deleteDoc(doc(db, 'checkin_notifications', d.id)));
+          await Promise.all(cnDeletions);
+        } catch (cnErr) {
+          console.warn('Notice purging checkin notifications for cobeertaste:', cnErr);
+        }
+      }
+
+      // 5. If local user state is currently cobeertaste, update state
+      if ((user.email || '').toLowerCase().trim() === cobeerEmail || user.username === 'cobeer taste TEST') {
+        setUser(prev => ({
+          ...prev,
+          username: 'Cobeer Taste',
+          points: 0,
+          checkedInBars: [],
+          checkinHistory: [],
+          stamps: {},
+          tenStampsDates: {},
+          lastCheckinDates: {}
+        }));
+        setRatingsHistory(prev => prev.filter(r => r.userId !== cobeerUid && r.userName !== 'cobeer taste TEST' && r.userName !== 'Cobeer Taste'));
+      }
+    } catch (err) {
+      console.warn('Notice in purgeAndSyncCobeerTaste:', err);
+    }
+  };
+
+  useEffect(() => {
+    purgeAndSyncCobeerTaste();
+  }, []);
+
   // Load reviews from Firestore
   useEffect(() => {
     let active = true;
@@ -2309,16 +2460,36 @@ export default function App() {
     ];
 
     const processAndSetRatings = (loadedRatings: any[]) => {
+      // Filter out any ratings by cobeertaste@gmail.com or cobeer taste TEST / Cobeer Taste
+      const sanitizedRatings = loadedRatings.filter(rat => {
+        const authorName = (rat.userName || '').trim().toLowerCase();
+        const authorEmail = (rat.userEmail || '').trim().toLowerCase();
+        if (
+          authorName === 'cobeer taste test' || 
+          authorName === 'cobeer taste' || 
+          authorName === 'cobeertaste' || 
+          authorEmail === 'cobeertaste@gmail.com'
+        ) {
+          return false;
+        }
+        return true;
+      });
+
       // Filter local ratings history to ONLY the current user's ratings (for "O meu histórico de avaliações")
-      const userRatings = user.isLoggedIn && user.id 
-        ? loadedRatings.filter(rat => rat.userId === user.id)
+      const isCobeer = (user.email || '').toLowerCase().trim() === 'cobeertaste@gmail.com';
+      const userRatings = (user.isLoggedIn && user.id && !isCobeer)
+        ? sanitizedRatings.filter(rat => rat.userId === user.id)
         : [];
       
       setRatingsHistory(userRatings);
       
       // Update points to match user's own reviews count
       if (user.isLoggedIn) {
-        setUser(prev => ({ ...prev, points: userRatings.length }));
+        setUser(prev => ({ 
+          ...prev, 
+          username: isCobeer ? 'Cobeer Taste' : prev.username,
+          points: isCobeer ? 0 : userRatings.length 
+        }));
       }
       
       // Save them as 'reviews' fields inside the bars state!
@@ -2336,8 +2507,8 @@ export default function App() {
           };
         });
 
-        // Process loaded ratings
-        loadedRatings.forEach(rat => {
+        // Process loaded sanitized ratings
+        sanitizedRatings.forEach(rat => {
           const barObj = resetBars.find(b => b.id === rat.barId);
           if (barObj) {
             const barReview: Review = {
@@ -2427,10 +2598,10 @@ export default function App() {
         const cachedFrs = localStorage.getItem(cacheKeyPrefix + 'friends');
         const cachedFests = localStorage.getItem(cacheKeyPrefix + 'checkedInFestivals');
 
-        let savedStamps = { 'catraio': 2, 'cerveteca': 1 };
-        let savedLastCheckinDates = {};
-        let savedTenStampsDates = {};
-        let savedCheckinHistory = [];
+        let savedStamps: Record<string, number> = { 'catraio': 2, 'cerveteca': 1 };
+        let savedLastCheckinDates: Record<string, string> = {};
+        let savedTenStampsDates: Record<string, string> = {};
+        let savedCheckinHistory: any[] = [];
 
         const cachedStamps = localStorage.getItem(cacheKeyPrefix + 'stamps');
         const cachedCheckins = localStorage.getItem(cacheKeyPrefix + 'lastCheckinDates');
@@ -2474,7 +2645,18 @@ export default function App() {
         let savedReferredBy: string | undefined = undefined;
         let savedHasCompletedFirstCheckin = localStorage.getItem(cacheKeyPrefix + 'hasCompletedFirstCheckin') === 'true';
         const userCleanEmail = (firebaseUser.email || '').toLowerCase().trim();
+        const isCobeerAccount = userCleanEmail === 'cobeertaste@gmail.com';
         const verifiedOwnerConfig = getVerifiedOwnerConfig(userCleanEmail);
+
+        if (isCobeerAccount) {
+          savedUsername = 'Cobeer Taste';
+          savedPoints = 0;
+          savedCheckinHistory = [];
+          savedStamps = {};
+          savedTenStampsDates = {};
+          savedLastCheckinDates = {};
+          purgeAndSyncCobeerTaste(firebaseUser);
+        }
 
         let savedRole: 'admin' | 'owner' | 'user' = (userCleanEmail === 'cobeertaste@gmail.com') 
           ? 'admin' 
@@ -2656,15 +2838,15 @@ export default function App() {
           ...prev,
           id: firebaseUser.uid,
           email: firebaseUser.email || 'e-mail',
-          username: savedUsername || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'utilizador',
-          points: savedPoints,
+          username: isCobeerAccount ? 'Cobeer Taste' : (savedUsername || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'utilizador'),
+          points: isCobeerAccount ? 0 : savedPoints,
           favorites: savedFavorites,
           friends: savedFriends,
           checkedInFestivals: savedFestivals,
-          stamps: savedStamps,
-          lastCheckinDates: savedLastCheckinDates,
-          tenStampsDates: savedTenStampsDates,
-          checkinHistory: savedCheckinHistory,
+          stamps: isCobeerAccount ? {} : savedStamps,
+          lastCheckinDates: isCobeerAccount ? {} : savedLastCheckinDates,
+          tenStampsDates: isCobeerAccount ? {} : savedTenStampsDates,
+          checkinHistory: isCobeerAccount ? [] : savedCheckinHistory,
           shareCheckinsEnabled: savedShareCheckins,
           user_language: userLangVal,
           earnedBadges: savedEarnedBadges.length > 0 ? savedEarnedBadges : prev.earnedBadges,
@@ -7614,7 +7796,7 @@ export default function App() {
                 <div className="mt-4">
                   {(() => {
                     const actualDistM = getHaversineDistanceInMeters(userLocation.latitude, userLocation.longitude, selectedBar.latitude, selectedBar.longitude);
-                    const isEligible50m = actualDistM <= 50;
+                    const isEligible50m = actualDistM < 50;
 
                     return (
                       <SpotVibeCheck
