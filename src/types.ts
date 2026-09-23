@@ -81,8 +81,10 @@ export interface Bar {
   hasApplePay?: boolean;
   latitude: number;
   longitude: number;
-  taps?: number;
+  hops?: number;
   totalCheckins?: number;
+  taps?: number;
+  points?: number;
   checkinPin?: string;
   hasFood?: boolean;
   petFriendly?: boolean;

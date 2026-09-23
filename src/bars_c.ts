@@ -709,7 +709,6 @@ export const BARS_C: Bar[] = [
     "latitude": 38.70929201001924,
     "longitude": -9.138374115379479,
     "hasApplePay": true,
-    "taps": 23,
     "hasFood": true,
     "petFriendly": true,
     "hasTerrace": false,

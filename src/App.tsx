@@ -499,15 +499,103 @@ export function getSpotTier(taps: number): SpotTierDetails {
   }
 }
 
-export function getDeterministicBaseTaps(barId: string): number {
-  if (barId === 'brew-portugal-lisboa' || barId === 'brew-portugal') return 23;
-  if (barId === 'a-fabrica-da-picaria-brew-pub-porto' || barId === 'fabrica-da-picaria') return 9;
-  if (barId === 'musa-das-virtudes-porto' || barId === 'musa-virtudes') return 15;
-  if (barId === 'prost-guimaraes') return 7;
-  if (barId === 'deuses-do-malte-v-n-gaia' || barId === 'deuses-do-malte') return 10;
-  const found = BARS_DATA.find(b => b.id === barId);
-  if (found && typeof found.taps === 'number' && found.taps > 0) {
-    return found.taps;
+export function getDeterministicBaseTaps(_barId: string): number {
+  return 0;
+}
+
+export function findSpotByAnyIdentifier(idOrName: string | undefined | null, allBars: Bar[]): Bar | undefined {
+  if (!idOrName || typeof idOrName !== 'string') return undefined;
+  const raw = idOrName.trim();
+  if (!raw) return undefined;
+  const lower = raw.toLowerCase();
+
+  // 1. Direct ID or Name match
+  const direct = allBars.find(b => b.id.toLowerCase() === lower || b.name.toLowerCase() === lower);
+  if (direct) return direct;
+
+  // Normalized helper
+  const normStr = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+  const targetNorm = normStr(raw);
+  if (!targetNorm) return undefined;
+
+  // 2. Normalized ID or Name match
+  const normMatch = allBars.find(b => normStr(b.id) === targetNorm || normStr(b.name) === targetNorm);
+  if (normMatch) return normMatch;
+
+  // 3. Substring match for identifiers >= 4 chars
+  if (targetNorm.length >= 4) {
+    const subMatch = allBars.find(b => {
+      const nid = normStr(b.id);
+      const nname = normStr(b.name);
+      return nid.includes(targetNorm) || targetNorm.includes(nid) || nname.includes(targetNorm) || targetNorm.includes(nname);
+    });
+    if (subMatch) return subMatch;
+  }
+
+  // 4. Token overlap matching for multi-word names
+  const getTokens = (s: string) => {
+    const words = s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z0-9]+/);
+    const stopWords = new Set(['craft', 'beer', 'bar', 'taproom', 'tap', 'room', 'cerveja', 'artesanal', 'de', 'da', 'do', 'das', 'dos', 'e', 'the', 'shop', 'lisboa', 'porto', 'coimbra']);
+    return words.filter(w => w.length > 2 && !stopWords.has(w));
+  };
+  const inputTokens = getTokens(raw);
+  if (inputTokens.length > 0) {
+    let bestBar: Bar | undefined;
+    let maxOverlap = 0;
+    for (const b of allBars) {
+      const bTokens = new Set(getTokens(`${b.id} ${b.name}`));
+      const overlap = inputTokens.filter(t => bTokens.has(t)).length;
+      if (overlap > maxOverlap) {
+        maxOverlap = overlap;
+        bestBar = b;
+      }
+    }
+    if (bestBar && maxOverlap >= Math.ceil(inputTokens.length / 2)) {
+      return bestBar;
+    }
+  }
+
+  return undefined;
+}
+
+export function getSpotPoints(bar: Bar | null | undefined): number {
+  if (!bar) return 0;
+  const directScore = Math.max(
+    typeof bar.points === 'number' ? bar.points : 0,
+    typeof bar.totalCheckins === 'number' ? bar.totalCheckins : 0,
+    typeof bar.hops === 'number' ? bar.hops : 0,
+    typeof bar.taps === 'number' ? bar.taps : 0
+  );
+  if (directScore > 0) return directScore;
+  try {
+    const keysToCheck = [
+      `spot_points_${bar.id}`,
+      `spot_hops_${bar.id}`,
+      `spot_taps_${bar.id}`,
+      `spot_points_${bar.name}`,
+      `spot_hops_${bar.name}`,
+      `spot_taps_${bar.name}`
+    ];
+    // Also if bar.id has suffixes like -porto, -lisboa, etc. check prefix
+    const parts = bar.id.split('-');
+    if (parts.length > 1) {
+      keysToCheck.push(`spot_points_${parts[0]}`);
+      keysToCheck.push(`spot_hops_${parts[0]}`);
+      keysToCheck.push(`spot_taps_${parts[0]}`);
+    }
+    let maxFound = 0;
+    for (const k of keysToCheck) {
+      const val = localStorage.getItem(k);
+      if (val) {
+        const parsed = parseInt(val, 10);
+        if (!isNaN(parsed) && parsed > maxFound) {
+          maxFound = parsed;
+        }
+      }
+    }
+    if (maxFound > 0) return maxFound;
+  } catch {
+    // fallback
   }
   return 0;
 }
@@ -547,15 +635,21 @@ export default function App() {
     }
   }, [activeTab]);
 
-  // App Core State
+  // App Core State - Spot scores represent total user check-ins (1 check-in = 1 HOP point)
   const [bars, setBars] = useState<Bar[]>(() =>
-    BARS_DATA.map(bar => ({
-      ...bar,
-      rating: 0,
-      reviewsCount: 0,
-      reviews: [],
-      taps: (typeof bar.taps === 'number' && bar.taps > 0) ? bar.taps : getDeterministicBaseTaps(bar.id)
-    }))
+    BARS_DATA.map(bar => {
+      const initialPoints = getSpotPoints(bar);
+      return {
+        ...bar,
+        rating: 0,
+        reviewsCount: 0,
+        reviews: [],
+        hops: initialPoints,
+        totalCheckins: initialPoints,
+        taps: initialPoints,
+        points: initialPoints
+      };
+    })
   );
   const [events, setEvents] = useState<BeerEvent[]>(EVENTS_DATA);
   const [selectedBar, setSelectedBar] = useState<Bar | null>(null);
@@ -2494,23 +2588,31 @@ export default function App() {
       
       // Save them as 'reviews' fields inside the bars state!
       setBars(prevBars => {
-        // Reset/Clean bars
+        // Reset/Clean bars while strictly preserving spot points (total check-ins)
         const resetBars = BARS_DATA.map(b => {
           const prevBar = prevBars.find(pb => pb.id === b.id);
-          const baseTaps = (typeof b.taps === 'number' && b.taps > 0) ? b.taps : getDeterministicBaseTaps(b.id);
+          const currentPoints = prevBar ? getSpotPoints(prevBar) : 0;
           return {
             ...b,
             rating: 0,
             reviewsCount: 0,
             reviews: [],
-            taps: prevBar && typeof prevBar.taps === 'number' && prevBar.taps > 0 ? prevBar.taps : baseTaps
+            hops: currentPoints,
+            totalCheckins: currentPoints,
+            taps: currentPoints,
+            points: currentPoints
           };
         });
 
-        // Process loaded sanitized ratings
+        // Process loaded sanitized ratings with strict 1 review per user per spot rule
         sanitizedRatings.forEach(rat => {
           const barObj = resetBars.find(b => b.id === rat.barId);
           if (barObj) {
+            if (!barObj.reviews) barObj.reviews = [];
+            const existingIdx = barObj.reviews.findIndex(r => 
+              (rat.userId && r.userId === rat.userId) ||
+              (rat.userName && r.userName?.toLowerCase() === rat.userName.toLowerCase())
+            );
             const barReview: Review = {
               id: rat.id,
               userId: rat.userId,
@@ -2520,9 +2622,13 @@ export default function App() {
               beerStyleReviewed: rat.tipo_cerveja,
               date: rat.createdAt ? new Date(rat.createdAt).toLocaleDateString('pt-PT') : 'Agora'
             };
-            if (!barObj.reviews) barObj.reviews = [];
-            barObj.reviews.push(barReview);
-            barObj.reviewsCount += 1;
+            if (existingIdx >= 0) {
+              // Replace existing review with latest, maintaining 1 review per user
+              barObj.reviews[existingIdx] = barReview;
+            } else {
+              barObj.reviews.push(barReview);
+              barObj.reviewsCount += 1;
+            }
           }
         });
 
@@ -2598,12 +2704,14 @@ export default function App() {
         const cachedFrs = localStorage.getItem(cacheKeyPrefix + 'friends');
         const cachedFests = localStorage.getItem(cacheKeyPrefix + 'checkedInFestivals');
 
-        let savedStamps: Record<string, number> = { 'catraio': 2, 'cerveteca': 1 };
+        let savedStamps: Record<string, number> = {};
+        let savedCheckedInBars: string[] = [];
         let savedLastCheckinDates: Record<string, string> = {};
         let savedTenStampsDates: Record<string, string> = {};
         let savedCheckinHistory: any[] = [];
 
         const cachedStamps = localStorage.getItem(cacheKeyPrefix + 'stamps');
+        const cachedCheckedInBars = localStorage.getItem(cacheKeyPrefix + 'checkedInBars');
         const cachedCheckins = localStorage.getItem(cacheKeyPrefix + 'lastCheckinDates');
         const cachedTenStamps = localStorage.getItem(cacheKeyPrefix + 'tenStampsDates');
         const cachedHistory = localStorage.getItem(cacheKeyPrefix + 'checkinHistory');
@@ -2627,6 +2735,9 @@ export default function App() {
         }
         if (cachedStamps !== null) {
           try { savedStamps = JSON.parse(cachedStamps); } catch (e) {}
+        }
+        if (cachedCheckedInBars !== null) {
+          try { savedCheckedInBars = JSON.parse(cachedCheckedInBars); } catch (e) {}
         }
         if (cachedCheckins !== null) {
           try { savedLastCheckinDates = JSON.parse(cachedCheckins); } catch (e) {}
@@ -2689,6 +2800,22 @@ export default function App() {
             if (Array.isArray(data.checkinHistory)) {
               savedCheckinHistory = data.checkinHistory;
               localStorage.setItem(cacheKeyPrefix + 'checkinHistory', JSON.stringify(savedCheckinHistory));
+            }
+            if (data.stamps && typeof data.stamps === 'object') {
+              savedStamps = data.stamps;
+              localStorage.setItem(cacheKeyPrefix + 'stamps', JSON.stringify(savedStamps));
+            }
+            if (Array.isArray(data.checkedInBars)) {
+              savedCheckedInBars = data.checkedInBars;
+              localStorage.setItem(cacheKeyPrefix + 'checkedInBars', JSON.stringify(savedCheckedInBars));
+            }
+            if (data.lastCheckinDates && typeof data.lastCheckinDates === 'object') {
+              savedLastCheckinDates = data.lastCheckinDates;
+              localStorage.setItem(cacheKeyPrefix + 'lastCheckinDates', JSON.stringify(savedLastCheckinDates));
+            }
+            if (data.tenStampsDates && typeof data.tenStampsDates === 'object') {
+              savedTenStampsDates = data.tenStampsDates;
+              localStorage.setItem(cacheKeyPrefix + 'tenStampsDates', JSON.stringify(savedTenStampsDates));
             }
             if (Array.isArray(data.earnedBadges)) {
               savedEarnedBadges = data.earnedBadges;
@@ -2843,6 +2970,7 @@ export default function App() {
           favorites: savedFavorites,
           friends: savedFriends,
           checkedInFestivals: savedFestivals,
+          checkedInBars: isCobeerAccount ? [] : (savedCheckedInBars.length > 0 ? savedCheckedInBars : prev.checkedInBars),
           stamps: isCobeerAccount ? {} : savedStamps,
           lastCheckinDates: isCobeerAccount ? {} : savedLastCheckinDates,
           tenStampsDates: isCobeerAccount ? {} : savedTenStampsDates,
@@ -3044,47 +3172,335 @@ export default function App() {
     }
   }, [user.points]);
 
-  // Load spots' TAPS from Firestore (real-time) and localStorage
+  // Load, verify, and reconcile spots' points (1 check-in = 1 HOP point) from user check-ins in Firestore and localStorage
   useEffect(() => {
     let active = true;
     
-    // First, load from localStorage to be instantly fast and robust
+    // First, load from localStorage to be instantly fast and robust, ignoring legacy hardcoded tap scores
     setBars(prevBars => prevBars.map(b => {
-      const cached = localStorage.getItem(`spot_taps_${b.id}`);
-      const baseTaps = (typeof b.taps === 'number' && b.taps > 0) ? b.taps : getDeterministicBaseTaps(b.id);
-      if (cached !== null) {
-        const parsed = parseInt(cached, 10);
-        return { ...b, taps: isNaN(parsed) ? baseTaps : parsed };
-      }
-      return { ...b, taps: baseTaps };
+      const currentPoints = getSpotPoints(b);
+      return { ...b, hops: currentPoints, totalCheckins: currentPoints, taps: currentPoints, points: currentPoints };
     }));
 
-    let unsubscribe: (() => void) | undefined;
+    let unsubscribeCheckins: (() => void) | undefined;
+    let unsubscribeSpotsTaps: (() => void) | undefined;
 
-    // Then, listen to real-time changes in Firestore
+    const reconcileAndSyncSpotCheckins = async () => {
+      if (isLocalAuthFallback) return;
+
+      try {
+        // Map of registered user check-ins per spot: userId -> (spotId -> count)
+        const userSpotCheckins = new Map<string, Map<string, number>>();
+
+        const recordUserSpotCheckin = (userId: string, spotId: string, count: number = 1) => {
+          if (!userId || !spotId || count <= 0) return;
+          if (!userSpotCheckins.has(userId)) {
+            userSpotCheckins.set(userId, new Map<string, number>());
+          }
+          const userMap = userSpotCheckins.get(userId)!;
+          const prev = userMap.get(spotId) || 0;
+          userMap.set(spotId, Math.max(prev, count));
+        };
+
+        // Unattributed check-in documents (no recognized registered userId)
+        const unattributedSpotCheckins: Record<string, number> = {};
+
+        // 1. Inspect 'checkins' collection
+        try {
+          const checkinSnap = await getDocs(collection(db, 'checkins'));
+          const checkinDocCounts = new Map<string, number>();
+          checkinSnap.forEach(cDoc => {
+            const data = cDoc.data();
+            const rawSpot = data.spotId || data.barId || data.spotName || data.barName || data.locationName;
+            const targetSpot = findSpotByAnyIdentifier(rawSpot, BARS_DATA);
+            if (targetSpot) {
+              const uId = data.userId || data.uid || data.user_id;
+              if (uId && typeof uId === 'string' && uId.toLowerCase() !== 'cobeertaste@gmail.com') {
+                const key = `${uId}:::${targetSpot.id}`;
+                checkinDocCounts.set(key, (checkinDocCounts.get(key) || 0) + 1);
+              } else {
+                unattributedSpotCheckins[targetSpot.id] = (unattributedSpotCheckins[targetSpot.id] || 0) + 1;
+              }
+            }
+          });
+          checkinDocCounts.forEach((count, key) => {
+            const [uId, sId] = key.split(':::');
+            recordUserSpotCheckin(uId, sId, count);
+          });
+        } catch (checkErr) {
+          console.warn('Could not inspect checkins collection:', checkErr);
+        }
+
+        // 2. Inspect 'users' collection (ALL registered users!)
+        try {
+          const usersSnap = await getDocs(collection(db, 'users'));
+          usersSnap.forEach(uDoc => {
+            const uData = uDoc.data();
+            const uId = uDoc.id;
+            const uEmail = (uData.email || '').toLowerCase().trim();
+            if (uEmail === 'cobeertaste@gmail.com') return; // Skip admin account
+
+            // a) Stamps map: { [spotIdOrName]: count }
+            if (uData.stamps && typeof uData.stamps === 'object') {
+              Object.entries(uData.stamps).forEach(([key, count]) => {
+                const targetSpot = findSpotByAnyIdentifier(key, BARS_DATA);
+                const c = typeof count === 'number' ? count : parseInt(String(count), 10);
+                if (targetSpot && !isNaN(c) && c > 0) {
+                  recordUserSpotCheckin(uId, targetSpot.id, c);
+                }
+              });
+            }
+
+            // b) Checkin history array: [{ barId, spotId, barName, spotName, location, ... }]
+            if (Array.isArray(uData.checkinHistory)) {
+              const historyCounts = new Map<string, number>();
+              uData.checkinHistory.forEach((item: any) => {
+                if (item && typeof item === 'object') {
+                  const targetSpot = findSpotByAnyIdentifier(item.barId || item.spotId || item.barName || item.spotName || item.location, BARS_DATA);
+                  if (targetSpot) {
+                    historyCounts.set(targetSpot.id, (historyCounts.get(targetSpot.id) || 0) + 1);
+                  }
+                }
+              });
+              historyCounts.forEach((cnt, sId) => {
+                recordUserSpotCheckin(uId, sId, cnt);
+              });
+            }
+
+            // c) checkedInBars array: [spotIdOrName, ...]
+            if (Array.isArray(uData.checkedInBars)) {
+              uData.checkedInBars.forEach((rawSpot: any) => {
+                const targetSpot = findSpotByAnyIdentifier(String(rawSpot), BARS_DATA);
+                if (targetSpot) {
+                  recordUserSpotCheckin(uId, targetSpot.id, 1);
+                }
+              });
+            }
+
+            // d) lastCheckinDates: { [spotIdOrName]: dateString }
+            if (uData.lastCheckinDates && typeof uData.lastCheckinDates === 'object') {
+              Object.keys(uData.lastCheckinDates).forEach(rawSpot => {
+                const targetSpot = findSpotByAnyIdentifier(rawSpot, BARS_DATA);
+                if (targetSpot) {
+                  recordUserSpotCheckin(uId, targetSpot.id, 1);
+                }
+              });
+            }
+
+            // e) tenStampsDates: { [spotIdOrName]: dateString }
+            if (uData.tenStampsDates && typeof uData.tenStampsDates === 'object') {
+              Object.keys(uData.tenStampsDates).forEach(rawSpot => {
+                const targetSpot = findSpotByAnyIdentifier(rawSpot, BARS_DATA);
+                if (targetSpot) {
+                  recordUserSpotCheckin(uId, targetSpot.id, 10);
+                }
+              });
+            }
+          });
+        } catch (usersErr) {
+          console.warn('Could not inspect users collection for check-ins:', usersErr);
+        }
+
+        // 3. Inspect 'checkin_notifications' collection
+        try {
+          const notifsSnap = await getDocs(collection(db, 'checkin_notifications'));
+          const notifCounts = new Map<string, number>();
+          notifsSnap.forEach(nDoc => {
+            const nd = nDoc.data();
+            const targetSpot = findSpotByAnyIdentifier(nd.locationName, BARS_DATA);
+            const senderId = nd.senderId || nd.userId;
+            if (targetSpot && senderId && typeof senderId === 'string') {
+              const key = `${senderId}:::${targetSpot.id}`;
+              notifCounts.set(key, (notifCounts.get(key) || 0) + 1);
+            } else if (targetSpot) {
+              unattributedSpotCheckins[targetSpot.id] = (unattributedSpotCheckins[targetSpot.id] || 0) + 1;
+            }
+          });
+          notifCounts.forEach((cnt, key) => {
+            const [sIdUser, sIdSpot] = key.split(':::');
+            recordUserSpotCheckin(sIdUser, sIdSpot, cnt);
+          });
+        } catch (nErr) {
+          console.warn('Could not inspect checkin_notifications collection:', nErr);
+        }
+
+        // 4. Incorporate current local user check-ins if authenticated or active
+        if (user.isLoggedIn && user.id && !user.id.startsWith('local-user-')) {
+          if (user.stamps) {
+            Object.entries(user.stamps).forEach(([key, count]) => {
+              const targetSpot = findSpotByAnyIdentifier(key, BARS_DATA);
+              if (targetSpot && typeof count === 'number' && count > 0) {
+                recordUserSpotCheckin(user.id, targetSpot.id, count);
+              }
+            });
+          }
+          if (Array.isArray(user.checkinHistory)) {
+            const localHistCounts = new Map<string, number>();
+            user.checkinHistory.forEach((item: any) => {
+              const targetSpot = findSpotByAnyIdentifier(item.barId || item.spotId || item.barName || item.spotName, BARS_DATA);
+              if (targetSpot) {
+                localHistCounts.set(targetSpot.id, (localHistCounts.get(targetSpot.id) || 0) + 1);
+              }
+            });
+            localHistCounts.forEach((cnt, sId) => {
+              recordUserSpotCheckin(user.id, sId, cnt);
+            });
+          }
+          if (Array.isArray(user.checkedInBars)) {
+            user.checkedInBars.forEach(bId => {
+              const targetSpot = findSpotByAnyIdentifier(bId, BARS_DATA);
+              if (targetSpot) {
+                recordUserSpotCheckin(user.id, targetSpot.id, 1);
+              }
+            });
+          }
+        }
+
+        // 5. Inspect existing 'spots_taps' collection
+        const firestoreSpotPoints: Record<string, number> = {};
+        try {
+          const spotsTapsSnap = await getDocs(collection(db, 'spots_taps'));
+          spotsTapsSnap.forEach(sDoc => {
+            const d = sDoc.data();
+            const val = Math.max(
+              typeof d.points === 'number' ? d.points : 0,
+              typeof d.totalCheckins === 'number' ? d.totalCheckins : 0,
+              typeof d.hops === 'number' ? d.hops : 0,
+              typeof d.taps === 'number' ? d.taps : 0
+            );
+            const targetSpot = findSpotByAnyIdentifier(sDoc.id, BARS_DATA);
+            if (targetSpot && val > 0) {
+              firestoreSpotPoints[targetSpot.id] = Math.max(firestoreSpotPoints[targetSpot.id] || 0, val);
+            }
+          });
+        } catch (stErr) {
+          console.warn('Could not inspect spots_taps collection:', stErr);
+        }
+
+        // 6. SUM registered users check-ins per spot!
+        const finalCalculatedScores: Record<string, number> = {};
+        BARS_DATA.forEach(b => {
+          let spotTotalCheckins = 0;
+          // Sum across all registered users
+          userSpotCheckins.forEach((userMap) => {
+            const userCount = userMap.get(b.id) || 0;
+            spotTotalCheckins += userCount;
+          });
+
+          // Add any unattributed checkin documents
+          spotTotalCheckins += (unattributedSpotCheckins[b.id] || 0);
+
+          // Compare with existing recorded points in spots_taps and local cache
+          const fromFirestoreSpots = firestoreSpotPoints[b.id] || 0;
+          const localPoints = getSpotPoints(b);
+
+          finalCalculatedScores[b.id] = Math.max(spotTotalCheckins, fromFirestoreSpots, localPoints);
+        });
+
+        if (!active) return;
+
+        // Persist reconciled points to localStorage and Firestore
+        for (const [spotId, truePoints] of Object.entries(finalCalculatedScores)) {
+          localStorage.setItem(`spot_points_${spotId}`, String(truePoints));
+          localStorage.setItem(`spot_hops_${spotId}`, String(truePoints));
+          localStorage.setItem(`spot_taps_${spotId}`, String(truePoints));
+
+          try {
+            await setDoc(doc(db, 'spots_taps', spotId), {
+              points: truePoints,
+              hops: truePoints,
+              totalCheckins: truePoints,
+              taps: truePoints
+            }, { merge: true });
+          } catch {
+            // non-critical error
+          }
+        }
+
+        if (!active) return;
+        setBars(prevBars => prevBars.map(b => {
+          const correctPoints = finalCalculatedScores[b.id] ?? getSpotPoints(b);
+          return {
+            ...b,
+            hops: correctPoints,
+            totalCheckins: correctPoints,
+            taps: correctPoints,
+            points: correctPoints
+          };
+        }));
+      } catch (err) {
+        console.warn('Error reconciling spot check-ins:', err);
+      }
+    };
+
+    reconcileAndSyncSpotCheckins();
+
+    // Listen to checkins collection for real-time additions
     if (!isLocalAuthFallback) {
       try {
-        unsubscribe = onSnapshot(collection(db, 'spots_taps'), (querySnapshot) => {
+        unsubscribeCheckins = onSnapshot(collection(db, 'checkins'), (snapshot) => {
           if (!active) return;
-          const firestoreTaps: Record<string, number> = {};
-          querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            if (typeof data.taps === 'number') {
-              firestoreTaps[doc.id] = data.taps;
+          const liveCheckins: Record<string, number> = {};
+          snapshot.forEach(cDoc => {
+            const data = cDoc.data();
+            const rawSpot = data.spotId || data.barId || data.spotName || data.barName || data.locationName;
+            const targetSpot = findSpotByAnyIdentifier(rawSpot, BARS_DATA);
+            if (targetSpot) {
+              liveCheckins[targetSpot.id] = (liveCheckins[targetSpot.id] || 0) + 1;
             }
           });
 
           setBars(prevBars => prevBars.map(b => {
-            const baseTaps = (typeof b.taps === 'number' && b.taps > 0) ? b.taps : getDeterministicBaseTaps(b.id);
-            if (firestoreTaps[b.id] !== undefined) {
-              // Also update localStorage cache
-              localStorage.setItem(`spot_taps_${b.id}`, String(firestoreTaps[b.id]));
-              return { ...b, taps: firestoreTaps[b.id] };
-            }
-            return { ...b, taps: (typeof b.taps === 'number' && b.taps > 0) ? b.taps : baseTaps };
+            const currentPoints = getSpotPoints(b);
+            const docCount = liveCheckins[b.id] || 0;
+            const updatedPoints = Math.max(currentPoints, docCount);
+            return {
+              ...b,
+              hops: updatedPoints,
+              totalCheckins: updatedPoints,
+              taps: updatedPoints,
+              points: updatedPoints
+            };
           }));
         }, (err) => {
-          console.warn("Could not load spots taps from Firestore, using local cached taps:", err);
+          console.warn("Could not listen to checkins collection:", err);
+        });
+      } catch (err) {
+        console.warn("Error setting up onSnapshot for checkins:", err);
+      }
+
+      try {
+        unsubscribeSpotsTaps = onSnapshot(collection(db, 'spots_taps'), (snapshot) => {
+          if (!active) return;
+          const liveScores: Record<string, number> = {};
+          snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            const val = Math.max(
+              typeof data.points === 'number' ? data.points : 0,
+              typeof data.hops === 'number' ? data.hops : 0,
+              typeof data.totalCheckins === 'number' ? data.totalCheckins : 0,
+              typeof data.taps === 'number' ? data.taps : 0
+            );
+            const targetSpot = findSpotByAnyIdentifier(docSnap.id, BARS_DATA);
+            if (targetSpot && val > 0) {
+              liveScores[targetSpot.id] = Math.max(liveScores[targetSpot.id] || 0, val);
+            }
+          });
+
+          setBars(prevBars => prevBars.map(b => {
+            const currentPoints = getSpotPoints(b);
+            const incomingPoints = liveScores[b.id] || 0;
+            const finalPoints = Math.max(currentPoints, incomingPoints);
+            return {
+              ...b,
+              hops: finalPoints,
+              totalCheckins: finalPoints,
+              taps: finalPoints,
+              points: finalPoints
+            };
+          }));
+        }, (err) => {
+          console.warn("Could not listen to spots_taps collection:", err);
         });
       } catch (err) {
         console.warn("Error setting up onSnapshot for spots_taps:", err);
@@ -3093,11 +3509,10 @@ export default function App() {
 
     return () => {
       active = false;
-      if (unsubscribe) {
-        unsubscribe();
-      }
+      if (unsubscribeCheckins) unsubscribeCheckins();
+      if (unsubscribeSpotsTaps) unsubscribeSpotsTaps();
     };
-  }, [isLocalAuthFallback]);
+  }, [isLocalAuthFallback, user.isLoggedIn, user.stamps]);
 
   // Mark all notifications as read when the user views the profile/notifications tab after a brief delay
   useEffect(() => {
@@ -3551,7 +3966,7 @@ export default function App() {
     const firstCheckinText = lang === 'PT' ? 'NOVO LOCAL DESCOBERTO. HOP ON!' : 'NEW SPOT DISCOVERED. HOP ON!';
 
     // Award stamps and points
-    const currentStamps = user.stamps[bar.id] || 0;
+    const currentStamps = (user.stamps && user.stamps[bar.id]) || 0;
     const nextStamps = currentStamps + 1;
     const isTenthStamp = nextStamps >= 10;
     
@@ -3564,6 +3979,36 @@ export default function App() {
         ? `Check-in efetuado! Conquistaste os 10 check-ins no spot ${bar.name}! Spot concluído com distinção! 🏆`
         : `Check-in complete! You completed all 10 check-ins at ${bar.name}! Spot conquered with distinction! 🏆`;
     }
+
+    const nextStampsRecord = { ...(user.stamps || {}) };
+    const nextTenStampsDates = { ...(user.tenStampsDates || {}) };
+
+    if (isTenthStamp) {
+      nextStampsRecord[bar.id] = 10;
+      nextTenStampsDates[bar.id] = todayStr;
+    } else {
+      nextStampsRecord[bar.id] = nextStamps;
+    }
+
+    const nextCheckedIn = (user.checkedInBars || []).includes(bar.id)
+      ? (user.checkedInBars || [])
+      : [...(user.checkedInBars || []), bar.id];
+
+    const nextLastCheckinDates = {
+      ...(user.lastCheckinDates || {}),
+      [bar.id]: todayStr
+    };
+
+    const newCheckinLogId = `checkin_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const newCheckinLog = {
+      id: newCheckinLogId,
+      barId: bar.id,
+      barName: bar.name,
+      location: bar.zone,
+      date: todayStr,
+      timestamp: new Date().toISOString()
+    };
+    const nextCheckinHistory = [newCheckinLog, ...(user.checkinHistory || [])];
 
     // 1. Record in Firestore 'checkins' collection for audit and 24h lockout
     if (user.isLoggedIn && !user.id.startsWith('local-user-')) {
@@ -3580,25 +4025,32 @@ export default function App() {
       }
     }
 
-    // 2. Save the updated points to the user document in Firestore if using cloud auth
+    // 2. Save the updated points, stamps, and history to the user document in Firestore if using cloud auth
     if (!isLocalAuthFallback && auth.currentUser) {
       try {
         const newPoints = (user.points || 0) + 1;
-        await setDoc(doc(db, 'users', user.id), { points: newPoints }, { merge: true });
+        await setDoc(doc(db, 'users', user.id), { 
+          points: newPoints,
+          stamps: nextStampsRecord,
+          checkedInBars: nextCheckedIn,
+          lastCheckinDates: nextLastCheckinDates,
+          tenStampsDates: nextTenStampsDates,
+          checkinHistory: nextCheckinHistory
+        }, { merge: true });
       } catch (uerr) {
         if (isPermissionError(uerr)) {
           handleFirestoreError(uerr, OperationType.WRITE, `users/${user.id}`);
         }
-        console.error('Error updating user points in Firestore:', uerr);
+        console.error('Error updating user checkin data in Firestore:', uerr);
       }
     }
 
     // 2.1 Process referral attribution on first check-in
     await processReferralFirstCheckin();
 
-    // 3. Save/Increment spot's TAPS & totalCheckins in Firestore and update state
-    const currentBarTaps = bar.taps || getDeterministicBaseTaps(bar.id);
-    const newBarTaps = currentBarTaps + 1;
+    // 3. Save/Increment spot's points, HOPS & totalCheckins in Firestore and update state (1 check-in = 1 HOP point)
+    const currentSpotPoints = getSpotPoints(bar);
+    const newSpotPoints = currentSpotPoints + 1;
 
     // Track spot check-in in Firebase Analytics & Firestore
     trackSpotCheckin(bar, { id: user.id, username: user.username }, isTenthStamp, 1);
@@ -3606,59 +4058,45 @@ export default function App() {
     if (!isLocalAuthFallback && auth.currentUser) {
       try {
         await setDoc(doc(db, 'spots_taps', bar.id), { 
-          taps: newBarTaps,
-          totalCheckins: newBarTaps 
+          points: newSpotPoints,
+          hops: newSpotPoints,
+          taps: newSpotPoints,
+          totalCheckins: newSpotPoints 
         }, { merge: true });
       } catch (terr) {
-        console.error('Error updating spot taps in Firestore:', terr);
+        console.error('Error updating spot points in Firestore:', terr);
       }
     }
-    localStorage.setItem(`spot_taps_${bar.id}`, String(newBarTaps));
-    setBars(prevBars => prevBars.map(b => b.id === bar.id ? { ...b, taps: newBarTaps, totalCheckins: newBarTaps } : b));
+    localStorage.setItem(`spot_points_${bar.id}`, String(newSpotPoints));
+    localStorage.setItem(`spot_hops_${bar.id}`, String(newSpotPoints));
+    localStorage.setItem(`spot_taps_${bar.id}`, String(newSpotPoints));
+    setBars(prevBars => prevBars.map(b => b.id === bar.id ? { 
+      ...b, 
+      hops: newSpotPoints, 
+      taps: newSpotPoints, 
+      totalCheckins: newSpotPoints,
+      points: newSpotPoints 
+    } : b));
+    if (selectedBar && selectedBar.id === bar.id) {
+      setSelectedBar(prev => prev ? { 
+        ...prev, 
+        hops: newSpotPoints, 
+        taps: newSpotPoints, 
+        totalCheckins: newSpotPoints,
+        points: newSpotPoints 
+      } : null);
+    }
 
     // 4. Update local user profile state
-    setUser(prev => {
-      const nextStampsRecord = { ...prev.stamps };
-      const nextTenStampsDates = { ...(prev.tenStampsDates || {}) };
-
-      if (isTenthStamp) {
-        nextStampsRecord[bar.id] = 10;
-        nextTenStampsDates[bar.id] = todayStr;
-      } else {
-        nextStampsRecord[bar.id] = nextStamps;
-      }
-
-      const nextCheckedIn = prev.checkedInBars.includes(bar.id)
-        ? prev.checkedInBars
-        : [...prev.checkedInBars, bar.id];
-
-      const nextLastCheckinDates = {
-        ...(prev.lastCheckinDates || {}),
-        [bar.id]: todayStr
-      };
-
-      const newCheckinLogId = `checkin_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-      const newCheckinLog = {
-        id: newCheckinLogId,
-        barId: bar.id,
-        barName: bar.name,
-        location: bar.zone,
-        date: todayStr,
-        timestamp: new Date().toISOString()
-      };
-
-      const nextCheckinHistory = [newCheckinLog, ...(prev.checkinHistory || [])];
-
-      return {
-        ...prev,
-        points: (prev.points || 0) + 1,
-        stamps: nextStampsRecord,
-        tenStampsDates: nextTenStampsDates,
-        checkedInBars: nextCheckedIn,
-        lastCheckinDates: nextLastCheckinDates,
-        checkinHistory: nextCheckinHistory
-      };
-    });
+    setUser(prev => ({
+      ...prev,
+      points: (prev.points || 0) + 1,
+      stamps: nextStampsRecord,
+      tenStampsDates: nextTenStampsDates,
+      checkedInBars: nextCheckedIn,
+      lastCheckinDates: nextLastCheckinDates,
+      checkinHistory: nextCheckinHistory
+    }));
 
     // 5. Trigger Screen-Wide STAGE CLEAR 8-Bit Festive Celebration & Arcade Sound!
     setStageClearSpotName(bar.name);
@@ -3993,13 +4431,55 @@ export default function App() {
       return;
     }
 
-    const hasAlreadyReviewed = (activeBarToReview.reviews || []).some(rev => rev.userId === user.id);
-    if (hasAlreadyReviewed) {
+    const currentSpotId = activeBarToReview.id;
+    const currentSpotName = activeBarToReview.name;
+
+    const alreadyReviewedInSpot = (activeBarToReview.reviews || []).some(rev => 
+      (user.id && rev.userId === user.id) || 
+      (user.username && rev.userName && rev.userName.toLowerCase() === user.username.toLowerCase())
+    );
+
+    const alreadyReviewedInHistory = (ratingsHistory || []).some(rh => 
+      ((user.id && rh.userId === user.id) || (user.username && rh.userName && rh.userName.toLowerCase() === user.username.toLowerCase())) && 
+      (rh.barId === currentSpotId || (currentSpotName && rh.barName === currentSpotName))
+    );
+
+    let alreadyReviewedInFirestore = false;
+    if (!isLocalAuthFallback && auth.currentUser) {
+      try {
+        const qByUid = query(
+          collection(db, 'ratings'),
+          where('barId', '==', currentSpotId),
+          where('userId', '==', user.id)
+        );
+        const snapUid = await getDocs(qByUid);
+        if (!snapUid.empty) {
+          alreadyReviewedInFirestore = true;
+        } else if (user.username) {
+          const qByName = query(
+            collection(db, 'ratings'),
+            where('barId', '==', currentSpotId),
+            where('userName', '==', user.username)
+          );
+          const snapName = await getDocs(qByName);
+          if (!snapName.empty) {
+            alreadyReviewedInFirestore = true;
+          }
+        }
+      } catch (checkErr) {
+        console.warn('Could not query Firestore for existing review:', checkErr);
+      }
+    }
+
+    if (alreadyReviewedInSpot || alreadyReviewedInHistory || alreadyReviewedInFirestore) {
       triggerSelfPush(
-        'Limite de Avaliação',
-        'Já avaliaste este spot! Só podes avaliar cada spot uma única vez.',
+        lang === 'PT' ? 'Limite de Avaliação' : 'Review Limit',
+        lang === 'PT' 
+          ? 'Já avaliaste este spot! Cada utilizador apenas pode efetuar 1 avaliação por spot.' 
+          : 'You have already reviewed this spot! Each user can only submit 1 review per spot.',
         'system'
       );
+      setActiveBarToReview(null);
       return;
     }
 
@@ -7892,10 +8372,10 @@ export default function App() {
                 )}
               </div>
 
-              {/* TAPS Classification Table (Moved deeper, right before Reviews) */}
+              {/* HOPS Classification Table (Moved deeper, right before Reviews) */}
               {(() => {
-                const currentTaps = selectedBar.taps || 0;
-                const tier = getSpotTier(currentTaps);
+                const currentHops = getSpotPoints(selectedBar);
+                const tier = getSpotTier(currentHops);
                 return (
                   <div className="mt-5 p-3.5 rounded-2xl border-2 border-[#1B2036] bg-white shadow-[3px_3px_0px_#1B2036] text-[#1B2036]">
                     <div className="flex items-center justify-between mb-3 border-b-2 border-[#1B2036]/15 pb-2">
@@ -7906,7 +8386,7 @@ export default function App() {
                         </h4>
                       </div>
                       <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-lg bg-[#F6EFDC] text-[#1B2036] border-2 border-[#1B2036] shadow-[1px_1px_0px_#1B2036]">
-                        {currentTaps.toLocaleString()} TAPS
+                        {currentHops.toLocaleString()} {currentHops === 1 ? 'HOP' : 'HOPS'}
                       </span>
                     </div>
 
@@ -7939,7 +8419,7 @@ export default function App() {
                     {/* Mini table list */}
                     <div className="mt-3.5 pt-3 border-t-2 border-[#1B2036]/15">
                       <span className="text-[#1B2036]/70 block text-[8px] font-bold uppercase tracking-wider mb-2 font-display">
-                        {lang === 'PT' ? 'Tabela de Classificação Geral' : 'General Classification Table'}
+                        {lang === 'PT' ? 'Tabela de Classificação Geral (Check-ins)' : 'General Classification Table (Check-ins)'}
                       </span>
                       <div className="space-y-1 text-[8.5px] font-mono">
                         {[
@@ -7951,12 +8431,12 @@ export default function App() {
                           { range: '15.000+', title: 'The Craft Mecca', badge: '🌌' }
                         ].map((lvl, idx) => {
                           const isCurrent = (
-                            (idx === 0 && currentTaps < 100) ||
-                            (idx === 1 && currentTaps >= 100 && currentTaps < 500) ||
-                            (idx === 2 && currentTaps >= 500 && currentTaps < 1500) ||
-                            (idx === 3 && currentTaps >= 1500 && currentTaps < 5000) ||
-                            (idx === 4 && currentTaps >= 5000 && currentTaps < 15000) ||
-                            (idx === 5 && currentTaps >= 15000)
+                            (idx === 0 && currentHops < 100) ||
+                            (idx === 1 && currentHops >= 100 && currentHops < 500) ||
+                            (idx === 2 && currentHops >= 500 && currentHops < 1500) ||
+                            (idx === 3 && currentHops >= 1500 && currentHops < 5000) ||
+                            (idx === 4 && currentHops >= 5000 && currentHops < 15000) ||
+                            (idx === 5 && currentHops >= 15000)
                           );
                           return (
                             <div 
@@ -7971,7 +8451,7 @@ export default function App() {
                                 <span>{lvl.badge}</span>
                                 <span>{lvl.title}</span>
                               </span>
-                              <span>{lvl.range}</span>
+                              <span className="font-bold">{lvl.range} HOPS</span>
                             </div>
                           );
                         })}
@@ -7988,23 +8468,55 @@ export default function App() {
                     {lang === 'PT' ? 'Avaliações e Opiniões' : 'Reviews & Ratings'}
                   </h4>
                   {(() => {
-                    const hasReviewed = user.isLoggedIn && (selectedBar.reviews || []).some(rev => rev.userId === user.id);
+                    const hasReviewed = user.isLoggedIn && (
+                      (selectedBar.reviews || []).some(rev => 
+                        (user.id && rev.userId === user.id) || 
+                        (user.username && rev.userName && rev.userName.toLowerCase() === user.username.toLowerCase())
+                      ) ||
+                      ratingsHistory.some(rh => 
+                        ((user.id && rh.userId === user.id) || (user.username && rh.userName && rh.userName.toLowerCase() === user.username.toLowerCase())) &&
+                        (rh.barId === selectedBar.id || (selectedBar.name && rh.barName === selectedBar.name))
+                      )
+                    );
+                    const userExistingReview = hasReviewed ? (
+                      (selectedBar.reviews || []).find(rev => 
+                        (user.id && rev.userId === user.id) || 
+                        (user.username && rev.userName && rev.userName.toLowerCase() === user.username.toLowerCase())
+                      ) ||
+                      ratingsHistory.find(rh => 
+                        ((user.id && rh.userId === user.id) || (user.username && rh.userName && rh.userName.toLowerCase() === user.username.toLowerCase())) &&
+                        (rh.barId === selectedBar.id || (selectedBar.name && rh.barName === selectedBar.name))
+                      )
+                    ) : null;
+
                     return (
                       <button 
                         onClick={() => {
-                          if (hasReviewed) return;
-                          setActiveBarToReview(selectedBar);
+                          if (hasReviewed && userExistingReview) {
+                            setEditingReview({
+                              id: userExistingReview.id,
+                              rating: userExistingReview.rating || (userExistingReview as any).stars || 5,
+                              comment: userExistingReview.comment || (userExistingReview as any).texto_rating || '',
+                              beerStyleReviewed: userExistingReview.beerStyleReviewed || (userExistingReview as any).tipo_cerveja || '',
+                              barId: selectedBar.id,
+                              barName: selectedBar.name
+                            });
+                            setEditRating(userExistingReview.rating || (userExistingReview as any).stars || 5);
+                            setEditComment(userExistingReview.comment || (userExistingReview as any).texto_rating || '');
+                            setEditBeerStyle(userExistingReview.beerStyleReviewed || (userExistingReview as any).tipo_cerveja || '');
+                          } else {
+                            setActiveBarToReview(selectedBar);
+                          }
                         }}
-                        disabled={hasReviewed}
                         className={`font-bold text-[10px] uppercase tracking-wider font-display transition px-2.5 py-1 rounded-lg border-2 ${
                           hasReviewed 
-                            ? 'text-[#1B2036]/50 bg-[#EFE6CC] border-[#1B2036]/30 cursor-not-allowed' 
+                            ? 'text-[#1B2036] bg-[#FAF6EB] hover:bg-[#F2A93B] border-[#1B2036] shadow-[1px_1px_0px_#1B2036] cursor-pointer' 
                             : 'bg-[#12908C] hover:bg-[#0B6C69] text-white font-extrabold border-[#1B2036] shadow-[1.5px_1.5px_0px_#1B2036] cursor-pointer active:translate-x-[1px] active:translate-y-[1px]'
                         }`}
                         id="btn-add-review-section"
                       >
                         {hasReviewed 
-                          ? (lang === 'PT' ? 'JÁ AVALIADO' : 'ALREADY REVIEWED') 
+                          ? (lang === 'PT' ? 'EDITAR AVALIAÇÃO' : 'EDIT REVIEW') 
                           : (lang === 'PT' ? 'AVALIAR SPOT' : 'REVIEW SPOT')}
                       </button>
                     );
@@ -8177,14 +8689,73 @@ export default function App() {
                   />
                 </div>
 
-                <button 
-                  onClick={submitReview}
-                  disabled={!reviewComment}
-                  className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold border-2 border-black shadow-[2px_2px_0px_#000000] active:translate-x-[1px] active:translate-y-[1px] transition disabled:opacity-40 cursor-pointer font-display uppercase tracking-wider"
-                  id="btn-review-submit"
-                >
-                  {lang === 'PT' ? 'Submeter Avaliação' : 'Submit Review'}
-                </button>
+                {(() => {
+                  const alreadyReviewedModal = user.isLoggedIn && (
+                    (activeBarToReview.reviews || []).some(rev => 
+                      (user.id && rev.userId === user.id) || 
+                      (user.username && rev.userName && rev.userName.toLowerCase() === user.username.toLowerCase())
+                    ) ||
+                    ratingsHistory.some(rh => 
+                      ((user.id && rh.userId === user.id) || (user.username && rh.userName && rh.userName.toLowerCase() === user.username.toLowerCase())) &&
+                      (rh.barId === activeBarToReview.id || (activeBarToReview.name && rh.barName === activeBarToReview.name))
+                    )
+                  );
+                  const existingRev = alreadyReviewedModal ? (
+                    (activeBarToReview.reviews || []).find(rev => 
+                      (user.id && rev.userId === user.id) || 
+                      (user.username && rev.userName && rev.userName.toLowerCase() === user.username.toLowerCase())
+                    ) ||
+                    ratingsHistory.find(rh => 
+                      ((user.id && rh.userId === user.id) || (user.username && rh.userName && rh.userName.toLowerCase() === user.username.toLowerCase())) &&
+                      (rh.barId === activeBarToReview.id || (activeBarToReview.name && rh.barName === activeBarToReview.name))
+                    )
+                  ) : null;
+
+                  if (alreadyReviewedModal && existingRev) {
+                    return (
+                      <div className="space-y-2 p-2 bg-amber-50 border border-amber-300 rounded-xl text-center">
+                        <div className="text-[10px] text-amber-900 font-bold">
+                          {lang === 'PT'
+                            ? 'Já avaliaste este spot! Cada utilizador apenas pode efetuar 1 avaliação por spot.'
+                            : 'You have already reviewed this spot! Each user can only submit 1 review per spot.'}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const barId = activeBarToReview.id;
+                            const barName = activeBarToReview.name;
+                            setActiveBarToReview(null);
+                            setEditingReview({
+                              id: existingRev.id,
+                              rating: existingRev.rating || (existingRev as any).stars || 5,
+                              comment: existingRev.comment || (existingRev as any).texto_rating || '',
+                              beerStyleReviewed: existingRev.beerStyleReviewed || (existingRev as any).tipo_cerveja || '',
+                              barId,
+                              barName
+                            });
+                            setEditRating(existingRev.rating || (existingRev as any).stars || 5);
+                            setEditComment(existingRev.comment || (existingRev as any).texto_rating || '');
+                            setEditBeerStyle(existingRev.beerStyleReviewed || (existingRev as any).tipo_cerveja || '');
+                          }}
+                          className="w-full py-2 bg-[#12908C] hover:bg-[#0B6C69] text-white font-bold rounded-lg text-xs uppercase font-display border border-[#1B2036] shadow-sm cursor-pointer"
+                        >
+                          {lang === 'PT' ? 'Editar a tua avaliação existente' : 'Edit your existing review'}
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <button 
+                      onClick={submitReview}
+                      disabled={!reviewComment}
+                      className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold border-2 border-black shadow-[2px_2px_0px_#000000] active:translate-x-[1px] active:translate-y-[1px] transition disabled:opacity-40 cursor-pointer font-display uppercase tracking-wider"
+                      id="btn-review-submit"
+                    >
+                      {lang === 'PT' ? 'Submeter Avaliação' : 'Submit Review'}
+                    </button>
+                  );
+                })()}
               </motion.div>
             </div>
           )}
@@ -8808,7 +9379,7 @@ export default function App() {
                           <div className="col-span-1 text-center"></div>
                           <div className="col-span-2 text-center">BADGE</div>
                           <div className="col-span-5">{lang === 'PT' ? 'TÍTULO' : 'TITLE'}</div>
-                          <div className="col-span-4 text-right">{lang === 'PT' ? 'OBJETIVO' : 'TAPS'}</div>
+                          <div className="col-span-4 text-right">{lang === 'PT' ? 'OBJETIVO' : 'HOPS'}</div>
                         </div>
 
                         {[
@@ -8835,7 +9406,7 @@ export default function App() {
                               </div>
 
                               <div className="col-span-4 text-right font-mono text-xs text-[#1B2036] pr-1 font-bold">
-                                {tier.range} TAPS
+                                {tier.range} HOPS
                               </div>
                             </div>
                           );
@@ -8847,7 +9418,14 @@ export default function App() {
                   {scoreSubTab === 'spots' && (
                     <div className="space-y-2">
                       {(() => {
-                        const sortedSpots = [...bars].sort((a, b) => (b.taps || 0) - (a.taps || 0));
+                        const sortedSpots = [...bars].sort((a, b) => {
+                          const pointsA = getSpotPoints(a);
+                          const pointsB = getSpotPoints(b);
+                          if (pointsB !== pointsA) {
+                            return pointsB - pointsA; // Ordena estritamente pelo spot com mais pontos até ao que tem menos pontos
+                          }
+                          return a.name.localeCompare(b.name, lang === 'PT' ? 'pt' : 'en', { sensitivity: 'base' });
+                        });
                         const spotsPageSize = 10;
                         const spotsTotalPages = Math.max(1, Math.ceil(sortedSpots.length / spotsPageSize));
                         const currentSpotsPage = Math.min(spotsScorePage, spotsTotalPages - 1);
@@ -8856,6 +9434,12 @@ export default function App() {
 
                         return (
                           <>
+                            {/* Explanation Banner: Ordenação por Pontos (Mais Pontos -> Menos Pontos) */}
+                            <div className="bg-[#FAF6EB] border border-[#1B2036]/20 rounded-xl px-3 py-2 flex flex-col sm:flex-row items-center justify-between text-[9px] font-mono gap-1 text-[#1B2036]">
+                              <span className="font-bold">📍 {lang === 'PT' ? 'Classificação de Spots: mais pontos ▶ menos pontos' : 'Spot Rankings: most points ▶ least points'}</span>
+                              <span className="text-[#12908C] font-extrabold uppercase">{lang === 'PT' ? '1 Check-in = 1 Ponto (HOP)' : '1 Check-in = 1 Point (HOP)'}</span>
+                            </div>
+
                             {/* Window Pagination Bar for SPOTS (10 em 10) */}
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 p-2 bg-white border-2 border-[#1B2036] rounded-xl shadow-[2px_2px_0px_#1B2036] shrink-0">
                               <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
@@ -8916,14 +9500,16 @@ export default function App() {
                               <div className="col-span-2 text-center font-mono">RANK</div>
                               <div className="col-span-1"></div>
                               <div className="col-span-6">BAR SPOT</div>
-                              <div className="col-span-3 text-right">TAPS</div>
+                              <div className="col-span-3 text-right">{lang === 'PT' ? 'PONTOS' : 'POINTS'}</div>
                             </div>
 
                             <div className="space-y-1.5">
                               {currentSpotsItems.map((spot, index) => {
                                 const absoluteRank = spotsStartIdx + index + 1;
-                                const spotTaps = spot.taps || 0;
+                                const spotPoints = getSpotPoints(spot);
                                 const isRank1 = absoluteRank === 1;
+                                const isRank2 = absoluteRank === 2;
+                                const isRank3 = absoluteRank === 3;
 
                                 return (
                                   <div 
@@ -8936,17 +9522,22 @@ export default function App() {
                                     className={`grid grid-cols-12 text-xs items-center py-2 px-1.5 rounded-xl border-2 transition cursor-pointer ${
                                       isRank1 
                                         ? 'bg-[#F2A93B]/25 text-[#1B2036] font-black border-[#1B2036] shadow-[2px_2px_0px_#1B2036]' 
-                                        : 'bg-white border-[#1B2036]/20 text-[#1B2036] shadow-[1px_1px_0px_#1B2036] hover:bg-[#F6EFDC]'
+                                        : isRank2
+                                          ? 'bg-[#EFE6CC]/60 text-[#1B2036] font-bold border-[#1B2036]/50 shadow-[1.5px_1.5px_0px_#1B2036]'
+                                          : isRank3
+                                            ? 'bg-[#E85B41]/10 text-[#1B2036] font-bold border-[#1B2036]/40 shadow-[1px_1px_0px_#1B2036]'
+                                            : 'bg-white border-[#1B2036]/20 text-[#1B2036] shadow-[1px_1px_0px_#1B2036] hover:bg-[#F6EFDC]'
                                     }`}
                                   >
                                     {/* Rank position */}
-                                    <div className="col-span-2 text-center font-bold font-mono text-xs">
-                                      {absoluteRank}º
+                                    <div className="col-span-2 text-center font-bold font-mono text-xs flex items-center justify-center gap-0.5">
+                                      {isRank1 && <span className="text-[10px] select-none">👑</span>}
+                                      <span>{absoluteRank}º</span>
                                     </div>
 
                                     {/* Small icon indicator */}
                                     <div className="col-span-1 flex items-center justify-center text-xs">
-                                      {isRank1 ? '🏆' : '🍻'}
+                                      {isRank1 ? '🏆' : isRank2 ? '🥈' : isRank3 ? '🥉' : '🍻'}
                                     </div>
 
                                     {/* Spot Name */}
@@ -8954,9 +9545,9 @@ export default function App() {
                                       {spot.name}
                                     </div>
 
-                                    {/* Taps count */}
+                                    {/* Points count */}
                                     <div className="col-span-3 text-right font-mono text-xs text-[#1B2036] pr-1 font-bold">
-                                      {spotTaps} TAPS
+                                      {spotPoints} {spotPoints === 1 ? (lang === 'PT' ? 'PTO' : 'PT') : 'PTS'}
                                     </div>
                                   </div>
                                 );
