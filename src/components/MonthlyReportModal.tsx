@@ -83,9 +83,20 @@ export default function MonthlyReportModal({
 
   useEffect(() => {
     if (isOpen && isAuthorizedAdmin) {
-      loadReport(selectedMonth);
+      loadReport(selectedMonth, true);
     }
   }, [isOpen, selectedMonth, allSpots, isAuthorizedAdmin]);
+
+  // Listen to live hop_checkin_updated custom event so it refreshes whenever check-ins or metrics update
+  useEffect(() => {
+    const handleUpdate = () => {
+      if (isOpen && isAuthorizedAdmin) {
+        loadReport(selectedMonth, true);
+      }
+    };
+    window.addEventListener('hop_checkin_updated', handleUpdate);
+    return () => window.removeEventListener('hop_checkin_updated', handleUpdate);
+  }, [isOpen, selectedMonth, isAuthorizedAdmin]);
 
   // Reset page when filter or tab changes
   useEffect(() => {

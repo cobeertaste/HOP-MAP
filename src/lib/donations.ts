@@ -13,8 +13,10 @@ import { getCurrentMonthKey } from './dateUtils';
  */
 const DEFAULT_STRIPE_PUB_KEY = 'pk_live_51KQ7gMJHFMFxDOD5TofPQPmVX6kWjnHhTbUkznJ1MYbeCrdTypzWdHIfcIaDrDd1LPZS2DP6LPC1K2fG0HHFD9iH001Q5VZLb1';
 
+const envObj = (typeof import.meta !== 'undefined' && (import.meta as any).env) ? (import.meta as any).env : process.env;
+
 function resolveStripePublishableKey(): string {
-  const envKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+  const envKey = envObj.VITE_STRIPE_PUBLISHABLE_KEY;
   if (typeof envKey === 'string' && envKey.trim().startsWith('pk_')) {
     return envKey.trim();
   }
@@ -24,7 +26,7 @@ function resolveStripePublishableKey(): string {
 export const STRIPE_PUBLISHABLE_KEY = resolveStripePublishableKey();
 
 export const REVOLUT_PAY_LINK = 
-  import.meta.env.VITE_REVOLUT_PAY_LINK || 
+  envObj.VITE_REVOLUT_PAY_LINK || 
   'https://revolut.me/josric6b2v';
 
 export const MBWAY_RECEIVER_PHONE = '+351 916259719';

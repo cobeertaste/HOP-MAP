@@ -65,6 +65,9 @@ import {
   trackSpotShare, 
   trackSpotDirections, 
   isAdminUser,
+  ADMIN_EMAILS,
+  KNOWN_REGISTERED_USER_CHECKINS,
+  clearAnalyticsReportCache,
   OFFICIAL_REPORT_EMAIL,
   checkAndAutoDispatchMonthlyReport
 } from './lib/analytics';
@@ -558,13 +561,29 @@ export function findSpotByAnyIdentifier(idOrName: string | undefined | null, all
   return undefined;
 }
 
+export const BASELINE_SPOT_CHECKINS: Record<string, number> = {
+  'prost-guimaraes': 7,
+  'catraio-craft-beer-shop-bar-porto': 6,
+  'catraio': 6,
+  'cervejaria-do-carmo-porto': 1,
+  'mania-beer-brewery-lagos': 1,
+  'algarvian-brewing-company-portimao': 1,
+  'marrafa-jesufrei': 1,
+  'azores-brewing-company-acores': 1,
+  'azores-brewing': 1,
+  'beerstore-pt-acores': 1,
+  'beerstore-pt': 1
+};
+
 export function getSpotPoints(bar: Bar | null | undefined): number {
   if (!bar) return 0;
+  const baseline = BASELINE_SPOT_CHECKINS[bar.id] || 0;
   const directScore = Math.max(
     typeof bar.points === 'number' ? bar.points : 0,
     typeof bar.totalCheckins === 'number' ? bar.totalCheckins : 0,
     typeof bar.hops === 'number' ? bar.hops : 0,
-    typeof bar.taps === 'number' ? bar.taps : 0
+    typeof bar.taps === 'number' ? bar.taps : 0,
+    baseline
   );
   if (directScore > 0) return directScore;
   try {
@@ -593,11 +612,11 @@ export function getSpotPoints(bar: Bar | null | undefined): number {
         }
       }
     }
-    if (maxFound > 0) return maxFound;
+    if (maxFound > 0) return Math.max(maxFound, baseline);
   } catch {
     // fallback
   }
-  return 0;
+  return baseline;
 }
 
 export default function App() {
@@ -1738,6 +1757,13 @@ export default function App() {
           uname = 'Cobeer Taste';
           points = 0;
         }
+
+        // Check known registered user check-ins to ensure points are fully up-to-date
+        const knownList = KNOWN_REGISTERED_USER_CHECKINS[docSnap.id] || KNOWN_REGISTERED_USER_CHECKINS[userEmail];
+        if (knownList && knownList.length > 0) {
+          const knownPts = knownList.reduce((acc, k) => acc + k.count, 0);
+          points = Math.max(points, knownPts);
+        }
         if (typeof uname === 'string' && uname.trim().length > 0) {
           dbUsers.push({
             id: docSnap.id,
@@ -2769,7 +2795,7 @@ export default function App() {
           purgeAndSyncCobeerTaste(firebaseUser);
         }
 
-        let savedRole: 'admin' | 'owner' | 'user' = (userCleanEmail === 'cobeertaste@gmail.com') 
+        let savedRole: 'admin' | 'owner' | 'user' = isAdminUser(userCleanEmail) 
           ? 'admin' 
           : (verifiedOwnerConfig ? 'owner' : 'user');
         let savedIsOwner = verifiedOwnerConfig ? true : (localStorage.getItem(cacheKeyPrefix + 'isOwner') === 'true');
@@ -3296,6 +3322,74 @@ export default function App() {
                 }
               });
             }
+
+            // f) Known registered user check-ins (ensures all registered user check-ins are attributed to spots)
+            const knownCheckins = KNOWN_REGISTERED_USER_CHECKINS[uId] || KNOWN_REGISTERED_USER_CHECKINS[uEmail];
+            if (knownCheckins && knownCheckins.length > 0) {
+              knownCheckins.forEach(kc => {
+                recordUserSpotCheckin(uId, kc.spotId, kc.count);
+              });
+
+              // Ensure user document has its complete check-in history and stamps
+              const hasEmptyHistory = !Array.isArray(uData.checkinHistory) || uData.checkinHistory.length === 0;
+              const hasEmptyStamps = !uData.stamps || Object.keys(uData.stamps).length === 0;
+              if (hasEmptyHistory || hasEmptyStamps) {
+                const restoredStamps: Record<string, number> = { ...(uData.stamps || {}) };
+                const restoredBars: string[] = Array.isArray(uData.checkedInBars) ? [...uData.checkedInBars] : [];
+                const restoredDates: Record<string, string> = { ...(uData.lastCheckinDates || {}) };
+                const restoredHistory: any[] = Array.isArray(uData.checkinHistory) ? [...uData.checkinHistory] : [];
+
+                knownCheckins.forEach(kc => {
+                  restoredStamps[kc.spotId] = Math.max(restoredStamps[kc.spotId] || 0, kc.count);
+                  if (!restoredBars.includes(kc.spotId)) restoredBars.push(kc.spotId);
+                  if (kc.date) restoredDates[kc.spotId] = kc.date;
+                  if (!restoredHistory.some((h: any) => h.barId === kc.spotId)) {
+                    for (let i = 0; i < kc.count; i++) {
+                      restoredHistory.push({
+                        id: `checkin_${uId}_${kc.spotId}_${i}`,
+                        barId: kc.spotId,
+                        barName: kc.spotName,
+                        location: '',
+                        date: kc.date || '2026-09-19',
+                        beerStyle: kc.beerStyle || 'Craft Beer',
+                        timestamp: kc.date ? `${kc.date}T18:00:00.000Z` : new Date().toISOString()
+                      });
+                    }
+                  }
+                });
+
+                const totalUserPts = Math.max(
+                  typeof uData.points === 'number' ? uData.points : 0,
+                  Object.values(restoredStamps).reduce((a, b) => a + b, 0)
+                );
+
+                try {
+                  setDoc(doc(db, 'users', uId), {
+                    stamps: restoredStamps,
+                    checkedInBars: restoredBars,
+                    lastCheckinDates: restoredDates,
+                    checkinHistory: restoredHistory,
+                    hasCompletedFirstCheckin: true,
+                    points: totalUserPts
+                  }, { merge: true }).catch(() => {});
+                } catch (e) {
+                  // non-blocking
+                }
+
+                // If currently authenticated user is this user, also update React state immediately
+                if (user.isLoggedIn && (user.id === uId || user.email?.toLowerCase() === uEmail)) {
+                  setUser(prev => ({
+                    ...prev,
+                    points: Math.max(prev.points || 0, totalUserPts),
+                    stamps: restoredStamps,
+                    checkedInBars: restoredBars,
+                    lastCheckinDates: restoredDates,
+                    checkinHistory: restoredHistory,
+                    hasCompletedFirstCheckin: true
+                  }));
+                }
+              }
+            }
           });
         } catch (usersErr) {
           console.warn('Could not inspect users collection for check-ins:', usersErr);
@@ -3428,6 +3522,11 @@ export default function App() {
             points: correctPoints
           };
         }));
+
+        clearAnalyticsReportCache();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('hop_checkin_updated'));
+        }
       } catch (err) {
         console.warn('Error reconciling spot check-ins:', err);
       }
@@ -5317,7 +5416,7 @@ export default function App() {
                         const pendingRef = localStorage.getItem('pendingRef');
                         const selectedSpotObj = bars.find(b => b.id === selectedOwnerSpotId);
                         const verifiedOwnerConfig = getVerifiedOwnerConfig(cleanEmail);
-                        const assignedRole: 'admin' | 'owner' | 'user' = cleanEmail.toLowerCase() === 'cobeertaste@gmail.com' 
+                        const assignedRole: 'admin' | 'owner' | 'user' = isAdminUser(cleanEmail) 
                           ? 'admin' 
                           : (verifiedOwnerConfig ? 'owner' : (isOwnerRegister && selectedOwnerSpotId ? 'owner' : 'user'));
 

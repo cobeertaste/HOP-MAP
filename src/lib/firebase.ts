@@ -2,15 +2,19 @@ import { initializeApp } from "firebase/app";
 import { initializeAuth, inMemoryPersistence, getAuth } from "firebase/auth";
 import { initializeFirestore, disableNetwork, getFirestore, Firestore } from "firebase/firestore";
 // Safely check for optional firebase-applet-config.json if present
-const configFiles = import.meta.glob<{ default: any }>("../../firebase-applet-config.json", { eager: true, import: "default" });
+const configFiles = typeof import.meta.glob === 'function' 
+  ? import.meta.glob<{ default: any }>("../../firebase-applet-config.json", { eager: true, import: "default" }) 
+  : {};
 const firebaseConfigFile = (configFiles["../../firebase-applet-config.json"] || {}) as any;
 
 // Prioritize environment variables (VITE_FIREBASE_*) and fall back to the JSON config file.
 const configBase = (firebaseConfigFile || {}) as any;
 
-const derivedProjectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || configBase.projectId || "hopmap-cobeertaste";
-const derivedSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || configBase.messagingSenderId || (() => {
-  const appIdVal = import.meta.env.VITE_FIREBASE_APP_ID || configBase.appId;
+const envObj = (typeof import.meta !== 'undefined' && (import.meta as any).env) ? (import.meta as any).env : process.env;
+
+const derivedProjectId = envObj.VITE_FIREBASE_PROJECT_ID || configBase.projectId || "hopmap-cobeertaste";
+const derivedSenderId = envObj.VITE_FIREBASE_MESSAGING_SENDER_ID || configBase.messagingSenderId || (() => {
+  const appIdVal = envObj.VITE_FIREBASE_APP_ID || configBase.appId;
   if (appIdVal && typeof appIdVal === 'string') {
     const parts = appIdVal.split(':');
     if (parts.length > 1) {
@@ -21,16 +25,16 @@ const derivedSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || con
 })();
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || configBase.apiKey,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || configBase.authDomain || (derivedProjectId ? `${derivedProjectId}.firebaseapp.com` : undefined),
+  apiKey: envObj.VITE_FIREBASE_API_KEY || configBase.apiKey,
+  authDomain: envObj.VITE_FIREBASE_AUTH_DOMAIN || configBase.authDomain || (derivedProjectId ? `${derivedProjectId}.firebaseapp.com` : undefined),
   projectId: derivedProjectId,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || configBase.storageBucket || (derivedProjectId ? `${derivedProjectId}.appspot.com` : undefined),
+  storageBucket: envObj.VITE_FIREBASE_STORAGE_BUCKET || configBase.storageBucket || (derivedProjectId ? `${derivedProjectId}.appspot.com` : undefined),
   messagingSenderId: derivedSenderId,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || configBase.appId,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || configBase.measurementId,
+  appId: envObj.VITE_FIREBASE_APP_ID || configBase.appId,
+  measurementId: envObj.VITE_FIREBASE_MEASUREMENT_ID || configBase.measurementId,
 };
 
-const databaseId = import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || configBase.firestoreDatabaseId;
+const databaseId = envObj.VITE_FIREBASE_FIRESTORE_DATABASE_ID || configBase.firestoreDatabaseId;
 
 // Initialize Firebase with dynamic config from environment variables or local fallback config
 export const isFirebaseConfigured = !!firebaseConfig.apiKey && 

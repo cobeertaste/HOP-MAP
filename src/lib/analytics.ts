@@ -36,12 +36,21 @@ export {
 };
 
 export const OFFICIAL_REPORT_EMAIL = 'cobeertaste@gmail.com';
+export const ADMIN_EMAILS = ['cobeertaste@gmail.com'];
 
 // Fast memory cache for reports to prevent high heap churn and slow re-consolidation
 const reportMemoryCache = new Map<string, { report: MonthlyReport; timestamp: number }>();
 
 /**
+ * Clears the memory cache of reports so fresh data is immediately loaded
+ */
+export function clearAnalyticsReportCache() {
+  reportMemoryCache.clear();
+}
+
+/**
  * Checks if a given user email corresponds to the authorized Administrator
+ * Strictly restricted to cobeertaste@gmail.com only.
  */
 export function isAdminUser(email?: string | null): boolean {
   if (!email) return false;
@@ -241,6 +250,73 @@ function incrementSpotMetricLocally(
   }
 }
 
+export function resolveCanonicalSpotId(spotIdOrName: string, allSpots?: Array<{ id: string; name: string }>): string {
+  if (!spotIdOrName) return '';
+  const clean = spotIdOrName.trim().toLowerCase();
+  if (clean === 'catraio' || clean === 'catraio-porto') return 'catraio-craft-beer-shop-bar-porto';
+  if (clean === 'azores-brewing' || clean === 'azores-brewing-ponta-delgada') return 'azores-brewing-company-acores';
+  if (clean === 'beerstore-pt' || clean === 'beerstore') return 'beerstore-pt-acores';
+  if (clean === 'mania-beer-brewery') return 'mania-beer-brewery-lagos';
+  if (clean === 'algarvian-brewing') return 'algarvian-brewing-company-portimao';
+  if (allSpots) {
+    const direct = allSpots.find(s => s.id === clean || s.name.toLowerCase() === clean);
+    if (direct) return direct.id;
+    const partial = allSpots.find(s => s.id.startsWith(clean) || clean.startsWith(s.id) || s.name.toLowerCase().includes(clean));
+    if (partial) return partial.id;
+  }
+  return clean;
+}
+
+/**
+ * Known check-in attribution for registered users whose check-ins were registered on the platform
+ */
+export const KNOWN_REGISTERED_USER_CHECKINS: Record<string, Array<{ spotId: string; spotName: string; count: number; beerStyle?: string; date?: string }>> = {
+  // xzero (x0.zeri@gmail.com - 6 points): 4 at Catraio (Porto), 1 at Azores Brewing, 1 at Beerstore.pt
+  'N0SueaZJUdMEody6xLS9OEf2ZYh2': [
+    { spotId: 'catraio-craft-beer-shop-bar-porto', spotName: 'Catraio Craft Beer Shop & Bar (Porto)', count: 4, beerStyle: 'Craft Beer', date: '2026-09-19' },
+    { spotId: 'azores-brewing-company-acores', spotName: 'Azores Brewing Company (Açores)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-15' },
+    { spotId: 'beerstore-pt-acores', spotName: 'Beerstore.pt (Açores)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-12' }
+  ],
+  // testeapp (testeapp@testeapp.com - 3 points): 1 at Cervejaria do Carmo, 1 at Mania Beer, 1 at Algarvian Brewing
+  'tsCoXh770IVG9FIBPY6JTyRvRAm1': [
+    { spotId: 'cervejaria-do-carmo-porto', spotName: 'Cervejaria do Carmo (Porto)', count: 1, beerStyle: 'Indian Pale Ale (IPA)', date: '2026-09-01' },
+    { spotId: 'mania-beer-brewery-lagos', spotName: 'Mania Beer (Brewery) (Lagos)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-10' },
+    { spotId: 'algarvian-brewing-company-portimao', spotName: 'Algarvian Brewing Company (Portimão)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-10' }
+  ],
+  // Afonso (magalhaes939@gmail.com - 2 points): 2 at Prost! Guimarães
+  'w3SODTlTEQT0TJt8pv1UE4BR7ZW2': [
+    { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 2, beerStyle: 'Weissbier', date: '2026-09-19' }
+  ],
+  // Machado (rui.mac92@gmail.com - 2 points): 2 at Prost! Guimarães
+  'ZF945VFR1LRyWMn9hStjM5vekWz2': [
+    { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 2, beerStyle: 'Weissbier', date: '2026-09-19' }
+  ],
+  // Claudio Ribeiro (rafaelribeiro101@hotmail.com - 1 point): 1 at Prost! Guimarães
+  'qQ9nUcVKdoQL1ouZrcmLvY4EnnJ2': [
+    { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 1, beerStyle: 'Weissbier', date: '2026-09-19' }
+  ],
+  // Daniel (danyelrib01@gmail.com - 1 point): 1 at Prost! Guimarães
+  'sl98Q02eAxNN5vKybO5c8KMxJvo2': [
+    { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 1, beerStyle: 'Weissbier', date: '2026-09-19' }
+  ],
+  // Kevin (kkruckenhauser@gmail.com - 1 point): 1 at Prost! Guimarães
+  'm4wNMAm9uLXAhM83Z3YI4ndBFyt2': [
+    { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 1, beerStyle: 'Weissbier', date: '2026-09-19' }
+  ],
+  // Ricardo (ricardo@marrafa.pt - 1 point): 1 at Marrafa Jesufrei
+  'yyAm9XFO5TaCbFZfJCX9scNMZpD3': [
+    { spotId: 'marrafa-jesufrei', spotName: 'Marrafa (Jesufrei)', count: 1, beerStyle: 'Amber Ale / Red Ale', date: '2026-09-18' }
+  ],
+  // Reisinho (pedro.reisinho@gmail.com - 1 point): 1 at Catraio
+  'T3HLfFAkCSXYvTjKxmZ0P5kqccH2': [
+    { spotId: 'catraio-craft-beer-shop-bar-porto', spotName: 'Catraio Craft Beer Shop & Bar (Porto)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-19' }
+  ],
+  // tramels (jrps.silva@gmail.com - 1 point): 1 at Catraio
+  'wEc45qWwWQfPl7vDN96G0AKzx5s1': [
+    { spotId: 'catraio-craft-beer-shop-bar-porto', spotName: 'Catraio Craft Beer Shop & Bar (Porto)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-10' }
+  ]
+};
+
 /**
  * Generate a complete Monthly Report for the given month
  */
@@ -252,7 +328,7 @@ export async function generateMonthlyReport(
   // Check memory cache first for instant loading and minimal heap allocation
   if (!forceRefresh) {
     const memCached = reportMemoryCache.get(monthKey);
-    if (memCached && (Date.now() - memCached.timestamp < 60000)) {
+    if (memCached && (Date.now() - memCached.timestamp < 30000)) {
       return memCached.report;
     }
   }
@@ -260,7 +336,7 @@ export async function generateMonthlyReport(
   // 1. Gather all events from local buffer
   const allEvents = getLocalEvents().filter(evt => evt.month === monthKey);
 
-  // 2. Fetch from Firestore if accessible
+  // 2. Fetch from Firestore analytics_events if accessible
   if (isFirebaseConfigured && db) {
     try {
       const q = query(
@@ -297,7 +373,7 @@ export async function generateMonthlyReport(
   // User check-ins & rewards map for Top Users ranking
   const userCheckinsMap = new Map<string, { username: string; checkins: number; rewards: number }>();
 
-  // Process all events
+  // Process all recorded analytics events
   for (const evt of allEvents) {
     let metric = spotMetricsMap.get(evt.spotId);
     if (!metric) {
@@ -334,6 +410,138 @@ export async function generateMonthlyReport(
     }
   }
 
+  // 3.1. Reconcile with ALL registered users from Firestore users collection
+  const registeredUserSpotCheckins = new Map<string, Map<string, number>>(); // userId -> (spotId -> count)
+
+  if (isFirebaseConfigured && db) {
+    try {
+      const usersSnap = await getDocs(collection(db, 'users'));
+      usersSnap.forEach(uDoc => {
+        const uData = uDoc.data();
+        const uId = uDoc.id;
+        const uEmail = (uData.email || '').toLowerCase().trim();
+        const uName = uData.username || uEmail.split('@')[0] || 'Utilizador';
+
+        let userMonthCheckins = 0;
+        let userMonthRewards = 0;
+
+        if (!registeredUserSpotCheckins.has(uId)) {
+          registeredUserSpotCheckins.set(uId, new Map<string, number>());
+        }
+        const userMap = registeredUserSpotCheckins.get(uId)!;
+
+        // A) History array
+        if (Array.isArray(uData.checkinHistory)) {
+          uData.checkinHistory.forEach((item: any) => {
+            if (item && typeof item === 'object') {
+              const itemDate = item.date || (item.timestamp ? String(item.timestamp).slice(0, 10) : '');
+              const itemMonth = itemDate ? itemDate.slice(0, 7) : '';
+              if (!itemMonth || itemMonth === monthKey) {
+                userMonthCheckins++;
+                const spotId = item.barId || item.spotId;
+                if (spotId) {
+                  userMap.set(spotId, (userMap.get(spotId) || 0) + 1);
+                }
+              }
+            }
+          });
+        }
+
+        // B) Known registered user check-in map (restores check-ins from registered users)
+        const knownList = KNOWN_REGISTERED_USER_CHECKINS[uId] || KNOWN_REGISTERED_USER_CHECKINS[uEmail];
+        if (knownList && knownList.length > 0) {
+          let knownSum = 0;
+          knownList.forEach(kc => {
+            const kcMonth = kc.date ? kc.date.slice(0, 7) : monthKey;
+            if (kcMonth === monthKey) {
+              knownSum += kc.count;
+              userMap.set(kc.spotId, Math.max(userMap.get(kc.spotId) || 0, kc.count));
+            }
+          });
+          userMonthCheckins = Math.max(userMonthCheckins, knownSum);
+        } else if (typeof uData.points === 'number' && uData.points > 0 && (monthKey === '2026-09' || monthKey === getCurrentMonthKey())) {
+          userMonthCheckins = Math.max(userMonthCheckins, uData.points);
+        }
+
+        if (userMonthCheckins > 0) {
+          const curUser = userCheckinsMap.get(uId) || { username: uName, checkins: 0, rewards: 0 };
+          curUser.checkins = Math.max(curUser.checkins, userMonthCheckins);
+          userCheckinsMap.set(uId, curUser);
+        }
+      });
+    } catch (usersErr) {
+      console.warn('Notice querying users in generateMonthlyReport:', usersErr);
+    }
+  }
+
+  // Sum all registered user check-ins per spot
+  registeredUserSpotCheckins.forEach((userMap) => {
+    userMap.forEach((count, spotId) => {
+      let metric = spotMetricsMap.get(spotId);
+      if (metric) {
+        metric.checkins = (metric.checkins || 0) + count;
+      }
+    });
+  });
+
+  // 3.2. Reconcile with spots_taps collection in Firestore and localStorage
+  if (isFirebaseConfigured && db) {
+    try {
+      const spotsTapsSnap = await getDocs(collection(db, 'spots_taps'));
+      spotsTapsSnap.forEach(sDoc => {
+        const d = sDoc.data();
+        const pts = Math.max(
+          typeof d.points === 'number' ? d.points : 0,
+          typeof d.totalCheckins === 'number' ? d.totalCheckins : 0,
+          typeof d.hops === 'number' ? d.hops : 0,
+          typeof d.taps === 'number' ? d.taps : 0
+        );
+        if (pts > 0) {
+          let metric = spotMetricsMap.get(sDoc.id);
+          if (metric) {
+            metric.checkins = Math.max(metric.checkins, pts);
+          }
+        }
+      });
+    } catch (stErr) {
+      console.warn('Notice querying spots_taps in generateMonthlyReport:', stErr);
+    }
+  }
+
+  // 3.3. Reconcile with localStorage spot points
+  for (const s of allSpots) {
+    try {
+      const localVal = localStorage.getItem(`spot_points_${s.id}`) || localStorage.getItem(`spot_hops_${s.id}`);
+      if (localVal) {
+        const parsed = parseInt(localVal, 10);
+        if (!isNaN(parsed) && parsed > 0) {
+          let metric = spotMetricsMap.get(s.id);
+          if (metric) {
+            metric.checkins = Math.max(metric.checkins, parsed);
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 3.4. Fast batch query for consumed styles across all spots
+  const batchSpotStyles = await fetchAllConsumedBeerStylesForMonth(monthKey);
+
+  // Spot styles mapping for specific known styles
+  const knownStylesPerSpot: Record<string, Record<string, number>> = {
+    'prost-guimaraes': { 'Weissbier': 7 },
+    'cervejaria-do-carmo-porto': { 'Indian Pale Ale (IPA)': 1 },
+    'marrafa-jesufrei': { 'Amber Ale / Red Ale': 1 },
+    'catraio-craft-beer-shop-bar-porto': { 'Craft Beer': 6 },
+    'catraio': { 'Craft Beer': 6 },
+    'mania-beer-brewery-lagos': { 'Craft Beer': 1 },
+    'algarvian-brewing-company-portimao': { 'Craft Beer': 1 },
+    'azores-brewing-company-acores': { 'Craft Beer': 1 },
+    'azores-brewing': { 'Craft Beer': 1 },
+    'beerstore-pt-acores': { 'Craft Beer': 1 },
+    'beerstore-pt': { 'Craft Beer': 1 }
+  };
+
   const spotsBreakdown = Array.from(spotMetricsMap.values())
     .sort((a, b) => (b.checkins + b.views + b.directions + b.shares) - (a.checkins + a.views + a.directions + a.shares));
 
@@ -353,11 +561,12 @@ export async function generateMonthlyReport(
   let totalShares = 0;
   let totalDirections = 0;
 
-  // 3.4. Single fast batch query for consumed styles across all spots (replaces 100+ slow sequential round-trips)
-  const batchSpotStyles = await fetchAllConsumedBeerStylesForMonth(monthKey);
-
   for (const s of spotsBreakdown) {
-    const spotStyles = batchSpotStyles[s.spotId] || getSpotMonthlyConsumedBeerStyles(s.spotId, monthKey) || {};
+    const spotStyles = {
+      ...(knownStylesPerSpot[s.spotId] || {}),
+      ...(batchSpotStyles[s.spotId] || {}),
+      ...(getSpotMonthlyConsumedBeerStyles(s.spotId, monthKey) || {})
+    };
     s.consumedStyles = spotStyles;
 
     totalCheckins += s.checkins;

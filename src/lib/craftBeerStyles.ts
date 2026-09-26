@@ -48,6 +48,7 @@ const LOCAL_STORAGE_MONTHLY_SPOT_STYLES_PREFIX = 'hop_monthly_spot_styles_'; // 
  * Reads aggregated consumed beer styles for a specific spot (all-time / cached)
  */
 export function getSpotConsumedBeerStyles(spotId: string): Record<string, number> {
+  if (typeof localStorage === 'undefined') return {};
   try {
     const raw = localStorage.getItem(`${LOCAL_STORAGE_SPOT_STYLES_PREFIX}${spotId}`);
     return raw ? JSON.parse(raw) : {};
@@ -60,6 +61,7 @@ export function getSpotConsumedBeerStyles(spotId: string): Record<string, number
  * Reads aggregated consumed beer styles for a specific spot and specific month
  */
 export function getSpotMonthlyConsumedBeerStyles(spotId: string, monthKey: string): Record<string, number> {
+  if (typeof localStorage === 'undefined') return {};
   try {
     const monthlyKey = `${LOCAL_STORAGE_MONTHLY_SPOT_STYLES_PREFIX}${monthKey}_${spotId}`;
     const raw = localStorage.getItem(monthlyKey);
@@ -67,7 +69,7 @@ export function getSpotMonthlyConsumedBeerStyles(spotId: string, monthKey: strin
       return JSON.parse(raw);
     }
   } catch (e) {
-    console.warn('Error reading monthly spot styles:', e);
+    // ignore
   }
   // Fallback to overall spot styles if specific month not split
   return getSpotConsumedBeerStyles(spotId);
@@ -78,6 +80,7 @@ export function getSpotMonthlyConsumedBeerStyles(spotId: string, monthKey: strin
  */
 export function getAllConsumedBeerStyles(): Record<string, number> {
   const totals: Record<string, number> = {};
+  if (typeof localStorage === 'undefined') return totals;
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -92,7 +95,7 @@ export function getAllConsumedBeerStyles(): Record<string, number> {
       }
     }
   } catch (e) {
-    console.warn('Error reading aggregated styles:', e);
+    // ignore
   }
   return totals;
 }
@@ -148,19 +151,21 @@ export async function fetchAllConsumedBeerStylesForMonth(
   const aggregated: Record<string, Record<string, number>> = {};
 
   // 1. Preload from local storage fast
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(`${LOCAL_STORAGE_MONTHLY_SPOT_STYLES_PREFIX}${monthKey}_`)) {
-        const spotId = key.replace(`${LOCAL_STORAGE_MONTHLY_SPOT_STYLES_PREFIX}${monthKey}_`, '');
-        const raw = localStorage.getItem(key);
-        if (raw && spotId) {
-          aggregated[spotId] = JSON.parse(raw);
+  if (typeof localStorage !== 'undefined') {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(`${LOCAL_STORAGE_MONTHLY_SPOT_STYLES_PREFIX}${monthKey}_`)) {
+          const spotId = key.replace(`${LOCAL_STORAGE_MONTHLY_SPOT_STYLES_PREFIX}${monthKey}_`, '');
+          const raw = localStorage.getItem(key);
+          if (raw && spotId) {
+            aggregated[spotId] = JSON.parse(raw);
+          }
         }
       }
+    } catch (e) {
+      // ignore
     }
-  } catch (e) {
-    console.warn('Notice reading local monthly styles:', e);
   }
 
   // 2. Fetch all month's consumptions in ONE single query from Firestore

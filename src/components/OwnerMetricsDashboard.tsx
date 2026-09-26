@@ -61,6 +61,16 @@ export default function OwnerMetricsDashboard({
     }
   }, [spot.id, selectedMonth, isAuthorized]);
 
+  useEffect(() => {
+    const handleUpdate = () => {
+      if (isAuthorized) {
+        loadSpotMetrics(selectedMonth);
+      }
+    };
+    window.addEventListener('hop_checkin_updated', handleUpdate);
+    return () => window.removeEventListener('hop_checkin_updated', handleUpdate);
+  }, [spot.id, selectedMonth, isAuthorized]);
+
   if (!isAuthorized) {
     return (
       <div className="p-6 rounded-3xl border-2 border-red-500/40 bg-red-500/10 text-center space-y-3 font-sans" id="owner-metrics-unauthorized">

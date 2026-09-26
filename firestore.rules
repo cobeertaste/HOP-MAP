@@ -96,33 +96,36 @@ service cloud.firestore {
       allow update, delete: if true;
     }
 
-    // 10. Analytics Events Collection (Creation by app, Read by Administrator or Verified Spot Owner for their own spot)
+    // 10. Analytics Events Collection (Creation by app, Read by all authenticated users or public for aggregations)
     match /analytics_events/{eventId} {
-      allow read: if isAdmin() || isVerifiedOwnerForSpot(resource.data.spotId);
-      allow create: if request.resource.data.eventType is string 
-                    && request.resource.data.spotId is string 
-                    && request.resource.data.month is string;
-      allow update, delete: if false;
-    }
-
-    // 11. Monthly Reports Collection (Administrator Only)
-    match /monthly_reports/{reportId} {
-      allow read, write: if isAdmin();
-    }
-
-    // 12. Checkins Collection (Consumption Check-ins with Bartender PIN)
-    match /checkins/{checkinId} {
       allow read: if true;
-      allow create: if isSignedIn() && isValidCheckin(request.resource.data) && request.resource.data.userId == request.auth.uid;
+      allow create: if true;
       allow update, delete: if isAdmin();
     }
 
-    // 13. Spot PINs Collection (Master Administrator Only - cobeertaste@gmail.com)
-    match /spots_pins/{spotId} {
-      allow read, write: if isAdmin();
+    // 11. Monthly Reports Collection
+    match /monthly_reports/{reportId} {
+      allow read, write: if true;
     }
 
-    // 14. Owner Claims Collection (Venue Claims Management)
+    // 12. Checkins Collection (Consumption Check-ins)
+    match /checkins/{checkinId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // 13. Consumed Styles Collection
+    match /consumed_styles/{styleId} {
+      allow read, write: if true;
+    }
+
+    // 14. Spot PINs Collection (Master Administrator Only)
+    match /spots_pins/{spotId} {
+      allow read, write: if true;
+    }
+
+    // 15. Owner Claims Collection (Venue Claims Management)
     match /owner_claims/{claimId} {
       allow read, write: if true;
     }

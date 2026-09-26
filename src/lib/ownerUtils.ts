@@ -682,7 +682,49 @@ export async function compileOwnerSpotMonthlyMetrics(
     } catch (e) {
       console.warn('Notice compiling spot checkins:', e);
     }
+
+    // Also check spots_taps doc in Firestore
+    try {
+      const spotTapDoc = await getDoc(doc(db, 'spots_taps', spotId));
+      if (spotTapDoc.exists()) {
+        const d = spotTapDoc.data();
+        const pts = Math.max(
+          typeof d.points === 'number' ? d.points : 0,
+          typeof d.totalCheckins === 'number' ? d.totalCheckins : 0,
+          typeof d.hops === 'number' ? d.hops : 0,
+          typeof d.taps === 'number' ? d.taps : 0
+        );
+        totalCheckins = Math.max(totalCheckins, pts);
+      }
+    } catch (e) {}
+
+    // Check users collection for visitors at this spot
+    try {
+      const usersSnap = await getDocs(collection(db, 'users'));
+      usersSnap.forEach(uDoc => {
+        const u = uDoc.data();
+        if (Array.isArray(u.checkinHistory)) {
+          u.checkinHistory.forEach((item: any) => {
+            if (item && (item.barId === spotId || item.spotId === spotId)) {
+              const dStr = item.date || (item.timestamp ? String(item.timestamp).slice(0, 10) : '');
+              if (!dStr || dStr.startsWith(targetMonth)) {
+                uniqueVisitorSet.add(u.uid || uDoc.id);
+              }
+            }
+          });
+        }
+      });
+    } catch (e) {}
   }
+
+  // Also check localStorage
+  try {
+    const localVal = localStorage.getItem(`spot_points_${spotId}`) || localStorage.getItem(`spot_hops_${spotId}`);
+    if (localVal) {
+      const p = parseInt(localVal, 10);
+      if (!isNaN(p) && p > 0) totalCheckins = Math.max(totalCheckins, p);
+    }
+  } catch (e) {}
 
   // 2. Fetch ratings & reviews strictly for this spot
   const spotReviews: Array<{
