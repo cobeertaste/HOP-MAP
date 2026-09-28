@@ -222,8 +222,8 @@ export function getBarFeatures(bar: Bar, _lang: Language = 'PT'): BarFeaturesRes
   const id = bar.id || '';
 
   // Deduce or use explicit attributes
-  let taps = (typeof bar.taps === 'number' && bar.taps > 0) ? bar.taps : 0;
-  if (!taps) {
+  let taps = typeof bar.taps === 'number' ? bar.taps : -1;
+  if (taps < 0) {
     if (id === 'brew-portugal-lisboa' || id === 'brew-portugal' || name.includes('brew portugal') || (name.startsWith('brew') && !name.includes('brewpub'))) {
       taps = 23;
     } else if (id === 'a-fabrica-da-picaria-brew-pub-porto' || id === 'fabrica-da-picaria' || name.includes('picaria')) {

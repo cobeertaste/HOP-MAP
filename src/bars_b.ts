@@ -621,7 +621,15 @@ export const BARS_B: Bar[] = [
     "facebookUrl": "https://www.facebook.com/cantinhocafe.cr/?locale=pt_PT",
     "latitude": 40.876964198000096,
     "longitude": -6.965209430962654,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 0,
+    "hasFood": true,
+    "hasTerrace": true,
+    "petFriendly": true,
+    "hasParking": true,
+    "parkingNotePT": "Sim",
+    "parkingNoteEN": "Yes",
+    "isVerified": true
   },
   {
     "id": "maldita-brewpub",

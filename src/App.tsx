@@ -582,7 +582,6 @@ export function getSpotPoints(bar: Bar | null | undefined): number {
     typeof bar.points === 'number' ? bar.points : 0,
     typeof bar.totalCheckins === 'number' ? bar.totalCheckins : 0,
     typeof bar.hops === 'number' ? bar.hops : 0,
-    typeof bar.taps === 'number' ? bar.taps : 0,
     baseline
   );
   if (directScore > 0) return directScore;
@@ -665,7 +664,6 @@ export default function App() {
         reviews: [],
         hops: initialPoints,
         totalCheckins: initialPoints,
-        taps: initialPoints,
         points: initialPoints
       };
     })
@@ -2625,7 +2623,6 @@ export default function App() {
             reviews: [],
             hops: currentPoints,
             totalCheckins: currentPoints,
-            taps: currentPoints,
             points: currentPoints
           };
         });
@@ -3205,7 +3202,7 @@ export default function App() {
     // First, load from localStorage to be instantly fast and robust, ignoring legacy hardcoded tap scores
     setBars(prevBars => prevBars.map(b => {
       const currentPoints = getSpotPoints(b);
-      return { ...b, hops: currentPoints, totalCheckins: currentPoints, taps: currentPoints, points: currentPoints };
+      return { ...b, hops: currentPoints, totalCheckins: currentPoints, points: currentPoints };
     }));
 
     let unsubscribeCheckins: (() => void) | undefined;
@@ -3594,7 +3591,6 @@ export default function App() {
               ...b,
               hops: finalPoints,
               totalCheckins: finalPoints,
-              taps: finalPoints,
               points: finalPoints
             };
           }));
@@ -4172,7 +4168,6 @@ export default function App() {
     setBars(prevBars => prevBars.map(b => b.id === bar.id ? { 
       ...b, 
       hops: newSpotPoints, 
-      taps: newSpotPoints, 
       totalCheckins: newSpotPoints,
       points: newSpotPoints 
     } : b));
@@ -4180,7 +4175,6 @@ export default function App() {
       setSelectedBar(prev => prev ? { 
         ...prev, 
         hops: newSpotPoints, 
-        taps: newSpotPoints, 
         totalCheckins: newSpotPoints,
         points: newSpotPoints 
       } : null);

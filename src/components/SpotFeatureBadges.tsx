@@ -45,17 +45,19 @@ export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFea
   const isBrew = bar.id === 'brew-portugal-lisboa' || bar.id === 'brew-portugal' || (bar.name && bar.name.toLowerCase().includes('brew portugal')) || (bar.name && (bar.name.toLowerCase().startsWith('brew') && !bar.name.toLowerCase().includes('brewpub')));
   const isVerified = isSpotVerified(bar);
 
-  let tapsCount = features.taps;
-  if (isBrew) {
-    tapsCount = 23;
-  } else if (isPicaria) {
-    tapsCount = 9;
-  } else if (isVirtudes) {
-    tapsCount = 15;
-  } else if (isProst) {
-    tapsCount = 7;
-  } else if (isDeusesDoMalte) {
-    tapsCount = 10;
+  let tapsCount = typeof bar.taps === 'number' ? bar.taps : features.taps;
+  if (typeof bar.taps !== 'number') {
+    if (isBrew) {
+      tapsCount = 23;
+    } else if (isPicaria) {
+      tapsCount = 9;
+    } else if (isVirtudes) {
+      tapsCount = 15;
+    } else if (isProst) {
+      tapsCount = 7;
+    } else if (isDeusesDoMalte) {
+      tapsCount = 10;
+    }
   }
 
   let tapsLabel = `${tapsCount} Taps`;
@@ -130,14 +132,14 @@ export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFea
       show: isVerified ? true : features.hasFood,
       iconName: 'food' as const,
       label: foodLabel,
-      isNegative: false
+      isNegative: isVerified && !features.hasFood
     },
     {
       id: 'pet',
       show: isVerified ? true : features.petFriendly,
       iconName: 'pet' as const,
       label: petLabel,
-      isNegative: false
+      isNegative: isVerified && !features.petFriendly
     },
     {
       id: 'terrace',
@@ -148,7 +150,7 @@ export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFea
     },
     {
       id: 'parking',
-      show: isVerified || features.hasParking || bar.hasParking === false,
+      show: isVerified || features.hasParking || bar.hasParking === false || Boolean(bar.parkingNotePT),
       iconName: 'parking' as const,
       label: parkingLabel,
       isNegative: parkingNegative
