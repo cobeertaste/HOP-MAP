@@ -221,10 +221,61 @@ export function getBarFeatures(bar: Bar, _lang: Language = 'PT'): BarFeaturesRes
   const name = (bar.name || '').toLowerCase();
   const id = bar.id || '';
 
+  // Known accurate tap counts map
+  const KNOWN_TAPS_BY_SPOT: Record<string, number> = {
+    'fidelis-penafiel': 12,
+    'letraria-de-vila-verde-vila-verde': 12,
+    'letraria-vila-verde': 12,
+    'letraria-craft-beer-vinyl-ponte-de-lima': 18,
+    'letraria-ponte-de-lima': 18,
+    'letraria-de-viana-do-castelo-viana-do-castelo': 18,
+    'letraria-viana': 18,
+    'letraria-braga': 24,
+    'letraria-downtown-porto': 24,
+    'letraria-downtown': 24,
+    'letraria-obidos-obidos': 12,
+    'letraria-obidos': 12,
+    'beerstore-pt-acores': 3,
+    'beerstore-pt': 3,
+    'musa-da-bica-lisboa': 15,
+    'musa-da-bica': 15,
+    'brew-portugal-lisboa': 23,
+    'brew-portugal': 23,
+    'a-fabrica-da-picaria-brew-pub-porto': 9,
+    'fabrica-da-picaria': 9,
+    'musa-das-virtudes-porto': 15,
+    'musa-virtudes': 15,
+    'prost-guimaraes': 7,
+    'deuses-do-malte-v-n-gaia': 10,
+    'deuses-do-malte': 10,
+    'hop-trip-craft-beer-shop-matosinhos': 15,
+    'hop-trip': 15,
+    'o-covil-lisboa': 13,
+    'o-covil': 13
+  };
+
   // Deduce or use explicit attributes
-  let taps = typeof bar.taps === 'number' ? bar.taps : -1;
+  let taps = KNOWN_TAPS_BY_SPOT[id] ?? (typeof bar.taps === 'number' ? bar.taps : -1);
   if (taps < 0) {
-    if (id === 'brew-portugal-lisboa' || id === 'brew-portugal' || name.includes('brew portugal') || (name.startsWith('brew') && !name.includes('brewpub'))) {
+    if (name.includes('fidélis') || name.includes('fidelis')) {
+      taps = 12;
+    } else if (name.includes('covil')) {
+      taps = 13;
+    } else if (name.includes('hop trip')) {
+      taps = 15;
+    } else if (name.includes('beerstore')) {
+      taps = 3;
+    } else if (name.includes('musa') && name.includes('bica')) {
+      taps = 15;
+    } else if (name.includes('letraria') && name.includes('braga')) {
+      taps = 24;
+    } else if (name.includes('letraria') && (name.includes('downtown') || name.includes('porto'))) {
+      taps = 24;
+    } else if (name.includes('letraria') && (name.includes('viana') || name.includes('ponte de lima'))) {
+      taps = 18;
+    } else if (name.includes('letraria') && (name.includes('vila verde') || name.includes('óbidos') || name.includes('obidos'))) {
+      taps = 12;
+    } else if (id === 'brew-portugal-lisboa' || id === 'brew-portugal' || name.includes('brew portugal') || (name.startsWith('brew') && !name.includes('brewpub'))) {
       taps = 23;
     } else if (id === 'a-fabrica-da-picaria-brew-pub-porto' || id === 'fabrica-da-picaria' || name.includes('picaria')) {
       taps = 9;

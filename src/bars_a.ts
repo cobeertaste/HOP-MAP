@@ -51,7 +51,8 @@ export const BARS_A: Bar[] = [
     "facebookUrl": "https://www.facebook.com/p/BeerStore-100075874127447/",
     "latitude": 38.65583551393739,
     "longitude": -27.223192726201365,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 3
   },
   {
     "id": "vulcana",
@@ -336,7 +337,8 @@ export const BARS_A: Bar[] = [
     "facebookUrl": "https://www.facebook.com/letrariaobidos/",
     "latitude": 39.36053820061405,
     "longitude": -9.15672580953309,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 12
   },
   {
     "id": "5-e-meio-ericeira",

@@ -54,8 +54,120 @@ export const VERIFIED_OWNER_MAPPINGS: Record<string, { spotId: string; spotName:
     spotId: 'prost-guimaraes',
     spotName: 'Prost! (Guimarães)',
     username: 'Prost! (Guimarães)'
+  },
+  'geral@lovecraftfeira.pt': {
+    spotId: 'lovecraft-public-house-feira-santa-maria-da-feira',
+    spotName: 'Lovecraft Public House Feira (Santa Maria da Feira)',
+    username: 'Lovecraft Feira'
+  },
+  'vinicius@emporio.pt': {
+    spotId: 'o-emporio-pt-ericeira',
+    spotName: 'O Empório.pt (Ericeira)',
+    username: 'Vinicius Lobato'
+  },
+  'geral@beerstore.pt': {
+    spotId: 'beerstore-pt-acores',
+    spotName: 'Beerstore.pt (Açores)',
+    username: 'Beerstore Açores'
+  },
+  'paula.c.prata@gmail.com': {
+    spotId: 'beer-cascais-cascais',
+    spotName: 'Beer Cascais (Cascais)',
+    username: 'ToBeer Cascais'
   }
 };
+
+/**
+ * Normalizes and checks if a user is authorized to access metrics for a given spot.
+ * - Master Admin (cobeertaste@gmail.com) has access to all spots
+ * - Venue owners have access strictly and exclusively to their designated spot
+ */
+export function isOwnerAuthorizedForSpot(
+  user: { role?: string; isOwner?: boolean; ownedSpotId?: string; email?: string } | null | undefined,
+  spotId: string
+): boolean {
+  if (!user || !spotId) return false;
+  if (user.role === 'admin' || (user.email && user.email.toLowerCase().trim() === 'cobeertaste@gmail.com')) {
+    return true;
+  }
+  if (!user.isOwner || !user.ownedSpotId) {
+    return false;
+  }
+
+  // 1. Direct equality
+  if (user.ownedSpotId === spotId) {
+    return true;
+  }
+
+  // 2. Canonical alias mappings
+  const spotAliases: Record<string, string[]> = {
+    'lovecraft-public-house-feira-santa-maria-da-feira': ['lovecraft-feira', 'lovecraft-public-house-feira', 'lovecraft-public-house-feira-santa-maria-da-feira'],
+    'lovecraft-feira': ['lovecraft-feira', 'lovecraft-public-house-feira-santa-maria-da-feira', 'lovecraft-public-house-feira'],
+    'o-emporio-pt-ericeira': ['o-emporio-pt', 'o-emporio-pt-ericeira'],
+    'o-emporio-pt': ['o-emporio-pt', 'o-emporio-pt-ericeira'],
+    'beerstore-pt-acores': ['beerstore-pt', 'beerstore-pt-acores'],
+    'beerstore-pt': ['beerstore-pt', 'beerstore-pt-acores'],
+    'beer-cascais-cascais': ['beer-cascais', 'beer-cascais-cascais'],
+    'beer-cascais': ['beer-cascais', 'beer-cascais-cascais'],
+    'marrafa-jesufrei': ['marrafa-jesufrei', 'marrafa'],
+    'bah-craft-beer-cascais': ['bah-craft-beer-cascais', 'bah-craft-beer'],
+    'prost-guimaraes': ['prost-guimaraes', 'prost'],
+    'a-fabrica-da-picaria-brew-pub-porto': ['a-fabrica-da-picaria-brew-pub-porto', 'a-fabrica-da-picaria-brew-pub']
+  };
+
+  const aliases = spotAliases[user.ownedSpotId];
+  if (aliases && aliases.includes(spotId)) {
+    return true;
+  }
+
+  const targetAliases = spotAliases[spotId];
+  if (targetAliases && targetAliases.includes(user.ownedSpotId)) {
+    return true;
+  }
+
+  // 3. Location suffix normalization (e.g. -porto, -cascais, -ericeira, -acores, etc.)
+  const cleanId = (id: string) => id.replace(/-(porto|cascais|guimaraes|ericeira|acores|santa-maria-da-feira|lagoa|lisboa|braga)$/i, '');
+  if (cleanId(user.ownedSpotId) === cleanId(spotId)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Finds a spot from the bars list based on the user's ownedSpotId, handling all alias variations.
+ */
+export function findSpotByOwnerSpotId(bars: Bar[], ownedSpotId?: string): Bar | undefined {
+  if (!ownedSpotId) return undefined;
+  const direct = bars.find(b => b.id === ownedSpotId);
+  if (direct) return direct;
+
+  const aliasMap: Record<string, string> = {
+    'lovecraft-feira': 'lovecraft-public-house-feira-santa-maria-da-feira',
+    'lovecraft-public-house-feira-santa-maria-da-feira': 'lovecraft-public-house-feira-santa-maria-da-feira',
+    'o-emporio-pt': 'o-emporio-pt-ericeira',
+    'o-emporio-pt-ericeira': 'o-emporio-pt-ericeira',
+    'beerstore-pt': 'beerstore-pt-acores',
+    'beerstore-pt-acores': 'beerstore-pt-acores',
+    'beer-cascais': 'beer-cascais-cascais',
+    'beer-cascais-cascais': 'beer-cascais-cascais',
+    'marrafa-jesufrei': 'marrafa-jesufrei',
+    'bah-craft-beer-cascais': 'bah-craft-beer-cascais',
+    'prost-guimaraes': 'prost-guimaraes',
+    'a-fabrica-da-picaria-brew-pub': 'a-fabrica-da-picaria-brew-pub-porto',
+    'a-fabrica-da-picaria-brew-pub-porto': 'a-fabrica-da-picaria-brew-pub-porto'
+  };
+
+  const targetId = aliasMap[ownedSpotId];
+  if (targetId) {
+    const found = bars.find(b => b.id === targetId);
+    if (found) return found;
+  }
+
+  const cleanId = (id: string) => id.replace(/-(porto|cascais|guimaraes|ericeira|acores|santa-maria-da-feira|lagoa|lisboa|braga)$/i, '');
+  const base = cleanId(ownedSpotId);
+  return bars.find(b => cleanId(b.id) === base);
+}
 
 /**
  * Checks if an email is a verified owner and returns their assigned spot configuration.
@@ -315,11 +427,31 @@ export async function getPendingOwnerClaims(): Promise<OwnerClaimRecord[]> {
 
   // Filter out any claim whose user or spot is already verified/approved
   const filtered = Array.from(claimsMap.values()).filter(c => {
-    const verified = getVerifiedOwnerConfig(c.userEmail);
-    if (verified && verified.spotId === c.spotId) return false;
-    // Check if spot already has an approved owner
-    const localVal = local[c.userId];
+    const cleanMail = (c.userEmail || '').toLowerCase().trim();
+    if (!cleanMail && !c.spotId) return false;
+
+    // Check pre-verified owners mappings
+    if (cleanMail && VERIFIED_OWNER_MAPPINGS[cleanMail]) return false;
+    const isPreVerifiedSpot = Object.values(VERIFIED_OWNER_MAPPINGS).some(
+      m => m.spotId === c.spotId || isOwnerAuthorizedForSpot({ isOwner: true, ownedSpotId: m.spotId }, c.spotId)
+    );
+    if (isPreVerifiedSpot) return false;
+
+    // Check dynamically approved owners cache in localStorage
+    try {
+      const raw = localStorage.getItem(APPROVED_OWNERS_REGISTRY_KEY);
+      if (raw) {
+        const reg = JSON.parse(raw);
+        if (cleanMail && reg[cleanMail]) return false;
+        if (c.userId && reg[c.userId]) return false;
+        if (c.spotId && (reg[c.spotId] || Object.values(reg).some((e: any) => e?.spotId === c.spotId))) return false;
+      }
+    } catch (e) {}
+
+    // Check local storage claims
+    const localVal = (c.userId && local[c.userId]) || (cleanMail && local[cleanMail]) || (c.spotId && local[c.spotId]);
     if (localVal && localVal.status === 'approved') return false;
+
     return true;
   });
 
@@ -334,7 +466,7 @@ export async function getPendingOwnerClaims(): Promise<OwnerClaimRecord[]> {
 export async function getApprovedOwnerClaims(): Promise<OwnerClaimRecord[]> {
   const approvedMap = new Map<string, OwnerClaimRecord>();
 
-  // 1. Add pre-verified owners (specifically ricardo@marrafa.pt for "Marrafa (Jesufrei)")
+  // 1. Add pre-verified owners
   Object.entries(VERIFIED_OWNER_MAPPINGS).forEach(([email, val]) => {
     approvedMap.set(val.spotId, {
       userId: `verified_${val.spotId}`,
@@ -362,6 +494,27 @@ export async function getApprovedOwnerClaims(): Promise<OwnerClaimRecord[]> {
       });
     }
   });
+
+  // Check approved owners registry in localStorage
+  try {
+    const raw = localStorage.getItem(APPROVED_OWNERS_REGISTRY_KEY);
+    if (raw) {
+      const reg = JSON.parse(raw);
+      Object.entries(reg).forEach(([key, val]: [string, any]) => {
+        if (val?.spotId && !approvedMap.has(val.spotId)) {
+          approvedMap.set(val.spotId, {
+            userId: val.userId || key,
+            userEmail: val.userEmail || key,
+            username: val.username || 'Proprietário',
+            spotId: val.spotId,
+            spotName: val.spotName || val.spotId,
+            requestedAt: val.approvedAt || new Date().toISOString(),
+            status: 'approved'
+          });
+        }
+      });
+    }
+  } catch (e) {}
 
   // 3. Add from Firestore if available
   if (isFirebaseConfigured) {
@@ -441,35 +594,39 @@ export async function approveOwnerClaim(
     requestedAt: approvedAt
   };
 
+  if (userId) local[userId] = claimRecord;
   local[effectiveUserId] = claimRecord;
   if (cleanEmail) {
     local[cleanEmail] = claimRecord;
   }
+  if (spotId) {
+    local[spotId] = claimRecord;
+  }
+
+  // Update any existing claim in local claims with matching email or spotId
+  Object.keys(local).forEach(k => {
+    if (
+      (cleanEmail && local[k]?.userEmail?.toLowerCase() === cleanEmail) ||
+      (spotId && local[k]?.spotId === spotId)
+    ) {
+      local[k] = claimRecord;
+    }
+  });
+
   saveLocalClaims(local);
 
   // Save in approved owners registry cache
   saveApprovedOwnerLocally(cleanEmail, effectiveUserId, spotId, spotName, username);
 
-  // 2. Update Firestore thoroughly
+  // 2. Update Firestore thoroughly with safety timeout
   if (isFirebaseConfigured) {
-    // A. Update dedicated owner_claims document
     try {
-      const claimRef = doc(db, 'owner_claims', effectiveUserId);
-      await setDoc(claimRef, {
-        userId: effectiveUserId,
-        spotId,
-        spotName,
-        userEmail: cleanEmail,
-        username: username || '',
-        status: 'approved',
-        approvedAt,
-        approvedBy: 'cobeertaste@gmail.com'
-      }, { merge: true });
+      const firestoreTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3500));
 
-      // Also ensure email-based claim key is saved in owner_claims
-      if (cleanEmail) {
-        const emailClaimRef = doc(db, 'owner_claims', `claim_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`);
-        await setDoc(emailClaimRef, {
+      const doFirestoreUpdate = async () => {
+        // A. Update dedicated owner_claims document
+        const claimRef = doc(db, 'owner_claims', effectiveUserId);
+        await setDoc(claimRef, {
           userId: effectiveUserId,
           spotId,
           spotName,
@@ -479,72 +636,90 @@ export async function approveOwnerClaim(
           approvedAt,
           approvedBy: 'cobeertaste@gmail.com'
         }, { merge: true });
-      }
 
-      // Query and update any pending claims in owner_claims collection for this user or email
-      if (cleanEmail) {
-        try {
-          const claimsRef = collection(db, 'owner_claims');
-          const qClaims = query(claimsRef, where('userEmail', '==', cleanEmail));
-          const snapClaims = await getDocs(qClaims);
-          snapClaims.forEach(docSnap => {
-            setDoc(docSnap.ref, {
-              status: 'approved',
-              spotId,
-              spotName,
-              approvedAt,
-              approvedBy: 'cobeertaste@gmail.com'
-            }, { merge: true }).catch(() => {});
-          });
-        } catch (qErr) {
-          console.warn('Notice updating matching owner_claims:', qErr);
+        // Also ensure email-based claim key is saved in owner_claims
+        if (cleanEmail) {
+          const emailClaimRef = doc(db, 'owner_claims', `claim_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`);
+          await setDoc(emailClaimRef, {
+            userId: effectiveUserId,
+            spotId,
+            spotName,
+            userEmail: cleanEmail,
+            username: username || '',
+            status: 'approved',
+            approvedAt,
+            approvedBy: 'cobeertaste@gmail.com'
+          }, { merge: true });
         }
-      }
-    } catch (claimErr) {
-      console.warn('Notice saving approved status in owner_claims:', claimErr);
-    }
 
-    // B. Update user documents in Firestore
-    // Query users collection by email to find the registered user document!
-    if (cleanEmail) {
-      try {
-        const usersRef = collection(db, 'users');
-        const qUsers = query(usersRef, where('email', '==', cleanEmail));
-        const snapUsers = await getDocs(qUsers);
-        snapUsers.forEach(docSnap => {
-          setDoc(docSnap.ref, {
-            role: 'owner',
-            isOwner: true,
-            ownedSpotId: spotId,
-            ownerClaimApproved: true,
-            ownerClaimPending: false,
-            ownerClaimApprovedAt: approvedAt,
-            ownerClaimSpotId: spotId,
-            ownerClaimSpotName: spotName
-          }, { merge: true }).catch(() => {});
-        });
-      } catch (err: any) {
-        console.warn('Notice updating users by email query:', err?.message || err);
-      }
-    }
+        // Query and update any pending claims in owner_claims collection for this user or email
+        if (cleanEmail) {
+          try {
+            const claimsRef = collection(db, 'owner_claims');
+            const qClaims = query(claimsRef, where('userEmail', '==', cleanEmail));
+            const snapClaims = await getDocs(qClaims);
+            await Promise.all(snapClaims.docs.map(docSnap => 
+              setDoc(docSnap.ref, {
+                status: 'approved',
+                spotId,
+                spotName,
+                approvedAt,
+                approvedBy: 'cobeertaste@gmail.com'
+              }, { merge: true })
+            ));
+          } catch (qErr) {
+            console.warn('Notice updating matching owner_claims:', qErr);
+          }
+        }
 
-    // Also update by direct userId if valid
-    if (effectiveUserId) {
-      try {
-        const userRef = doc(db, 'users', effectiveUserId);
-        await setDoc(userRef, {
-          role: 'owner',
-          isOwner: true,
-          ownedSpotId: spotId,
-          ownerClaimApproved: true,
-          ownerClaimPending: false,
-          ownerClaimApprovedAt: approvedAt,
-          ownerClaimSpotId: spotId,
-          ownerClaimSpotName: spotName
-        }, { merge: true });
-      } catch (err: any) {
-        console.warn('Notice updating user doc by ID in Firestore:', err?.message || err);
-      }
+        // B. Update user documents in Firestore
+        if (cleanEmail) {
+          try {
+            const usersRef = collection(db, 'users');
+            const qUsers = query(usersRef, where('email', '==', cleanEmail));
+            const snapUsers = await getDocs(qUsers);
+            await Promise.all(snapUsers.docs.map(docSnap => 
+              setDoc(docSnap.ref, {
+                role: 'owner',
+                isOwner: true,
+                ownedSpotId: spotId,
+                ownerClaimApproved: true,
+                ownerClaimPending: false,
+                ownerClaimApprovedAt: approvedAt,
+                ownerClaimSpotId: spotId,
+                ownerClaimSpotName: spotName
+              }, { merge: true })
+            ));
+          } catch (err: any) {
+            console.warn('Notice updating users by email query:', err?.message || err);
+          }
+        }
+
+        // Also update by direct userId if valid
+        if (effectiveUserId) {
+          try {
+            const userRef = doc(db, 'users', effectiveUserId);
+            await setDoc(userRef, {
+              role: 'owner',
+              isOwner: true,
+              ownedSpotId: spotId,
+              ownerClaimApproved: true,
+              ownerClaimPending: false,
+              ownerClaimApprovedAt: approvedAt,
+              ownerClaimSpotId: spotId,
+              ownerClaimSpotName: spotName
+            }, { merge: true });
+          } catch (err: any) {
+            console.warn('Notice updating user doc by ID in Firestore:', err?.message || err);
+          }
+        }
+      };
+
+      await Promise.race([doFirestoreUpdate(), firestoreTimeout]).catch(e => {
+        console.warn('Firestore update timed out or encountered notice, local approval active:', e);
+      });
+    } catch (e) {
+      console.warn('Notice during Firestore approval sync:', e);
     }
   }
 
@@ -552,6 +727,9 @@ export async function approveOwnerClaim(
   const cachePrefixes = [`hop_user_${effectiveUserId}_`];
   if (cleanEmail) {
     cachePrefixes.push(`hop_user_${cleanEmail}_`);
+  }
+  if (userId && userId !== effectiveUserId) {
+    cachePrefixes.push(`hop_user_${userId}_`);
   }
 
   cachePrefixes.forEach(prefix => {
@@ -571,6 +749,7 @@ export async function approveOwnerClaim(
     window.dispatchEvent(new CustomEvent('hop_owner_approved', {
       detail: { userId: effectiveUserId, spotId, spotName, userEmail: cleanEmail }
     }));
+    window.dispatchEvent(new CustomEvent('hop_checkin_updated'));
   }
 }
 

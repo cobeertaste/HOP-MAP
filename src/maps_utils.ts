@@ -92,6 +92,7 @@ export const BAR_MAPS_URLS: Record<string, string> = {
   'deuses-do-malte': 'https://maps.app.goo.gl/RFCe1duCjG2o4hJf7',
   'doze-marias': 'https://maps.app.goo.gl/U3XzQ1NA8hynfPt66',
   'monja-penafiel': 'https://maps.app.goo.gl/LAqBusJkm7nudGw49',
+  'fidelis-penafiel': 'https://maps.google.com/?q=41.2079721168809,-8.28210319679476',
   'letraria-braga-garden': 'https://maps.app.goo.gl/boBtkZnnaRdjdrPq9',
   'lovecraft-feira': 'https://maps.app.goo.gl/KE1c8C61mcaghXQE6',
   'quimera-brewpub': 'https://maps.app.goo.gl/CjD56JQCraE8BTkM6',
@@ -113,7 +114,9 @@ export const BAR_MAPS_URLS: Record<string, string> = {
   'marrafa-jesufrei': 'https://maps.app.goo.gl/d3CBCgpZcZMAQtJKA',
   'bah-craft-beer': 'https://maps.app.goo.gl/DRJqN2J5jYYnvA6p6',
   'malaica-caldas': 'https://maps.app.goo.gl/ZRwyz12oFy8qZT7y6',
-  'o-bandido': 'https://maps.app.goo.gl/yKXUuiYypAX4ggCA7'
+  'o-bandido': 'https://maps.app.goo.gl/yKXUuiYypAX4ggCA7',
+  'o-covil-lisboa': 'https://maps.app.goo.gl/dj3Dhr6u2tmzSj8f9',
+  'o-covil': 'https://maps.app.goo.gl/dj3Dhr6u2tmzSj8f9'
 };
 
 export function getBarGoogleMapsUrl(barId: string, fallbackAddress: string): string {

@@ -11,7 +11,7 @@ import {
   MessageSquare, Key, MapPin, Eye, Navigation, CheckCircle2
 } from 'lucide-react';
 import { Bar, UserProfile, OwnerSpotMonthlyMetrics } from '../types';
-import { compileOwnerSpotMonthlyMetrics } from '../lib/ownerUtils';
+import { compileOwnerSpotMonthlyMetrics, isOwnerAuthorizedForSpot } from '../lib/ownerUtils';
 import { getPreviousMonthKey, getMonthLabel, getDispatchDateLabel } from '../lib/dateUtils';
 import { getSpotCheckinPin } from '../lib/spotPinUtils';
 
@@ -33,12 +33,7 @@ export default function OwnerMetricsDashboard({
   const [selectedMonth, setSelectedMonth] = useState<string>(() => getPreviousMonthKey());
 
   // Strict spot access check: owners can ONLY access metrics for their designated spot (admin has master access)
-  const isAuthorized = user.role === 'admin' || (
-    Boolean(user.isOwner && user.ownedSpotId && spot.id) && (
-      user.ownedSpotId === spot.id ||
-      user.ownedSpotId.replace(/-porto$|-cascais$|-guimaraes$/, '') === spot.id.replace(/-porto$|-cascais$|-guimaraes$/, '')
-    )
-  );
+  const isAuthorized = isOwnerAuthorizedForSpot(user, spot.id);
 
   const spotPin = getSpotCheckinPin(spot);
 

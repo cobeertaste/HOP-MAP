@@ -302,7 +302,8 @@ export const BARS_B: Bar[] = [
     "facebookUrl": "https://www.facebook.com/LetrariaPortoDowntown/",
     "latitude": 41.15093903202883,
     "longitude": -8.614035075213907,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 24
   },
   {
     "id": "deuses-do-malte",
@@ -464,7 +465,8 @@ export const BARS_B: Bar[] = [
     "facebookUrl": "https://www.facebook.com/letrariaviana/?locale=km_KH",
     "latitude": 41.694551312118016,
     "longitude": -8.831175361394598,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 18
   },
   {
     "id": "dona-beer-braga",
@@ -569,7 +571,8 @@ export const BARS_B: Bar[] = [
     "facebookUrl": "https://www.facebook.com/LetrariaVilaVerde",
     "latitude": 41.650022108237216,
     "longitude": -8.438788151364786,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 12
   },
   {
     "id": "hop-trip",
@@ -595,7 +598,8 @@ export const BARS_B: Bar[] = [
     "facebookUrl": "https://www.facebook.com/hoptripcraftbeer",
     "latitude": 41.180910406252956,
     "longitude": -8.692768135111493,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 15
   },
   {
     "id": "cantinho-cafe",

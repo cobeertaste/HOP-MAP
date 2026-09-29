@@ -21,6 +21,10 @@ service cloud.firestore {
         (request.auth.token.email.lower() == 'afabricadapicaria@gmail.com' && (spotId == 'a-fabrica-da-picaria-brew-pub-porto' || spotId == 'a-fabrica-da-picaria-brew-pub')) ||
         (request.auth.token.email.lower() == 'kkruckenhauser@gmail.com' && spotId == 'prost-guimaraes') ||
         (request.auth.token.email.lower() == 'ricardo@marrafa.pt' && spotId == 'marrafa-jesufrei') ||
+        (request.auth.token.email.lower() == 'geral@lovecraftfeira.pt' && (spotId == 'lovecraft-public-house-feira-santa-maria-da-feira' || spotId == 'lovecraft-feira')) ||
+        (request.auth.token.email.lower() == 'vinicius@emporio.pt' && (spotId == 'o-emporio-pt-ericeira' || spotId == 'o-emporio-pt')) ||
+        (request.auth.token.email.lower() == 'geral@beerstore.pt' && (spotId == 'beerstore-pt-acores' || spotId == 'beerstore-pt')) ||
+        (request.auth.token.email.lower() == 'paula.c.prata@gmail.com' && (spotId == 'beer-cascais-cascais' || spotId == 'beer-cascais')) ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
           && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownedSpotId == spotId 
           && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownerClaimApproved == true)

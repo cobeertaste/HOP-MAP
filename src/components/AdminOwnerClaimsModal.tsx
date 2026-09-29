@@ -41,10 +41,15 @@ export default function AdminOwnerClaimsModal({
   onClaimApproved,
   onClaimRejected
 }: AdminOwnerClaimsModalProps) {
-  const isAuthorizedAdmin = isAdmin ?? isAdminUser(userEmail);
+  const isAuthorizedAdmin = Boolean(
+    isAdmin || 
+    isAdminUser(userEmail) || 
+    (userEmail && userEmail.toLowerCase().trim() === 'cobeertaste@gmail.com')
+  );
   const [activeTab, setActiveTab] = useState<'pending' | 'approved'>('pending');
   const [claims, setClaims] = useState<OwnerClaimRecord[]>([]);
   const [approvedClaims, setApprovedClaims] = useState<OwnerClaimRecord[]>([]);
+  const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,7 +70,12 @@ export default function AdminOwnerClaimsModal({
         getPendingOwnerClaims(),
         getApprovedOwnerClaims()
       ]);
-      setClaims(pendingData);
+      setClaims(
+        pendingData.filter(c => {
+          const mail = (c.userEmail || '').toLowerCase().trim();
+          return !approvedIds.has(c.userId) && !approvedIds.has(mail) && !approvedIds.has(c.spotId);
+        })
+      );
       setApprovedClaims(approvedData);
     } catch (e) {
       console.warn('Notice loading claims:', e);
@@ -81,6 +91,7 @@ export default function AdminOwnerClaimsModal({
   }, [isOpen, isAuthorizedAdmin]);
 
   const handleApprove = async (claim: OwnerClaimRecord) => {
+    const cleanMail = (claim.userEmail || '').toLowerCase().trim();
     setProcessingId(claim.userId);
     try {
       await approveOwnerClaim(claim.userId, claim.spotId, claim.spotName, claim.userEmail, claim.username);
@@ -89,12 +100,20 @@ export default function AdminOwnerClaimsModal({
           ? `Local "${claim.spotName}" aprovado com sucesso para ${claim.userEmail}! O utilizador passa a proprietário do local e tem acesso às métricas APENAS deste local.`
           : `Venue "${claim.spotName}" successfully approved for ${claim.userEmail}! The user is now the venue owner with access to metrics ONLY for this venue.`
       );
-      setClaims(prev => prev.filter(c => c.userId !== claim.userId && c.userEmail?.toLowerCase() !== claim.userEmail?.toLowerCase()));
+      setApprovedIds(prev => {
+        const next = new Set(prev);
+        if (claim.userId) next.add(claim.userId);
+        if (cleanMail) next.add(cleanMail);
+        if (claim.spotId) next.add(claim.spotId);
+        return next;
+      });
+      setClaims(prev => prev.filter(c => c.userId !== claim.userId && c.userEmail?.toLowerCase() !== cleanMail && c.spotId !== claim.spotId));
       setApprovedClaims(prev => [
         { ...claim, status: 'approved' },
-        ...prev.filter(c => c.spotId !== claim.spotId && c.userEmail?.toLowerCase() !== claim.userEmail?.toLowerCase())
+        ...prev.filter(c => c.spotId !== claim.spotId && c.userEmail?.toLowerCase() !== cleanMail)
       ]);
       onClaimApproved?.(claim.userId, claim.spotId, claim.userEmail);
+      setActiveTab('approved');
       await loadClaims();
     } catch (err: any) {
       setNotice(
@@ -126,11 +145,18 @@ export default function AdminOwnerClaimsModal({
           ? `Proprietário aprovado com sucesso! O utilizador ${cleanEmail} é agora proprietário do spot "${spotName}" com acesso exclusivo às suas métricas.`
           : `Owner approved successfully! User ${cleanEmail} is now owner of "${spotName}" with exclusive access to its metrics.`
       );
+      setApprovedIds(prev => {
+        const next = new Set(prev);
+        next.add(cleanEmail);
+        next.add(directSpotId);
+        return next;
+      });
       setDirectEmail('');
       setDirectUsername('');
       setDirectSpotId('');
       setShowDirectApprove(false);
       onClaimApproved?.('', directSpotId, cleanEmail);
+      setActiveTab('approved');
       await loadClaims();
     } catch (err: any) {
       setNotice(err?.message || 'Error');

@@ -38,7 +38,7 @@ import MonthlyReportModal from './components/MonthlyReportModal';
 import AdminPinsDashboardModal from './components/AdminPinsDashboardModal';
 import AdminOwnerClaimsModal from './components/AdminOwnerClaimsModal';
 import OwnerMetricsDashboard from './components/OwnerMetricsDashboard';
-import { getClaimedSpotIds, submitOwnerClaim, getVerifiedOwnerConfig } from './lib/ownerUtils';
+import { getClaimedSpotIds, submitOwnerClaim, getVerifiedOwnerConfig, findSpotByOwnerSpotId } from './lib/ownerUtils';
 import BeerStyleSelectModal from './components/BeerStyleSelectModal';
 import RetroPinModal from './components/RetroPinModal';
 import RetroStageClearCelebration from './components/RetroStageClearCelebration';
@@ -830,7 +830,10 @@ export default function App() {
   });
 
   // App Administrator authorization check (strictly reserved for cobeertaste@gmail.com)
-  const isAdmin = isAdminUser(user.email) || isAdminUser(auth.currentUser?.email);
+  const isAdmin = isAdminUser(user.email) || 
+    isAdminUser(auth.currentUser?.email) || 
+    user.role === 'admin' || 
+    (typeof user.email === 'string' && user.email.toLowerCase().trim() === 'cobeertaste@gmail.com');
 
   // i18n Internationalization Language State (PT default, respects URL routing)
   const [lang, setLang] = useState<Language>(() => {
@@ -7016,7 +7019,7 @@ export default function App() {
 
             {/* VIEW E: USER PROFILE & NOTIFICATION SIMULATOR */}
             {activeTab === 'profile' && (() => {
-              const ownedSpot = (user.isOwner && user.ownedSpotId) ? bars.find(b => b.id === user.ownedSpotId) : undefined;
+              const ownedSpot = (user.isOwner && user.ownedSpotId) ? findSpotByOwnerSpotId(bars, user.ownedSpotId) : undefined;
               return (
               <motion.div 
                 key="profile-tab"
@@ -8461,6 +8464,18 @@ export default function App() {
                   >
                     <Instagram className="w-3.5 h-3.5" />
                     <span>Instagram</span>
+                  </a>
+                )}
+                {selectedBar.websiteUrl && (
+                  <a 
+                    href={selectedBar.websiteUrl} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="flex-1 flex items-center justify-center space-x-1.5 px-3 py-2.5 border-2 border-[#1B2036] rounded-xl bg-white hover:bg-[#EFE6CC] text-[#1B2036] shadow-[2px_2px_0px_#1B2036] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+                    id={`btn-website-${selectedBar.id}`}
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Website</span>
                   </a>
                 )}
               </div>

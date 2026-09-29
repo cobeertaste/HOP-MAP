@@ -56,7 +56,7 @@ export const SPOT_DESCRIPTIONS_EN_BY_ID: Record<string, string> = {
   "mal-amado-braga": "Cozy craft beer and cocktail haven situated right by the historic Braga Cathedral (Sé).",
   "craft-draft-braganca": "Regarded as the craft beer sanctuary in Trás-os-Montes, featuring a rich and curated selection.",
   "letraria-de-vila-verde-vila-verde": "Cerveja Letra’s original brewery taproom and hop garden in the Braga/Vila Verde region.",
-  "hop-trip-craft-beer-shop-matosinhos": "Hop Trip - Craft Beer Shop is a reference spot for craft beer lovers in Matosinhos.",
+  "hop-trip-craft-beer-shop-matosinhos": "Hop Trip - Craft Beer Shop is a reference spot for craft beer lovers in Matosinhos featuring 15 craft beer taps.",
   "tough-love-tap-room-porto": "Tough Love’s second location specializing in traditional cask-conditioned ales and fresh craft beers.",
   "gulden-draak-bierhuis-porto": "Gulden Draak Bierhuis is a benchmark Belgian and craft beer house in Porto.",
   "baobab-craft-beer-porto": "Craft beer haven in downtown Porto with a strong focus on IPAs and international rarities.",
@@ -90,11 +90,12 @@ export const SPOT_DESCRIPTIONS_EN_BY_ID: Record<string, string> = {
   "maldita-brewpub-aveiro": "Maldita craft beer brewpub in Aveiro serving fresh tap beers with Mexican-influenced cuisine.",
   "taverna-lusitana-monsanto": "Cozy tavern in historical Monsanto offering Portuguese dishes and craft beer with outdoor seating.",
   "vadia-brewpub-oliveira-de-azemeis": "Vadia Brewpub harmonizes fresh craft beer, guided brewery tours, and artisanal food with live music.",
-  "letraria-downtown-porto": "Craft beer bar and restaurant in Porto with 22 rotating taps, beer garden, and delicious pairings.",
+  "letraria-downtown-porto": "Craft beer bar and restaurant in Porto with 24 rotating taps, beer garden, and delicious pairings.",
   "deuses-do-malte-v-n-gaia": "Rustic, intimate taproom in Vila Nova de Gaia with 10 rotating taps and savory pairing dishes.",
   "12-marias-fermela": "Tasting room at the brewery in Fermelã for enjoying craft beers with snacks in an intimate vibe.",
   "monja-penafiel": "Modern historic center bar in Penafiel serving craft beer, signature pastries, toasts, and burgers.",
-  "letraria-braga": "Cerveja Letra bar in Braga by the Sé, offering 23 craft beer taps, cheese boards, and book exchange.",
+  "fidelis-penafiel": "At Fidélis, each beer is crafted with dedication, using quality ingredients and artisanal techniques that respect tradition while exploring new flavours.",
+  "letraria-braga": "Cerveja Letra bar in Braga by the Sé, offering 24 craft beer taps, cheese boards, and book exchange.",
   "lovecraft-public-house-feira-santa-maria-da-feira": "Welcoming craft beer bar in Santa Maria da Feira with diverse beers and high-quality vegetarian/vegan snacks.",
   "quimera-brewpub-lisboa": "Unique brewpub in an 18th-century tunnel serving Quimera beers, NY Deli sandwiches, and live music.",
   "amo-brewery-lisboa": "Nano-brewery and multicultural space in Arroios/Intendente hosting craft beer tastings and pop-ups.",
@@ -117,6 +118,7 @@ export const SPOT_DESCRIPTIONS_EN_BY_ID: Record<string, string> = {
   "bah-craft-beer-cascais": "Proudly independent craft beer in Cascais delivering delightful, flavorful artisanal brews.",
   "malaica-caldas-da-rainha": "Malaica is a craft beer house, social space, local art gallery, and welcoming community in Caldas da Rainha.",
   "o-bandido-porto": "Celebrated for serving great burgers alongside 40+ different Portuguese and international craft beers in Porto.",
+  "o-covil-lisboa": "A Lusitanian and Celtiberian sanctuary for feast and cheer in Arroios with 13 craft taps and ample mead.",
 };
 
 

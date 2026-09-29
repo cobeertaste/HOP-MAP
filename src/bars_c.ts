@@ -83,7 +83,8 @@ export const BARS_C: Bar[] = [
     "facebookUrl": "https://www.facebook.com/letrariaobidos/",
     "latitude": 39.36053820061405,
     "longitude": -9.15672580953309,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 12
   },
   {
     "id": "five-e-meio-ericeira",

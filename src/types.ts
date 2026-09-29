@@ -78,6 +78,7 @@ export interface Bar {
   coverPhoto: string;
   facebookUrl?: string;
   instagramUrl?: string;
+  websiteUrl?: string;
   hasApplePay?: boolean;
   latitude: number;
   longitude: number;
