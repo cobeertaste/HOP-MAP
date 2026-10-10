@@ -25,6 +25,8 @@ service cloud.firestore {
         (request.auth.token.email.lower() == 'vinicius@emporio.pt' && (spotId == 'o-emporio-pt-ericeira' || spotId == 'o-emporio-pt')) ||
         (request.auth.token.email.lower() == 'geral@beerstore.pt' && (spotId == 'beerstore-pt-acores' || spotId == 'beerstore-pt')) ||
         (request.auth.token.email.lower() == 'paula.c.prata@gmail.com' && (spotId == 'beer-cascais-cascais' || spotId == 'beer-cascais')) ||
+        (request.auth.token.email.lower() == 'hello@azoresbrewingcompany.com' && (spotId == 'azores-brewing' || spotId == 'azores-brewing-company-acores')) ||
+        (request.auth.token.email.lower() == 'conversas.moderadas@gmail.com' && (spotId == 'mal-amado-braga' || spotId == 'mal-amado')) ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
           && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownedSpotId == spotId 
           && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownerClaimApproved == true)

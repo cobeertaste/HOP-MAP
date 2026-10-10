@@ -20,7 +20,15 @@ export const ALL_SPOTS: Bar[] = [
     facebookUrl: "https://www.facebook.com/azoresbrewingcompany/",
     latitude: 37.80204398942461,
     longitude: -25.51780516578328,
-    hasApplePay: true
+    hasApplePay: true,
+    taps: 6,
+    hasFood: true,
+    hasTerrace: true,
+    petFriendly: true,
+    hasParking: true,
+    parkingNotePT: "Sim",
+    parkingNoteEN: "Yes",
+    isVerified: true
   },
   {
     id: "beerstore-pt-acores",
@@ -1241,7 +1249,15 @@ export const ALL_SPOTS: Bar[] = [
     facebookUrl: "https://www.facebook.com/CatraioCraftBeer",
     latitude: 41.1511201428873,
     longitude: -8.617286141986535,
-    hasApplePay: true
+    hasApplePay: true,
+    taps: 16,
+    hasFood: true,
+    petFriendly: true,
+    hasParking: false,
+    hasTerrace: true,
+    parkingNotePT: "Não",
+    parkingNoteEN: "No",
+    isVerified: true
   },
   {
     id: "cerveja-nortada-porto",

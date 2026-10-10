@@ -43,8 +43,8 @@ export const ALL_BADGES: Badge[] = [
     icon: '⭐',
     namePt: 'Estrela',
     nameEn: 'Star',
-    descriptionPt: '3 dias consecutivos de check-in efetuado.',
-    descriptionEn: '3 consecutive days of check-ins completed.',
+    descriptionPt: '3 dias consecutivos de check-in efetuado (+2 HOPS Bónus).',
+    descriptionEn: '3 consecutive days of check-ins completed (+2 Bonus HOPS).',
     category: 'checkins',
     rarity: 'common'
   },
@@ -54,8 +54,8 @@ export const ALL_BADGES: Badge[] = [
     icon: '🌟',
     namePt: 'Superestrela',
     nameEn: 'Superstar',
-    descriptionPt: '5 dias consecutivos de check-in efetuado.',
-    descriptionEn: '5 consecutive days of check-ins completed.',
+    descriptionPt: '5 dias consecutivos de check-in efetuado (+3 HOPS Bónus).',
+    descriptionEn: '5 consecutive days of check-ins completed (+3 Bonus HOPS).',
     category: 'checkins',
     rarity: 'rare'
   },
@@ -65,8 +65,19 @@ export const ALL_BADGES: Badge[] = [
     icon: '🏆',
     namePt: 'Campeão',
     nameEn: 'Champion',
-    descriptionPt: '7 dias consecutivos de check-in efetuado.',
-    descriptionEn: '7 consecutive days of check-ins completed.',
+    descriptionPt: '7 dias consecutivos de check-in efetuado (+5 HOPS Bónus).',
+    descriptionEn: '7 consecutive days of check-ins completed (+5 Bonus HOPS).',
+    category: 'checkins',
+    rarity: 'epic'
+  },
+  {
+    id: 'streak_14_days',
+    code: 'STREAK_14_DAYS',
+    icon: '🔥',
+    namePt: 'Imparável',
+    nameEn: 'Unstoppable',
+    descriptionPt: '14 dias consecutivos de check-in efetuado (+10 HOPS Bónus).',
+    descriptionEn: '14 consecutive days of check-ins completed (+10 Bonus HOPS).',
     category: 'checkins',
     rarity: 'epic'
   },
@@ -76,8 +87,8 @@ export const ALL_BADGES: Badge[] = [
     icon: '💎',
     namePt: 'Ícone',
     nameEn: 'Icon',
-    descriptionPt: '31 dias consecutivos de check-in efetuado.',
-    descriptionEn: '31 consecutive days of check-ins completed.',
+    descriptionPt: '31 dias consecutivos de check-in efetuado (+20 HOPS Bónus).',
+    descriptionEn: '31 consecutive days of check-ins completed (+20 Bonus HOPS).',
     category: 'checkins',
     rarity: 'epic'
   },
@@ -87,8 +98,8 @@ export const ALL_BADGES: Badge[] = [
     icon: '🏛️',
     namePt: 'Hall da Fama',
     nameEn: 'Hall of Fame',
-    descriptionPt: '50 dias consecutivos de check-in efetuado.',
-    descriptionEn: '50 consecutive days of check-ins completed.',
+    descriptionPt: '50 dias consecutivos de check-in efetuado (+35 HOPS Bónus).',
+    descriptionEn: '50 consecutive days of check-ins completed (+35 Bonus HOPS).',
     category: 'checkins',
     rarity: 'legendary'
   },
@@ -98,8 +109,8 @@ export const ALL_BADGES: Badge[] = [
     icon: '⚡',
     namePt: 'Invencível',
     nameEn: 'Invincible',
-    descriptionPt: '100 dias consecutivos de check-in efetuado.',
-    descriptionEn: '100 consecutive days of check-ins completed.',
+    descriptionPt: '100 dias consecutivos de check-in efetuado (+75 HOPS Bónus).',
+    descriptionEn: '100 consecutive days of check-ins completed (+75 Bonus HOPS).',
     category: 'checkins',
     rarity: 'legendary'
   },
@@ -109,8 +120,8 @@ export const ALL_BADGES: Badge[] = [
     icon: '👑',
     namePt: 'Lenda',
     nameEn: 'Legend',
-    descriptionPt: '365 dias consecutivos de check-in efetuado.',
-    descriptionEn: '365 consecutive days of check-ins completed.',
+    descriptionPt: '365 dias consecutivos de check-in efetuado (+250 HOPS Bónus).',
+    descriptionEn: '365 consecutive days of check-ins completed (+250 Bonus HOPS).',
     category: 'checkins',
     rarity: 'legendary'
   },
@@ -1146,6 +1157,12 @@ export function calculateUserBadges(ctx: BadgeCalculationContext): BadgeUnlockSt
         unlocked = maxConsecutiveStreak >= 7;
         progressPercent = Math.min(100, Math.round((maxConsecutiveStreak / 7) * 100));
         progressText = `${Math.min(7, maxConsecutiveStreak)}/7 ${isPt ? 'dias' : 'days'}`;
+        break;
+
+      case 'streak_14_days':
+        unlocked = maxConsecutiveStreak >= 14;
+        progressPercent = Math.min(100, Math.round((maxConsecutiveStreak / 14) * 100));
+        progressText = `${Math.min(14, maxConsecutiveStreak)}/14 ${isPt ? 'dias' : 'days'}`;
         break;
 
       case 'streak_31_days':

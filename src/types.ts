@@ -223,6 +223,10 @@ export interface UserProfile {
   ownerClaimSpotId?: string;
   ownerClaimSpotName?: string;
   ownerClaimRequestedAt?: string;
+  currentStreak?: number;
+  longestStreak?: number;
+  awardedStreakMilestones?: number[];
+  streakBonusPoints?: number;
 }
 
 export interface OwnerClaimRecord {

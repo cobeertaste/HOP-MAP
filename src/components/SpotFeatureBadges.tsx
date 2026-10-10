@@ -18,6 +18,9 @@ export function isSpotVerified(bar?: Bar | null): boolean {
   return (
     id === 'prost-guimaraes' ||
     name.includes('prost') ||
+    id === 'catraio-craft-beer-shop-bar-porto' ||
+    id === 'catraio' ||
+    name.includes('catraio') ||
     id === 'deuses-do-malte-v-n-gaia' ||
     id === 'deuses-do-malte' ||
     name.includes('deuses do malte') ||
@@ -32,32 +35,41 @@ export function isSpotVerified(bar?: Bar | null): boolean {
     name.includes('brew portugal') ||
     name === 'brew' ||
     name.startsWith('brew (') ||
-    name.startsWith('brew!')
+    name.startsWith('brew!') ||
+    id === 'azores-brewing-company-acores' ||
+    id === 'azores-brewing' ||
+    name.includes('azores brewing')
   );
 }
 
 export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFeatureBadgesProps) {
   const features = getBarFeatures(bar, lang);
   const isProst = bar.id === 'prost-guimaraes' || (bar.name && bar.name.toLowerCase().includes('prost'));
+  const isCatraio = bar.id === 'catraio-craft-beer-shop-bar-porto' || bar.id === 'catraio' || (bar.name && bar.name.toLowerCase().includes('catraio'));
+  const isAzoresBrewing = bar.id === 'azores-brewing-company-acores' || bar.id === 'azores-brewing' || (bar.name && bar.name.toLowerCase().includes('azores brewing'));
   const isDeusesDoMalte = bar.id === 'deuses-do-malte-v-n-gaia' || bar.id === 'deuses-do-malte' || (bar.name && bar.name.toLowerCase().includes('deuses do malte'));
   const isPicaria = bar.id === 'a-fabrica-da-picaria-brew-pub-porto' || bar.id === 'fabrica-da-picaria' || (bar.name && bar.name.toLowerCase().includes('picaria'));
   const isVirtudes = bar.id === 'musa-das-virtudes-porto' || bar.id === 'musa-virtudes' || (bar.name && bar.name.toLowerCase().includes('virtudes'));
   const isBrew = bar.id === 'brew-portugal-lisboa' || bar.id === 'brew-portugal' || (bar.name && bar.name.toLowerCase().includes('brew portugal')) || (bar.name && (bar.name.toLowerCase().startsWith('brew') && !bar.name.toLowerCase().includes('brewpub')));
   const isVerified = isSpotVerified(bar);
 
-  let tapsCount = typeof bar.taps === 'number' ? bar.taps : features.taps;
-  if (typeof bar.taps !== 'number') {
-    if (isBrew) {
-      tapsCount = 23;
-    } else if (isPicaria) {
-      tapsCount = 9;
-    } else if (isVirtudes) {
-      tapsCount = 15;
-    } else if (isProst) {
-      tapsCount = 7;
-    } else if (isDeusesDoMalte) {
-      tapsCount = 10;
-    }
+  let tapsCount = features.taps;
+  if (isCatraio) {
+    tapsCount = 16;
+  } else if (isAzoresBrewing) {
+    tapsCount = 6;
+  } else if (isBrew) {
+    tapsCount = 23;
+  } else if (isPicaria) {
+    tapsCount = 9;
+  } else if (isVirtudes) {
+    tapsCount = 15;
+  } else if (isProst) {
+    tapsCount = 7;
+  } else if (isDeusesDoMalte) {
+    tapsCount = 10;
+  } else if (typeof bar.taps === 'number') {
+    tapsCount = bar.taps;
   }
 
   let tapsLabel = `${tapsCount} Taps`;
@@ -100,10 +112,10 @@ export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFea
   } else if (isPicaria || isVirtudes) {
     parkingLabel = lang === 'PT' ? 'Estacionamento: Sim (público)' : 'Parking: Yes (public)';
     parkingNegative = false;
-  } else if (isProst) {
+  } else if (isProst || isCatraio) {
     parkingLabel = lang === 'PT' ? 'Estacionamento: Não' : 'Parking: No';
     parkingNegative = true;
-  } else if (isDeusesDoMalte) {
+  } else if (isDeusesDoMalte || isAzoresBrewing) {
     parkingLabel = lang === 'PT' ? 'Estacionamento: Sim' : 'Parking: Yes';
     parkingNegative = false;
   } else if (isVerified) {

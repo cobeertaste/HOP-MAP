@@ -25,7 +25,15 @@ export const BARS_A: Bar[] = [
     "facebookUrl": "https://www.facebook.com/azoresbrewingcompany/",
     "latitude": 37.80204398942461,
     "longitude": -25.51780516578328,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 6,
+    "hasFood": true,
+    "hasTerrace": true,
+    "petFriendly": true,
+    "hasParking": true,
+    "parkingNotePT": "Sim",
+    "parkingNoteEN": "Yes",
+    "isVerified": true
   },
   {
     "id": "beerstore-pt",

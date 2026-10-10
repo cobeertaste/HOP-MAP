@@ -74,6 +74,16 @@ export const VERIFIED_OWNER_MAPPINGS: Record<string, { spotId: string; spotName:
     spotId: 'beer-cascais-cascais',
     spotName: 'Beer Cascais (Cascais)',
     username: 'ToBeer Cascais'
+  },
+  'hello@azoresbrewingcompany.com': {
+    spotId: 'azores-brewing',
+    spotName: 'Azores Brewing (Açores)',
+    username: 'azoresbrewingcompany'
+  },
+  'conversas.moderadas@gmail.com': {
+    spotId: 'mal-amado-braga',
+    spotName: 'Mal Amado (Braga)',
+    username: 'Mal_Amado'
   }
 };
 
@@ -90,12 +100,18 @@ export function isOwnerAuthorizedForSpot(
   if (user.role === 'admin' || (user.email && user.email.toLowerCase().trim() === 'cobeertaste@gmail.com')) {
     return true;
   }
-  if (!user.isOwner || !user.ownedSpotId) {
+
+  // Also check verified owner config by email directly to guarantee immediate authorization
+  const emailConfig = user.email ? getVerifiedOwnerConfig(user.email) : null;
+  const effectiveOwnedSpotId = user.ownedSpotId || emailConfig?.spotId;
+  const effectiveIsOwner = user.isOwner || Boolean(emailConfig);
+
+  if (!effectiveIsOwner || !effectiveOwnedSpotId) {
     return false;
   }
 
   // 1. Direct equality
-  if (user.ownedSpotId === spotId) {
+  if (effectiveOwnedSpotId === spotId) {
     return true;
   }
 
@@ -112,22 +128,26 @@ export function isOwnerAuthorizedForSpot(
     'marrafa-jesufrei': ['marrafa-jesufrei', 'marrafa'],
     'bah-craft-beer-cascais': ['bah-craft-beer-cascais', 'bah-craft-beer'],
     'prost-guimaraes': ['prost-guimaraes', 'prost'],
-    'a-fabrica-da-picaria-brew-pub-porto': ['a-fabrica-da-picaria-brew-pub-porto', 'a-fabrica-da-picaria-brew-pub']
+    'a-fabrica-da-picaria-brew-pub-porto': ['a-fabrica-da-picaria-brew-pub-porto', 'a-fabrica-da-picaria-brew-pub'],
+    'azores-brewing': ['azores-brewing', 'azores-brewing-company-acores', 'azores-brewing-acores'],
+    'azores-brewing-company-acores': ['azores-brewing', 'azores-brewing-company-acores', 'azores-brewing-acores'],
+    'mal-amado-braga': ['mal-amado-braga', 'mal-amado'],
+    'mal-amado': ['mal-amado-braga', 'mal-amado']
   };
 
-  const aliases = spotAliases[user.ownedSpotId];
+  const aliases = spotAliases[effectiveOwnedSpotId];
   if (aliases && aliases.includes(spotId)) {
     return true;
   }
 
   const targetAliases = spotAliases[spotId];
-  if (targetAliases && targetAliases.includes(user.ownedSpotId)) {
+  if (targetAliases && targetAliases.includes(effectiveOwnedSpotId)) {
     return true;
   }
 
   // 3. Location suffix normalization (e.g. -porto, -cascais, -ericeira, -acores, etc.)
   const cleanId = (id: string) => id.replace(/-(porto|cascais|guimaraes|ericeira|acores|santa-maria-da-feira|lagoa|lisboa|braga)$/i, '');
-  if (cleanId(user.ownedSpotId) === cleanId(spotId)) {
+  if (cleanId(effectiveOwnedSpotId) === cleanId(spotId)) {
     return true;
   }
 
@@ -155,12 +175,16 @@ export function findSpotByOwnerSpotId(bars: Bar[], ownedSpotId?: string): Bar | 
     'bah-craft-beer-cascais': 'bah-craft-beer-cascais',
     'prost-guimaraes': 'prost-guimaraes',
     'a-fabrica-da-picaria-brew-pub': 'a-fabrica-da-picaria-brew-pub-porto',
-    'a-fabrica-da-picaria-brew-pub-porto': 'a-fabrica-da-picaria-brew-pub-porto'
+    'a-fabrica-da-picaria-brew-pub-porto': 'a-fabrica-da-picaria-brew-pub-porto',
+    'azores-brewing': 'azores-brewing',
+    'azores-brewing-company-acores': 'azores-brewing',
+    'mal-amado-braga': 'mal-amado-braga',
+    'mal-amado': 'mal-amado-braga'
   };
 
   const targetId = aliasMap[ownedSpotId];
   if (targetId) {
-    const found = bars.find(b => b.id === targetId);
+    const found = bars.find(b => b.id === targetId || (ownedSpotId.includes('azores-brewing') && (b.id === 'azores-brewing' || b.id === 'azores-brewing-company-acores')));
     if (found) return found;
   }
 
@@ -819,6 +843,23 @@ export async function compileOwnerSpotMonthlyMetrics(
   const isCompleted = isMonthCompleted(targetMonth);
   const scheduledDispatch = getDispatchDateLabel(targetMonth);
 
+  // Build candidate spot IDs for spots with known aliases
+  const candidateSpotIds = new Set<string>([spotId]);
+  if (spotId === 'azores-brewing' || spotId === 'azores-brewing-company-acores') {
+    candidateSpotIds.add('azores-brewing');
+    candidateSpotIds.add('azores-brewing-company-acores');
+  } else if (spotId === 'mal-amado-braga' || spotId === 'mal-amado') {
+    candidateSpotIds.add('mal-amado-braga');
+    candidateSpotIds.add('mal-amado');
+  } else if (spotId === 'beerstore-pt-acores' || spotId === 'beerstore-pt') {
+    candidateSpotIds.add('beerstore-pt-acores');
+    candidateSpotIds.add('beerstore-pt');
+  } else if (spotId === 'beer-cascais-cascais' || spotId === 'beer-cascais') {
+    candidateSpotIds.add('beer-cascais-cascais');
+    candidateSpotIds.add('beer-cascais');
+  }
+  const spotIdList = Array.from(candidateSpotIds);
+
   // Initialize accumulators
   let totalCheckins = 0;
   const uniqueVisitorSet = new Set<string>();
@@ -833,49 +874,51 @@ export async function compileOwnerSpotMonthlyMetrics(
 
   // 1. Fetch check-ins strictly for this spot
   if (isFirebaseConfigured) {
-    try {
-      const checkinsRef = collection(db, 'checkins');
-      const q = query(checkinsRef, where('spotId', '==', spotId));
-      const snap = await getDocs(q);
-      snap.forEach(d => {
-        const data = d.data();
-        // Check date falls in the month: dateString format 'YYYY-MM-DD'
-        const dateStr = data.dateString || (data.timestamp ? new Date(data.timestamp).toISOString().slice(0, 10) : '');
-        if (dateStr.startsWith(targetMonth)) {
-          totalCheckins++;
-          if (data.userId) uniqueVisitorSet.add(data.userId);
+    for (const candidateId of spotIdList) {
+      try {
+        const checkinsRef = collection(db, 'checkins');
+        const q = query(checkinsRef, where('spotId', '==', candidateId));
+        const snap = await getDocs(q);
+        snap.forEach(d => {
+          const data = d.data();
+          // Check date falls in the month: dateString format 'YYYY-MM-DD'
+          const dateStr = data.dateString || (data.timestamp ? new Date(data.timestamp).toISOString().slice(0, 10) : '');
+          if (dateStr.startsWith(targetMonth)) {
+            totalCheckins++;
+            if (data.userId) uniqueVisitorSet.add(data.userId);
 
-          // Hourly distribution
-          let hour = 19; // default evening
-          if (data.timestamp) {
-            hour = new Date(data.timestamp).getHours();
+            // Hourly distribution
+            let hour = 19; // default evening
+            if (data.timestamp) {
+              hour = new Date(data.timestamp).getHours();
+            }
+            if (hour >= 12 && hour < 15) hourlyCount['12h - 15h (Almoço)']++;
+            else if (hour >= 15 && hour < 18) hourlyCount['15h - 18h (Tarde)']++;
+            else if (hour >= 18 && hour < 21) hourlyCount['18h - 21h (Afterwork)']++;
+            else if (hour >= 21 && hour <= 23) hourlyCount['21h - 00h (Noite)']++;
+            else if (hour >= 0 && hour < 4) hourlyCount['00h - 04h (Madrugada)']++;
+            else hourlyCount['Outros horários']++;
           }
-          if (hour >= 12 && hour < 15) hourlyCount['12h - 15h (Almoço)']++;
-          else if (hour >= 15 && hour < 18) hourlyCount['15h - 18h (Tarde)']++;
-          else if (hour >= 18 && hour < 21) hourlyCount['18h - 21h (Afterwork)']++;
-          else if (hour >= 21 && hour <= 23) hourlyCount['21h - 00h (Noite)']++;
-          else if (hour >= 0 && hour < 4) hourlyCount['00h - 04h (Madrugada)']++;
-          else hourlyCount['Outros horários']++;
-        }
-      });
-    } catch (e) {
-      console.warn('Notice compiling spot checkins:', e);
-    }
-
-    // Also check spots_taps doc in Firestore
-    try {
-      const spotTapDoc = await getDoc(doc(db, 'spots_taps', spotId));
-      if (spotTapDoc.exists()) {
-        const d = spotTapDoc.data();
-        const pts = Math.max(
-          typeof d.points === 'number' ? d.points : 0,
-          typeof d.totalCheckins === 'number' ? d.totalCheckins : 0,
-          typeof d.hops === 'number' ? d.hops : 0,
-          typeof d.taps === 'number' ? d.taps : 0
-        );
-        totalCheckins = Math.max(totalCheckins, pts);
+        });
+      } catch (e) {
+        console.warn('Notice compiling spot checkins:', e);
       }
-    } catch (e) {}
+
+      // Also check spots_taps doc in Firestore
+      try {
+        const spotTapDoc = await getDoc(doc(db, 'spots_taps', candidateId));
+        if (spotTapDoc.exists()) {
+          const d = spotTapDoc.data();
+          const pts = Math.max(
+            typeof d.points === 'number' ? d.points : 0,
+            typeof d.totalCheckins === 'number' ? d.totalCheckins : 0,
+            typeof d.hops === 'number' ? d.hops : 0,
+            typeof d.taps === 'number' ? d.taps : 0
+          );
+          totalCheckins = Math.max(totalCheckins, pts);
+        }
+      } catch (e) {}
+    }
 
     // Check users collection for visitors at this spot
     try {
@@ -884,7 +927,7 @@ export async function compileOwnerSpotMonthlyMetrics(
         const u = uDoc.data();
         if (Array.isArray(u.checkinHistory)) {
           u.checkinHistory.forEach((item: any) => {
-            if (item && (item.barId === spotId || item.spotId === spotId)) {
+            if (item && (candidateSpotIds.has(item.barId) || candidateSpotIds.has(item.spotId))) {
               const dStr = item.date || (item.timestamp ? String(item.timestamp).slice(0, 10) : '');
               if (!dStr || dStr.startsWith(targetMonth)) {
                 uniqueVisitorSet.add(u.uid || uDoc.id);
@@ -897,13 +940,15 @@ export async function compileOwnerSpotMonthlyMetrics(
   }
 
   // Also check localStorage
-  try {
-    const localVal = localStorage.getItem(`spot_points_${spotId}`) || localStorage.getItem(`spot_hops_${spotId}`);
-    if (localVal) {
-      const p = parseInt(localVal, 10);
-      if (!isNaN(p) && p > 0) totalCheckins = Math.max(totalCheckins, p);
-    }
-  } catch (e) {}
+  for (const candidateId of spotIdList) {
+    try {
+      const localVal = localStorage.getItem(`spot_points_${candidateId}`) || localStorage.getItem(`spot_hops_${candidateId}`);
+      if (localVal) {
+        const p = parseInt(localVal, 10);
+        if (!isNaN(p) && p > 0) totalCheckins = Math.max(totalCheckins, p);
+      }
+    } catch (e) {}
+  }
 
   // 2. Fetch ratings & reviews strictly for this spot
   const spotReviews: Array<{
@@ -914,29 +959,34 @@ export async function compileOwnerSpotMonthlyMetrics(
     beerStyleReviewed?: string;
     date: string;
   }> = [];
+  const seenReviewIds = new Set<string>();
   let totalRatingSum = 0;
 
   if (isFirebaseConfigured) {
-    try {
-      const ratingsRef = collection(db, 'ratings');
-      const q = query(ratingsRef, where('barId', '==', spotId));
-      const snap = await getDocs(q);
-      snap.forEach(d => {
-        const data = d.data();
-        const dateStr = data.createdAt ? new Date(data.createdAt).toISOString().slice(0, 10) : '';
-        const stars = typeof data.stars === 'number' ? data.stars : 5;
-        totalRatingSum += stars;
-        spotReviews.push({
-          id: d.id,
-          userName: data.userName || 'Cervejeiro',
-          rating: stars,
-          comment: data.texto_rating || '',
-          beerStyleReviewed: data.tipo_cerveja,
-          date: dateStr
+    for (const candidateId of spotIdList) {
+      try {
+        const ratingsRef = collection(db, 'ratings');
+        const q = query(ratingsRef, where('barId', '==', candidateId));
+        const snap = await getDocs(q);
+        snap.forEach(d => {
+          if (seenReviewIds.has(d.id)) return;
+          seenReviewIds.add(d.id);
+          const data = d.data();
+          const dateStr = data.createdAt ? new Date(data.createdAt).toISOString().slice(0, 10) : '';
+          const stars = typeof data.stars === 'number' ? data.stars : 5;
+          totalRatingSum += stars;
+          spotReviews.push({
+            id: d.id,
+            userName: data.userName || 'Cervejeiro',
+            rating: stars,
+            comment: data.texto_rating || '',
+            beerStyleReviewed: data.tipo_cerveja,
+            date: dateStr
+          });
         });
-      });
-    } catch (e) {
-      console.warn('Notice compiling spot ratings:', e);
+      } catch (e) {
+        console.warn('Notice compiling spot ratings:', e);
+      }
     }
   }
 
@@ -944,31 +994,36 @@ export async function compileOwnerSpotMonthlyMetrics(
   let totalShares = 0;
   let totalViews = 0;
   let totalDirections = 0;
+  const seenEventIds = new Set<string>();
 
   if (isFirebaseConfigured) {
-    try {
-      const eventsRef = collection(db, 'analytics_events');
-      const q = query(
-        eventsRef, 
-        where('spotId', '==', spotId),
-        where('month', '==', targetMonth)
-      );
-      const snap = await getDocs(q);
-      snap.forEach(d => {
-        const ev = d.data();
-        if (ev.eventType === 'spot_social_share') totalShares++;
-        else if (ev.eventType === 'spot_view') totalViews++;
-        else if (ev.eventType === 'spot_directions_click') totalDirections++;
-      });
-    } catch (e) {
-      console.warn('Notice reading spot analytics events:', e);
+    for (const candidateId of spotIdList) {
+      try {
+        const eventsRef = collection(db, 'analytics_events');
+        const q = query(
+          eventsRef, 
+          where('spotId', '==', candidateId),
+          where('month', '==', targetMonth)
+        );
+        const snap = await getDocs(q);
+        snap.forEach(d => {
+          if (seenEventIds.has(d.id)) return;
+          seenEventIds.add(d.id);
+          const ev = d.data();
+          if (ev.eventType === 'spot_social_share') totalShares++;
+          else if (ev.eventType === 'spot_view') totalViews++;
+          else if (ev.eventType === 'spot_directions_click') totalDirections++;
+        });
+      } catch (e) {
+        console.warn('Notice reading spot analytics events:', e);
+      }
     }
   }
 
   // Also combine local events buffer
   const localEvents = getLocalEvents();
   localEvents.forEach(ev => {
-    if (ev.spotId === spotId && ev.month === targetMonth) {
+    if (candidateSpotIds.has(ev.spotId) && ev.month === targetMonth) {
       if (ev.eventType === 'spot_social_share') totalShares++;
       else if (ev.eventType === 'spot_view') totalViews++;
       else if (ev.eventType === 'spot_directions_click') totalDirections++;

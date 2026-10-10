@@ -251,7 +251,11 @@ export function getBarFeatures(bar: Bar, _lang: Language = 'PT'): BarFeaturesRes
     'hop-trip-craft-beer-shop-matosinhos': 15,
     'hop-trip': 15,
     'o-covil-lisboa': 13,
-    'o-covil': 13
+    'o-covil': 13,
+    'catraio-craft-beer-shop-bar-porto': 16,
+    'catraio': 16,
+    'azores-brewing-company-acores': 6,
+    'azores-brewing': 6
   };
 
   // Deduce or use explicit attributes
@@ -259,6 +263,10 @@ export function getBarFeatures(bar: Bar, _lang: Language = 'PT'): BarFeaturesRes
   if (taps < 0) {
     if (name.includes('fidélis') || name.includes('fidelis')) {
       taps = 12;
+    } else if (name.includes('catraio')) {
+      taps = 16;
+    } else if (name.includes('azores brewing')) {
+      taps = 6;
     } else if (name.includes('covil')) {
       taps = 13;
     } else if (name.includes('hop trip')) {
@@ -295,12 +303,18 @@ export function getBarFeatures(bar: Bar, _lang: Language = 'PT'): BarFeaturesRes
     }
   }
 
-  const hasFood = bar.hasFood !== undefined ? bar.hasFood : true;
-  const petFriendly = bar.petFriendly !== undefined ? bar.petFriendly : true;
-  const hasTerrace = bar.hasTerrace !== undefined ? bar.hasTerrace : true;
-  const hasParking = bar.hasParking !== undefined 
-    ? bar.hasParking 
-    : (desc.includes('estacionamento') || desc.includes('parque') || desc.includes('parking') || true);
+  const isCatraio = id === 'catraio-craft-beer-shop-bar-porto' || id === 'catraio' || name.includes('catraio');
+  const isAzoresBrewing = id === 'azores-brewing-company-acores' || id === 'azores-brewing' || name.includes('azores brewing');
+  const hasFood = (isCatraio || isAzoresBrewing) ? true : (bar.hasFood !== undefined ? bar.hasFood : true);
+  const petFriendly = (isCatraio || isAzoresBrewing) ? true : (bar.petFriendly !== undefined ? bar.petFriendly : true);
+  const hasTerrace = (isCatraio || isAzoresBrewing) ? true : (bar.hasTerrace !== undefined ? bar.hasTerrace : true);
+  const hasParking = isCatraio
+    ? false
+    : isAzoresBrewing
+    ? true
+    : (bar.hasParking !== undefined 
+      ? bar.hasParking 
+      : (desc.includes('estacionamento') || desc.includes('parque') || desc.includes('parking') || true));
   const hasBeerShop = bar.hasBeerShop !== undefined 
     ? bar.hasBeerShop 
     : (desc.includes('loja') || desc.includes('garrafeira') || desc.includes('take-away') || desc.includes('bottleshop') || desc.includes('beer shop') || name.includes('beerstore'));

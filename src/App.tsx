@@ -38,7 +38,8 @@ import MonthlyReportModal from './components/MonthlyReportModal';
 import AdminPinsDashboardModal from './components/AdminPinsDashboardModal';
 import AdminOwnerClaimsModal from './components/AdminOwnerClaimsModal';
 import OwnerMetricsDashboard from './components/OwnerMetricsDashboard';
-import { getClaimedSpotIds, submitOwnerClaim, getVerifiedOwnerConfig, findSpotByOwnerSpotId } from './lib/ownerUtils';
+import { getClaimedSpotIds, submitOwnerClaim, getVerifiedOwnerConfig, findSpotByOwnerSpotId, VERIFIED_OWNER_MAPPINGS } from './lib/ownerUtils';
+import { calculateStreakStats, evaluateNewStreakMilestones, STREAK_MILESTONES } from './lib/streaks';
 import BeerStyleSelectModal from './components/BeerStyleSelectModal';
 import RetroPinModal from './components/RetroPinModal';
 import RetroStageClearCelebration from './components/RetroStageClearCelebration';
@@ -1841,6 +1842,18 @@ export default function App() {
     return uniqueBars.size;
   }, [user.checkinHistory, user.stamps, user.checkedInBars]);
 
+  // Check-in Streak Stats Calculation for the current user
+  const userStreakStats = React.useMemo(() => {
+    return calculateStreakStats(user);
+  }, [
+    user.checkinHistory,
+    user.lastCheckinDates,
+    user.tenStampsDates,
+    user.currentStreak,
+    user.longestStreak,
+    user.awardedStreakMilestones
+  ]);
+
   // Badges Calculation for the current user
   const userBadgeStatuses = React.useMemo(() => {
     return calculateUserBadges({
@@ -2493,6 +2506,31 @@ export default function App() {
         }));
         setRatingsHistory(prev => prev.filter(r => r.userId !== cobeerUid && r.userName !== 'cobeer taste TEST' && r.userName !== 'Cobeer Taste'));
       }
+
+      // 6. Sync verified owners in Firestore users collection
+      if (isFirebaseConfigured && db) {
+        for (const [ownerEmail, ownerCfg] of Object.entries(VERIFIED_OWNER_MAPPINGS)) {
+          try {
+            const qOwnerUser = query(usersRef, where('email', '==', ownerEmail));
+            const snapOwnerUser = await getDocs(qOwnerUser);
+            snapOwnerUser.forEach(d => {
+              const dData = d.data();
+              if (!dData.isOwner || dData.ownedSpotId !== ownerCfg.spotId || !dData.ownerClaimApproved) {
+                updateDoc(doc(db, 'users', d.id), {
+                  role: 'owner',
+                  isOwner: true,
+                  ownedSpotId: ownerCfg.spotId,
+                  ownerClaimApproved: true,
+                  ownerClaimPending: false,
+                  ownerClaimSpotId: ownerCfg.spotId,
+                  ownerClaimSpotName: ownerCfg.spotName,
+                  ...(ownerCfg.username && !dData.username ? { username: ownerCfg.username } : {})
+                }).catch(() => {});
+              }
+            });
+          } catch (e) {}
+        }
+      }
     } catch (err) {
       console.warn('Notice in purgeAndSyncCobeerTaste:', err);
     }
@@ -2781,6 +2819,20 @@ export default function App() {
         let savedBadges: any[] = [];
         let savedReferredBy: string | undefined = undefined;
         let savedHasCompletedFirstCheckin = localStorage.getItem(cacheKeyPrefix + 'hasCompletedFirstCheckin') === 'true';
+        let savedCurrentStreak: number | undefined = undefined;
+        let savedLongestStreak: number | undefined = undefined;
+        let savedAwardedStreakMilestones: number[] = [];
+        let savedStreakBonusPoints = 0;
+
+        const cachedAwardedMilestones = localStorage.getItem(cacheKeyPrefix + 'awardedStreakMilestones');
+        if (cachedAwardedMilestones) {
+          try { savedAwardedStreakMilestones = JSON.parse(cachedAwardedMilestones); } catch (e) {}
+        }
+        const cachedStreakBonus = localStorage.getItem(cacheKeyPrefix + 'streakBonusPoints');
+        if (cachedStreakBonus) {
+          savedStreakBonusPoints = parseInt(cachedStreakBonus, 10) || 0;
+        }
+
         const userCleanEmail = (firebaseUser.email || '').toLowerCase().trim();
         const isCobeerAccount = userCleanEmail === 'cobeertaste@gmail.com';
         const verifiedOwnerConfig = getVerifiedOwnerConfig(userCleanEmail);
@@ -2857,6 +2909,20 @@ export default function App() {
             }
             if (typeof data.hasCompletedFirstCheckin === 'boolean') {
               savedHasCompletedFirstCheckin = data.hasCompletedFirstCheckin;
+            }
+            if (typeof data.currentStreak === 'number') {
+              savedCurrentStreak = data.currentStreak;
+            }
+            if (typeof data.longestStreak === 'number') {
+              savedLongestStreak = data.longestStreak;
+            }
+            if (Array.isArray(data.awardedStreakMilestones)) {
+              savedAwardedStreakMilestones = data.awardedStreakMilestones;
+              localStorage.setItem(cacheKeyPrefix + 'awardedStreakMilestones', JSON.stringify(savedAwardedStreakMilestones));
+            }
+            if (typeof data.streakBonusPoints === 'number') {
+              savedStreakBonusPoints = data.streakBonusPoints;
+              localStorage.setItem(cacheKeyPrefix + 'streakBonusPoints', String(savedStreakBonusPoints));
             }
 
             // Extract owner and role fields
@@ -3014,6 +3080,10 @@ export default function App() {
           ownerClaimApproved: savedOwnerClaimApproved,
           ownerClaimSpotId: savedOwnerClaimSpotId,
           ownerClaimSpotName: savedOwnerClaimSpotName,
+          currentStreak: isCobeerAccount ? 0 : savedCurrentStreak,
+          longestStreak: isCobeerAccount ? 0 : savedLongestStreak,
+          awardedStreakMilestones: isCobeerAccount ? [] : savedAwardedStreakMilestones,
+          streakBonusPoints: isCobeerAccount ? 0 : savedStreakBonusPoints,
           isLoggedIn: true
         }));
       } else {
@@ -3181,13 +3251,60 @@ export default function App() {
       localStorage.setItem(cacheKeyPrefix + 'lastCheckinDates', JSON.stringify(user.lastCheckinDates || {}));
       localStorage.setItem(cacheKeyPrefix + 'tenStampsDates', JSON.stringify(user.tenStampsDates || {}));
       localStorage.setItem(cacheKeyPrefix + 'checkinHistory', JSON.stringify(user.checkinHistory || []));
+      localStorage.setItem(cacheKeyPrefix + 'awardedStreakMilestones', JSON.stringify(user.awardedStreakMilestones || []));
+      localStorage.setItem(cacheKeyPrefix + 'streakBonusPoints', String(user.streakBonusPoints || 0));
     } else {
       localStorage.setItem('hop_user_1_stamps', JSON.stringify(user.stamps || {}));
       localStorage.setItem('hop_user_1_lastCheckinDates', JSON.stringify(user.lastCheckinDates || {}));
       localStorage.setItem('hop_user_1_tenStampsDates', JSON.stringify(user.tenStampsDates || {}));
       localStorage.setItem('hop_user_1_checkinHistory', JSON.stringify(user.checkinHistory || []));
+      localStorage.setItem('hop_user_1_awardedStreakMilestones', JSON.stringify(user.awardedStreakMilestones || []));
+      localStorage.setItem('hop_user_1_streakBonusPoints', String(user.streakBonusPoints || 0));
     }
-  }, [user.id, user.points, user.favorites, user.friends, user.stamps, user.lastCheckinDates, user.tenStampsDates, user.checkinHistory, user.isLoggedIn]);
+  }, [user.id, user.points, user.favorites, user.friends, user.stamps, user.lastCheckinDates, user.tenStampsDates, user.checkinHistory, user.awardedStreakMilestones, user.streakBonusPoints, user.isLoggedIn]);
+
+  // Synchronize computed streak stats and retroactively award any earned streak milestone bonus HOPS
+  useEffect(() => {
+    if (!user.isLoggedIn || !user.id || user.id.startsWith('local-user-') || (user.email || '').toLowerCase().trim() === 'cobeertaste@gmail.com') {
+      return;
+    }
+
+    const { currentStreak, longestStreak } = userStreakStats;
+    const { newlyReachedMilestones, totalBonusHops, updatedAwardedMilestones } = evaluateNewStreakMilestones(
+      currentStreak,
+      longestStreak,
+      user.awardedStreakMilestones || []
+    );
+
+    const needsStreakSync =
+      newlyReachedMilestones.length > 0 ||
+      user.currentStreak !== currentStreak ||
+      user.longestStreak !== longestStreak;
+
+    if (!needsStreakSync) return;
+
+    const updatedPoints = (user.points || 0) + totalBonusHops;
+    const updatedBonusPts = (user.streakBonusPoints || 0) + totalBonusHops;
+
+    setUser(prev => ({
+      ...prev,
+      points: updatedPoints,
+      currentStreak,
+      longestStreak,
+      awardedStreakMilestones: updatedAwardedMilestones,
+      streakBonusPoints: updatedBonusPts
+    }));
+
+    if (!isLocalAuthFallback && auth.currentUser) {
+      setDoc(doc(db, 'users', user.id), {
+        points: updatedPoints,
+        currentStreak,
+        longestStreak,
+        awardedStreakMilestones: updatedAwardedMilestones,
+        streakBonusPoints: updatedBonusPts
+      }, { merge: true }).catch(() => {});
+    }
+  }, [userStreakStats.currentStreak, userStreakStats.longestStreak, user.isLoggedIn, user.id]);
 
   // Auto layout triggers & alerts
   useEffect(() => {
@@ -3518,7 +3635,6 @@ export default function App() {
             ...b,
             hops: correctPoints,
             totalCheckins: correctPoints,
-            taps: correctPoints,
             points: correctPoints
           };
         }));
@@ -3557,7 +3673,6 @@ export default function App() {
               ...b,
               hops: updatedPoints,
               totalCheckins: updatedPoints,
-              taps: updatedPoints,
               points: updatedPoints
             };
           }));
@@ -4108,6 +4223,33 @@ export default function App() {
     };
     const nextCheckinHistory = [newCheckinLog, ...(user.checkinHistory || [])];
 
+    // Calculate updated check-in streak and check for newly unlocked streak milestones
+    const updatedStreakStats = calculateStreakStats(
+      {
+        checkinHistory: nextCheckinHistory,
+        lastCheckinDates: nextLastCheckinDates,
+        tenStampsDates: nextTenStampsDates,
+        currentStreak: user.currentStreak,
+        longestStreak: user.longestStreak,
+        awardedStreakMilestones: user.awardedStreakMilestones
+      },
+      [todayStr],
+      todayStr
+    );
+
+    const {
+      newlyReachedMilestones,
+      totalBonusHops: streakBonusEarned,
+      updatedAwardedMilestones
+    } = evaluateNewStreakMilestones(
+      updatedStreakStats.currentStreak,
+      updatedStreakStats.longestStreak,
+      user.awardedStreakMilestones || []
+    );
+
+    const totalHopsEarnedThisCheckin = 1 + streakBonusEarned;
+    const nextStreakBonusPoints = (user.streakBonusPoints || 0) + streakBonusEarned;
+
     // 1. Record in Firestore 'checkins' collection for audit and 24h lockout
     if (user.isLoggedIn && !user.id.startsWith('local-user-')) {
       try {
@@ -4123,17 +4265,21 @@ export default function App() {
       }
     }
 
-    // 2. Save the updated points, stamps, and history to the user document in Firestore if using cloud auth
+    // 2. Save the updated points, stamps, streak stats, and history to the user document in Firestore if using cloud auth
     if (!isLocalAuthFallback && auth.currentUser) {
       try {
-        const newPoints = (user.points || 0) + 1;
+        const newPoints = (user.points || 0) + totalHopsEarnedThisCheckin;
         await setDoc(doc(db, 'users', user.id), { 
           points: newPoints,
           stamps: nextStampsRecord,
           checkedInBars: nextCheckedIn,
           lastCheckinDates: nextLastCheckinDates,
           tenStampsDates: nextTenStampsDates,
-          checkinHistory: nextCheckinHistory
+          checkinHistory: nextCheckinHistory,
+          currentStreak: updatedStreakStats.currentStreak,
+          longestStreak: updatedStreakStats.longestStreak,
+          awardedStreakMilestones: updatedAwardedMilestones,
+          streakBonusPoints: nextStreakBonusPoints
         }, { merge: true });
       } catch (uerr) {
         if (isPermissionError(uerr)) {
@@ -4186,13 +4332,33 @@ export default function App() {
     // 4. Update local user profile state
     setUser(prev => ({
       ...prev,
-      points: (prev.points || 0) + 1,
+      points: (prev.points || 0) + totalHopsEarnedThisCheckin,
       stamps: nextStampsRecord,
       tenStampsDates: nextTenStampsDates,
       checkedInBars: nextCheckedIn,
       lastCheckinDates: nextLastCheckinDates,
-      checkinHistory: nextCheckinHistory
+      checkinHistory: nextCheckinHistory,
+      currentStreak: updatedStreakStats.currentStreak,
+      longestStreak: updatedStreakStats.longestStreak,
+      awardedStreakMilestones: updatedAwardedMilestones,
+      streakBonusPoints: nextStreakBonusPoints
     }));
+
+    // 4.1 If a streak milestone was reached, trigger a special reward notification
+    if (newlyReachedMilestones.length > 0) {
+      const topMilestone = newlyReachedMilestones[newlyReachedMilestones.length - 1];
+      triggerSelfPush(
+        lang === 'PT'
+          ? `🔥 Meta de Streak (${topMilestone.days} Dias)! +${streakBonusEarned} HOPS Bónus!`
+          : `🔥 ${topMilestone.days}-Day Streak Milestone! +${streakBonusEarned} Bonus HOPS!`,
+        lang === 'PT'
+          ? `Incrível! Mantiveste ${topMilestone.days} dias seguidos de check-in (${topMilestone.titlePt}) e ganhaste +${streakBonusEarned} HOPS de bónus!`
+          : `Awesome! You reached a ${topMilestone.days}-day check-in streak (${topMilestone.titleEn}) and earned +${streakBonusEarned} bonus HOPS!`,
+        'reward',
+        `🔥 ${topMilestone.days}-Day Streak Milestone! +${streakBonusEarned} Bonus HOPS!`,
+        `Awesome! You reached a ${topMilestone.days}-day check-in streak (${topMilestone.titleEn}) and earned +${streakBonusEarned} bonus HOPS!`
+      );
+    }
 
     // 5. Trigger Screen-Wide STAGE CLEAR 8-Bit Festive Celebration & Arcade Sound!
     setStageClearSpotName(bar.name);
@@ -4222,16 +4388,24 @@ export default function App() {
     // 6. iOS System Toast Notification
     setIosToast({
       id: `toast_${Date.now()}`,
-      title: isFirstCheckinAtSpot
-        ? firstCheckinText
-        : (lang === 'PT' ? 'Check-in Confirmado' : 'Check-in Confirmed'),
+      title: newlyReachedMilestones.length > 0
+        ? (lang === 'PT'
+          ? `🔥 Streak ${updatedStreakStats.currentStreak} Dias! (+${streakBonusEarned} Bónus)`
+          : `🔥 ${updatedStreakStats.currentStreak}-Day Streak! (+${streakBonusEarned} Bonus)`)
+        : (isFirstCheckinAtSpot
+          ? firstCheckinText
+          : (lang === 'PT' ? 'Check-in Confirmado' : 'Check-in Confirmed')),
       barName: bar.name,
-      pointsEarned: 1,
-      subtitle: isFirstCheckinAtSpot
-        ? firstCheckinText
-        : (isTenthStamp 
-          ? (lang === 'PT' ? '10.º Selo Conquistado! 🎉' : '10th Stamp Achieved! 🎉') 
-          : (lang === 'PT' ? '1 HOP Ganho (+1 Selo)' : '1 HOP Earned (+1 Stamp)'))
+      pointsEarned: totalHopsEarnedThisCheckin,
+      subtitle: newlyReachedMilestones.length > 0
+        ? (lang === 'PT'
+          ? `+1 Check-in + ${streakBonusEarned} HOPS Bónus de Streak!`
+          : `+1 Check-in + ${streakBonusEarned} Streak Bonus HOPS!`)
+        : (isFirstCheckinAtSpot
+          ? firstCheckinText
+          : (isTenthStamp 
+            ? (lang === 'PT' ? '10.º Selo Conquistado! 🎉' : '10th Stamp Achieved! 🎉') 
+            : (lang === 'PT' ? '1 HOP Ganho (+1 Selo)' : '1 HOP Earned (+1 Stamp)')))
     });
 
     // 7. Notify friends if check-in sharing is enabled
@@ -4246,29 +4420,35 @@ export default function App() {
     });
 
     // 9. Pop-up modal per user prompt specifications
+    const streakBonusSuffix = newlyReachedMilestones.length > 0
+      ? (lang === 'PT'
+        ? ` 🔥 Meta de Streak de ${updatedStreakStats.currentStreak} dias atingida (+${streakBonusEarned} HOPS Bónus)!`
+        : ` 🔥 ${updatedStreakStats.currentStreak}-day Streak Milestone reached (+${streakBonusEarned} Bonus HOPS)!`)
+      : '';
+
     if (isFirstCheckinAtSpot) {
       setCheckinPopupModal({
         isOpen: true,
         title: 'HOP-MAP',
-        message: firstCheckinText,
+        message: `${firstCheckinText}${streakBonusSuffix}`,
         website: 'www.cobeertaste.com'
       });
     } else if (isTenthStamp) {
       setCheckinPopupModal({
         isOpen: true,
         title: 'HOP-MAP',
-        message: lang === 'PT' 
+        message: (lang === 'PT' 
           ? `Parabéns, conquistaste o ${bar.name}! Completaste os 10 check-ins com sucesso neste spot.`
-          : `Congratulations, you conquered ${bar.name}! You successfully completed all 10 check-ins at this spot.`,
+          : `Congratulations, you conquered ${bar.name}! You successfully completed all 10 check-ins at this spot.`) + streakBonusSuffix,
         website: 'www.cobeertaste.com'
       });
     } else {
       setCheckinPopupModal({
         isOpen: true,
         title: 'HOP-MAP',
-        message: lang === 'PT'
+        message: (lang === 'PT'
           ? `Parabéns, ganhaste 1 HOP por check-in no spot ${bar.name}. Desfruta da tua cerveja em ${bar.name}.`
-          : `Congratulations, you earned 1 HOP for checking in at ${bar.name}. Enjoy your craft beer!`,
+          : `Congratulations, you earned 1 HOP for checking in at ${bar.name}. Enjoy your craft beer!`) + streakBonusSuffix,
         website: 'www.cobeertaste.com'
       });
     }
@@ -5635,7 +5815,16 @@ export default function App() {
               className="text-[9.5px] text-[#1B2036]/70 mt-2 w-full max-w-xs text-justify leading-relaxed px-1 font-body"
               id="login-terms-disclaimer"
             >
-              {t('loginTermsAgreement', lang)}
+              {t('loginTermsAgreement', lang)}{' '}
+              <a
+                href="https://www.termsfeed.com/live/fd8997d3-fcd7-4490-9ec6-b0bb6c6817e1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline font-semibold text-[#1B2036] hover:text-[#12908C] transition-colors"
+                id="login-privacy-policy-link"
+              >
+                {t('privacyPolicyLabel', lang)}
+              </a>
             </p>
 
             <p 
@@ -7158,7 +7347,7 @@ export default function App() {
                     </div>
                     <p className="text-[10px] truncate mt-0.5 text-zinc-500">{user.email}</p>
                     
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span 
                         className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-md border border-zinc-700"
                         style={{
@@ -7168,6 +7357,11 @@ export default function App() {
                       >
                         {userRankingStyle.tierTitle}
                       </span>
+                      {userStreakStats.currentStreak > 0 && (
+                        <span className="text-[9px] font-mono font-extrabold text-amber-800 px-1.5 py-0.5">
+                          🔥 {userStreakStats.currentStreak}{lang === 'PT' ? 'd Streak' : 'd Streak'}
+                        </span>
+                      )}
                       {isGlobalRank1 && (
                         <span className="text-[9px] font-mono font-black text-amber-300 bg-amber-500/20 border border-zinc-700 px-2 py-0.5 rounded-md animate-pulse">
                           #1 GLOBAL
@@ -7310,6 +7504,192 @@ export default function App() {
                         {isGlobalRank1 && <span className="mr-1 select-none">👑</span>}
                         {typeof userGlobalRank === 'number' ? `#${userGlobalRank}` : userGlobalRank} <span className="text-[10px] text-amber-600 font-bold">{lang === 'PT' ? 'Global' : 'Global'}</span>
                       </div>
+                    </div>
+
+                    {/* 6. Sequência de Check-ins (Streak) */}
+                    <div className="py-2.5 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <span className="text-[11px] font-bold block text-black font-display">
+                          {lang === 'PT' ? 'Sequência de Check-ins (Streak)' : 'Check-in Streak'}
+                        </span>
+                        <span className="text-[10px] text-zinc-600 block font-sans">
+                          {lang === 'PT' 
+                            ? `Dias consecutivos de check-in · Recorde: ${userStreakStats.longestStreak}d` 
+                            : `Consecutive check-in days · Best: ${userStreakStats.longestStreak}d`}
+                        </span>
+                      </div>
+                      <div className="shrink-0 font-mono text-sm font-extrabold px-3 py-1.5 rounded-xl border border-zinc-700 bg-amber-500/15 text-amber-900 flex items-center gap-1">
+                        <span className="select-none">{userStreakStats.currentStreak > 0 ? '🔥' : '⏳'}</span>
+                        <span>{userStreakStats.currentStreak}</span>
+                        <span className="text-[10px] text-amber-700 font-bold">
+                          {lang === 'PT'
+                            ? (userStreakStats.currentStreak === 1 ? 'DIA' : 'DIAS')
+                            : (userStreakStats.currentStreak === 1 ? 'DAY' : 'DAYS')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CHECK-IN STREAKS & MILESTONE BONUS HOPS TRACKER */}
+                <div className="p-4 rounded-3xl border-2 border-zinc-700 transition-all bg-[#F6EFDC] text-neutral-900 shadow-sm space-y-3.5" id="profile-checkin-streak-card">
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b border-zinc-700 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-zinc-700 flex items-center justify-center text-base shrink-0 select-none">
+                        🔥
+                      </div>
+                      <div className="text-left">
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider font-display text-black">
+                          {lang === 'PT' ? 'Check-in Streaks & Bónus HOPS' : 'Check-in Streaks & Bonus HOPS'}
+                        </h4>
+                        <p className="text-[9.5px] text-zinc-600 font-sans">
+                          {lang === 'PT'
+                            ? 'Faz check-in em dias seguidos para ganhar HOPS extra nas metas'
+                            : 'Check in multiple days in a row to earn bonus HOPS at milestones'}
+                        </p>
+                      </div>
+                    </div>
+                    {(user.streakBonusPoints || 0) > 0 && (
+                      <div className="text-right shrink-0">
+                        <span className="text-[10px] font-mono font-extrabold text-amber-800 block">
+                          +{user.streakBonusPoints} HOPS
+                        </span>
+                        <span className="text-[8.5px] text-zinc-600 font-sans block">
+                          {lang === 'PT' ? 'Bónus Ganhos' : 'Bonus Earned'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Streak vs Longest Streak Summary */}
+                  <div className="grid grid-cols-2 gap-2.5 text-left">
+                    <div className="p-3 rounded-2xl bg-[#EFE6CC] border border-zinc-700 flex items-center justify-between">
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider font-bold text-zinc-600 block font-display">
+                          {lang === 'PT' ? 'Streak Atual' : 'Current Streak'}
+                        </span>
+                        <div className="text-lg font-extrabold font-mono text-black flex items-baseline gap-1 mt-0.5">
+                          <span>{userStreakStats.currentStreak}</span>
+                          <span className="text-[10px] font-bold text-amber-700 uppercase">
+                            {lang === 'PT'
+                              ? (userStreakStats.currentStreak === 1 ? 'Dia' : 'Dias')
+                              : (userStreakStats.currentStreak === 1 ? 'Day' : 'Days')}
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-zinc-600 font-sans block mt-0.5">
+                          {userStreakStats.checkedInToday
+                            ? (lang === 'PT' ? '✓ Check-in feito hoje' : '✓ Checked in today')
+                            : userStreakStats.isStreakAtRisk
+                              ? (lang === 'PT' ? '⚡ Faz check-in hoje para manter!' : '⚡ Check in today to keep it!')
+                              : (lang === 'PT' ? 'Faz check-in hoje para iniciar' : 'Check in today to start')}
+                        </span>
+                      </div>
+                      <span className="text-2xl select-none">{userStreakStats.currentStreak > 0 ? '🔥' : '🍺'}</span>
+                    </div>
+
+                    <div className="p-3 rounded-2xl bg-[#EFE6CC] border border-zinc-700 flex items-center justify-between">
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider font-bold text-zinc-600 block font-display">
+                          {lang === 'PT' ? 'Melhor Sequência' : 'Longest Streak'}
+                        </span>
+                        <div className="text-lg font-extrabold font-mono text-black flex items-baseline gap-1 mt-0.5">
+                          <span>{userStreakStats.longestStreak}</span>
+                          <span className="text-[10px] font-bold text-amber-700 uppercase">
+                            {lang === 'PT'
+                              ? (userStreakStats.longestStreak === 1 ? 'Dia' : 'Dias')
+                              : (userStreakStats.longestStreak === 1 ? 'Day' : 'Days')}
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-zinc-600 font-sans block mt-0.5">
+                          {lang === 'PT'
+                            ? `${userStreakStats.achievedMilestones.length}/${STREAK_MILESTONES.length} metas alcançadas`
+                            : `${userStreakStats.achievedMilestones.length}/${STREAK_MILESTONES.length} milestones reached`}
+                        </span>
+                      </div>
+                      <span className="text-2xl select-none">🏆</span>
+                    </div>
+                  </div>
+
+                  {/* Next Milestone Progress Bar */}
+                  {userStreakStats.nextMilestone && (
+                    <div className="p-3 rounded-2xl bg-[#EFE6CC]/70 border border-zinc-700 space-y-1.5 text-left">
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="font-bold text-black font-display flex items-center gap-1">
+                          <span>{userStreakStats.nextMilestone.icon}</span>
+                          <span>
+                            {lang === 'PT'
+                              ? `Próxima Meta: ${userStreakStats.nextMilestone.titlePt}`
+                              : `Next Milestone: ${userStreakStats.nextMilestone.titleEn}`}
+                          </span>
+                        </span>
+                        <span className="font-mono font-extrabold text-amber-800">
+                          +{userStreakStats.nextMilestone.bonusHops} HOPS
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-zinc-300 rounded-full overflow-hidden border border-zinc-700">
+                        <div
+                          className="h-full bg-amber-500 transition-all duration-500"
+                          style={{ width: `${Math.max(6, userStreakStats.progressToNextPercent)}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-[9px] text-zinc-600 font-sans">
+                        <span>
+                          {lang === 'PT'
+                            ? `Progresso: ${userStreakStats.currentStreak}/${userStreakStats.nextMilestone.days} dias seguidos`
+                            : `Progress: ${userStreakStats.currentStreak}/${userStreakStats.nextMilestone.days} consecutive days`}
+                        </span>
+                        <span>
+                          {lang === 'PT'
+                            ? `Faltam ${userStreakStats.daysToNextMilestone} ${userStreakStats.daysToNextMilestone === 1 ? 'dia' : 'dias'}`
+                            : `${userStreakStats.daysToNextMilestone} ${userStreakStats.daysToNextMilestone === 1 ? 'day' : 'days'} left`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Milestones Ladder */}
+                  <div className="space-y-1.5 text-left">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-zinc-700 font-display">
+                        {lang === 'PT' ? 'Recompensas de Metas (Bónus HOPS)' : 'Streak Milestones (Bonus HOPS)'}
+                      </span>
+                      <span className="text-[9px] text-zinc-600 font-sans">
+                        {lang === 'PT' ? 'Acumula no ranking' : 'Added to total HOPS'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {STREAK_MILESTONES.map((milestone) => {
+                        const isUnlocked =
+                          userStreakStats.longestStreak >= milestone.days ||
+                          (user.awardedStreakMilestones || []).includes(milestone.days);
+                        const isNext = userStreakStats.nextMilestone?.days === milestone.days;
+                        return (
+                          <div
+                            key={milestone.days}
+                            className={`p-2 rounded-xl border text-center transition-all ${
+                              isUnlocked
+                                ? 'bg-amber-500/20 border-zinc-800 text-black'
+                                : isNext
+                                  ? 'bg-[#EFE6CC] border-amber-600 text-zinc-900'
+                                  : 'bg-[#EFE6CC]/50 border-zinc-400 text-zinc-500 opacity-75'
+                            }`}
+                          >
+                            <div className="text-base leading-none select-none">{milestone.icon}</div>
+                            <div className="text-[10px] font-extrabold font-display mt-1 leading-tight">
+                              {milestone.days}{lang === 'PT' ? 'd' : 'd'}
+                            </div>
+                            <div className="text-[8.5px] font-mono font-bold text-amber-800 leading-tight mt-0.5">
+                              +{milestone.bonusHops} HOPS
+                            </div>
+                            <div className="text-[7.5px] font-sans mt-0.5 truncate">
+                              {isUnlocked
+                                ? (lang === 'PT' ? '✓ Ganho' : '✓ Earned')
+                                : `${Math.min(milestone.days, userStreakStats.currentStreak)}/${milestone.days}`}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

@@ -163,7 +163,15 @@ export const BARS_B: Bar[] = [
     "facebookUrl": "https://www.facebook.com/CatraioCraftBeer",
     "latitude": 41.1511201428873,
     "longitude": -8.617286141986535,
-    "hasApplePay": true
+    "hasApplePay": true,
+    "taps": 16,
+    "hasFood": true,
+    "petFriendly": true,
+    "hasParking": false,
+    "hasTerrace": true,
+    "parkingNotePT": "Não",
+    "parkingNoteEN": "No",
+    "isVerified": true
   },
   {
     "id": "nortada",

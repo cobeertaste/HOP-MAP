@@ -26,6 +26,13 @@
         "ownerClaimSpotId": { "type": "string" },
         "ownerClaimSpotName": { "type": "string" },
         "ownerClaimRequestedAt": { "type": "string", "format": "date-time" },
+        "currentStreak": { "type": "number" },
+        "longestStreak": { "type": "number" },
+        "awardedStreakMilestones": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "streakBonusPoints": { "type": "number" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email"]
