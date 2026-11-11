@@ -1766,7 +1766,7 @@ export default function App() {
           const knownPts = knownList.reduce((acc, k) => acc + k.count, 0);
           points = Math.max(points, knownPts);
         }
-        if (typeof uname === 'string' && uname.trim().length > 0) {
+        if (typeof uname === 'string' && uname.trim().length > 0 && points > 0 && userEmail !== 'cobeertaste@gmail.com') {
           dbUsers.push({
             id: docSnap.id,
             username: uname.trim(),
@@ -1779,28 +1779,31 @@ export default function App() {
       let currentUserFound = false;
       const isCurrentCobeer = (user.email || '').toLowerCase().trim() === 'cobeertaste@gmail.com';
       const list = dbUsers.map(u => {
-        if (user.isLoggedIn && (u.id === user.id || u.username.toLowerCase() === user.username.toLowerCase())) {
+        if (user.isLoggedIn && (u.id === user.id || u.username.toLowerCase() === user.username.toLowerCase() || (user.email && (KNOWN_REGISTERED_USER_CHECKINS[user.email.toLowerCase()] && (u.id === 'N0SueaZJUdMEody6xLS9OEf2ZYh2' || u.username.toLowerCase() === 'xzero'))))) {
           currentUserFound = true;
           return { 
             ...u, 
             id: user.id, 
             username: isCurrentCobeer ? 'Cobeer Taste' : user.username, 
-            points: isCurrentCobeer ? 0 : (user.points || 0) 
+            points: isCurrentCobeer ? 0 : Math.max(u.points, user.points || 0) 
           };
         }
         return u;
       });
 
-      if (user.isLoggedIn && !currentUserFound && user.username) {
+      if (user.isLoggedIn && !currentUserFound && user.username && !isCurrentCobeer && (user.points || 0) > 0) {
         list.push({
           id: user.id,
-          username: isCurrentCobeer ? 'Cobeer Taste' : user.username,
-          points: isCurrentCobeer ? 0 : (user.points || 0)
+          username: user.username,
+          points: user.points || 0
         });
       }
 
-      // Sort strictly in descending order of points
-      const sorted = list.sort((a, b) => b.points - a.points);
+      // Sort strictly in descending order of points, secondary by username
+      const sorted = list.sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        return a.username.localeCompare(b.username);
+      });
       setGlobalScores(sorted);
     } catch (err) {
       console.warn("Could not fetch global scores for registered users:", err);
@@ -2859,7 +2862,19 @@ export default function App() {
 
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
+          let userDocSnap = await getDoc(userDocRef);
+          if (!userDocSnap.exists() && userCleanEmail) {
+            try {
+              const qEmail = query(collection(db, 'users'), where('email', '==', userCleanEmail));
+              const snapEmail = await getDocs(qEmail);
+              if (!snapEmail.empty) {
+                userDocSnap = snapEmail.docs[0];
+              }
+            } catch (qErr) {
+              console.warn('Could not query user by email:', qErr);
+            }
+          }
+
           if (userDocSnap.exists()) {
             const data = userDocSnap.data();
             savedPoints = typeof data.points === 'number' ? data.points : 0;
@@ -3019,7 +3034,31 @@ export default function App() {
               localStorage.setItem(cacheKeyPrefix + 'hasCompletedFirstCheckin', 'true');
             }
           } else {
-            // Document doesn't exist, create it with initial points of 0
+            // Document doesn't exist, check known registered user check-ins
+            const known = KNOWN_REGISTERED_USER_CHECKINS[userCleanEmail] || KNOWN_REGISTERED_USER_CHECKINS[firebaseUser.uid];
+            if (known && known.length > 0) {
+              savedPoints = Math.max(savedPoints, known.reduce((acc, k) => acc + k.count, 0));
+              if (Object.keys(savedStamps).length === 0) {
+                known.forEach(kc => {
+                  savedStamps[kc.spotId] = (savedStamps[kc.spotId] || 0) + kc.count;
+                  if (!savedCheckedInBars.includes(kc.spotId)) savedCheckedInBars.push(kc.spotId);
+                  if (kc.date) savedLastCheckinDates[kc.spotId] = kc.date;
+                  for (let i = 0; i < kc.count; i++) {
+                    savedCheckinHistory.push({
+                      id: `checkin_${firebaseUser.uid}_${kc.spotId}_${i}`,
+                      barId: kc.spotId,
+                      barName: kc.spotName,
+                      location: '',
+                      date: kc.date || '2026-09-19',
+                      beerStyle: kc.beerStyle || 'Craft Beer',
+                      timestamp: kc.date ? `${kc.date}T18:00:00.000Z` : new Date().toISOString()
+                    });
+                  }
+                });
+              }
+              savedHasCompletedFirstCheckin = true;
+            }
+
             const pendingRef = localStorage.getItem('pendingRef');
             const initialUserData: any = {
               uid: firebaseUser.uid,
@@ -3029,9 +3068,13 @@ export default function App() {
               favorites: savedFavorites,
               friends: savedFriends,
               checkedInFestivals: savedFestivals,
+              checkinHistory: savedCheckinHistory,
+              stamps: savedStamps,
+              checkedInBars: savedCheckedInBars,
+              lastCheckinDates: savedLastCheckinDates,
               shareCheckinsEnabled: savedShareCheckins,
               user_language: userLangVal,
-              hasCompletedFirstCheckin: false,
+              hasCompletedFirstCheckin: savedHasCompletedFirstCheckin,
               createdAt: new Date().toISOString(),
               role: savedRole,
               isOwner: savedIsOwner,
@@ -4186,6 +4229,13 @@ export default function App() {
     let alertMsg = lang === 'PT'
       ? `Check-in efetuado com sucesso! Ganhaste +1 ponto HOP e +1 selo no spot ${bar.name}.`
       : `Check-in successful! You earned +1 HOP point and +1 stamp at ${bar.name}.`;
+
+    const isHalloweenCheckin = (todayLocal.getMonth() + 1 === 10 && todayLocal.getDate() === 31);
+    if (isHalloweenCheckin) {
+      alertMsg += lang === 'PT'
+        ? ' 🎃 Desbloqueaste o badge especial de Halloween!'
+        : ' 🎃 You unlocked the special Halloween badge!';
+    }
 
     if (isTenthStamp) {
       alertMsg = lang === 'PT'

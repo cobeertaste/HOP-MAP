@@ -658,14 +658,14 @@ export const ALL_BADGES: Badge[] = [
   },
   {
     id: 'holiday_halloween',
-    code: 'HOLIDAY_HALLOWEEN',
+    code: 'SPECIAL_HALLOWEEN',
     icon: '🎃',
-    namePt: 'HALLOWEEN HOPPER',
-    nameEn: 'HALLOWEEN HOPPER',
-    descriptionPt: 'Check-in realizado na noite mística de Halloween (31 de Outubro). Gostosuras, travessuras e cerveja artesanal!',
-    descriptionEn: 'Check-in completed on Halloween (October 31st). Spooky sips and frightful crafts!',
-    category: 'holidays',
-    rarity: 'rare'
+    namePt: 'Halloween Especial',
+    nameEn: 'Halloween Special',
+    descriptionPt: 'Badge especial de Halloween! Check-in realizado num spot de cerveja artesanal no dia 31 de Outubro. Gostosuras, travessuras e cerveja artesanal!',
+    descriptionEn: 'Special Halloween badge! Check-in completed at a craft beer spot on October 31st. Spooky sips, craft treats and witchy brews!',
+    category: 'special',
+    rarity: 'epic'
   },
   {
     id: 'holiday_all_saints',
@@ -773,15 +773,13 @@ function getEasterSundayForYear(year: number): { month: number; day: number } {
 
 function parseCheckinDate(dateStr?: string, timestamp?: string): { month: number; day: number; dayOfWeek: number; year: number } | null {
   let d: Date | null = null;
-  if (timestamp) {
+  if (dateStr && /^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    const parts = dateStr.substring(0, 10).split('-');
+    d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  } else if (timestamp) {
     d = new Date(timestamp);
   } else if (dateStr) {
-    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
-      const parts = dateStr.substring(0, 10).split('-');
-      d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-    } else {
-      d = new Date(dateStr);
-    }
+    d = new Date(dateStr);
   }
   if (!d || isNaN(d.getTime())) return null;
   return {
@@ -881,6 +879,7 @@ function checkIsHolidayDate(
       return month === 10 && day === 5;
 
     case 'holiday_halloween':
+    case 'special_halloween':
       // 31 de Outubro (Halloween / Noite das Bruxas)
       return month === 10 && day === 31;
 
@@ -1525,9 +1524,10 @@ export function calculateUserBadges(ctx: BadgeCalculationContext): BadgeUnlockSt
         break;
 
       case 'holiday_halloween':
-        unlocked = isHolidayUnlocked('holiday_halloween');
+      case 'special_halloween':
+        unlocked = isHolidayUnlocked('holiday_halloween') || isHolidayUnlocked('special_halloween');
         progressPercent = unlocked ? 100 : 0;
-        progressText = unlocked ? (isPt ? 'Desbloqueado 🎃' : 'Unlocked 🎃') : (isPt ? '0/1 (31 de Out)' : '0/1 (Oct 31st)');
+        progressText = unlocked ? (isPt ? 'Desbloqueado 🎃' : 'Unlocked 🎃') : (isPt ? '0/1 (Check-in a 31 de Out)' : '0/1 (Check-in on Oct 31st)');
         break;
 
       case 'holiday_all_saints':
@@ -1572,8 +1572,15 @@ export function calculateUserBadges(ctx: BadgeCalculationContext): BadgeUnlockSt
         break;
     }
 
-    // If already stored in user.earnedBadges, force unlocked
-    if (user.earnedBadges && user.earnedBadges.includes(badge.id)) {
+    // If already stored in user.earnedBadges or user.badges, force unlocked
+    if (user.earnedBadges && (user.earnedBadges.includes(badge.id) || (badge.id === 'holiday_halloween' && user.earnedBadges.includes('special_halloween')))) {
+      unlocked = true;
+      progressPercent = 100;
+    }
+    if (user.badges && user.badges.some((b: any) => {
+      const bId = typeof b === 'string' ? b : b?.id;
+      return bId === badge.id || (badge.id === 'holiday_halloween' && bId === 'special_halloween');
+    })) {
       unlocked = true;
       progressPercent = 100;
     }

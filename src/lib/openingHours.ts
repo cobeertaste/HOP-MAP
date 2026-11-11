@@ -255,7 +255,13 @@ export function getBarFeatures(bar: Bar, _lang: Language = 'PT'): BarFeaturesRes
     'catraio-craft-beer-shop-bar-porto': 16,
     'catraio': 16,
     'azores-brewing-company-acores': 6,
-    'azores-brewing': 6
+    'azores-brewing': 6,
+    'artesanalis-bottle-shop-lisboa': 2,
+    'artesanalis': 2,
+    'the-beer-station-lisboa': 11,
+    'the-beer-station': 11,
+    'cerveteca-lisboa-lisboa': 10,
+    'cerveteca': 10
   };
 
   // Deduce or use explicit attributes
@@ -267,6 +273,12 @@ export function getBarFeatures(bar: Bar, _lang: Language = 'PT'): BarFeaturesRes
       taps = 16;
     } else if (name.includes('azores brewing')) {
       taps = 6;
+    } else if (name.includes('artesanalis')) {
+      taps = 2;
+    } else if (name.includes('the beer station') || name.includes('beer station')) {
+      taps = 11;
+    } else if (name.includes('cerveteca')) {
+      taps = 10;
     } else if (name.includes('covil')) {
       taps = 13;
     } else if (name.includes('hop trip')) {
@@ -305,12 +317,15 @@ export function getBarFeatures(bar: Bar, _lang: Language = 'PT'): BarFeaturesRes
 
   const isCatraio = id === 'catraio-craft-beer-shop-bar-porto' || id === 'catraio' || name.includes('catraio');
   const isAzoresBrewing = id === 'azores-brewing-company-acores' || id === 'azores-brewing' || name.includes('azores brewing');
-  const hasFood = (isCatraio || isAzoresBrewing) ? true : (bar.hasFood !== undefined ? bar.hasFood : true);
-  const petFriendly = (isCatraio || isAzoresBrewing) ? true : (bar.petFriendly !== undefined ? bar.petFriendly : true);
-  const hasTerrace = (isCatraio || isAzoresBrewing) ? true : (bar.hasTerrace !== undefined ? bar.hasTerrace : true);
-  const hasParking = isCatraio
+  const isArtesanalis = id === 'artesanalis-bottle-shop-lisboa' || id === 'artesanalis' || name.includes('artesanalis');
+  const isTheBeerStation = id === 'the-beer-station-lisboa' || id === 'the-beer-station' || name.includes('the beer station') || name.includes('beer station');
+  const isCerveteca = id === 'cerveteca-lisboa-lisboa' || id === 'cerveteca' || name.includes('cerveteca');
+  const hasFood = (isCatraio || isAzoresBrewing || isArtesanalis || isTheBeerStation || isCerveteca) ? true : (bar.hasFood !== undefined ? bar.hasFood : true);
+  const petFriendly = (isCatraio || isAzoresBrewing || isArtesanalis || isTheBeerStation || isCerveteca) ? true : (bar.petFriendly !== undefined ? bar.petFriendly : true);
+  const hasTerrace = (isCatraio || isAzoresBrewing || isArtesanalis || isTheBeerStation || isCerveteca) ? true : (bar.hasTerrace !== undefined ? bar.hasTerrace : true);
+  const hasParking = (isCatraio || isArtesanalis || isTheBeerStation)
     ? false
-    : isAzoresBrewing
+    : (isAzoresBrewing || isCerveteca)
     ? true
     : (bar.hasParking !== undefined 
       ? bar.hasParking 

@@ -38,7 +38,17 @@ export function isSpotVerified(bar?: Bar | null): boolean {
     name.startsWith('brew!') ||
     id === 'azores-brewing-company-acores' ||
     id === 'azores-brewing' ||
-    name.includes('azores brewing')
+    name.includes('azores brewing') ||
+    id === 'artesanalis-bottle-shop-lisboa' ||
+    id === 'artesanalis' ||
+    name.includes('artesanalis') ||
+    id === 'the-beer-station-lisboa' ||
+    id === 'the-beer-station' ||
+    name.includes('the beer station') ||
+    name.includes('beer station') ||
+    id === 'cerveteca-lisboa-lisboa' ||
+    id === 'cerveteca' ||
+    name.includes('cerveteca')
   );
 }
 
@@ -47,6 +57,9 @@ export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFea
   const isProst = bar.id === 'prost-guimaraes' || (bar.name && bar.name.toLowerCase().includes('prost'));
   const isCatraio = bar.id === 'catraio-craft-beer-shop-bar-porto' || bar.id === 'catraio' || (bar.name && bar.name.toLowerCase().includes('catraio'));
   const isAzoresBrewing = bar.id === 'azores-brewing-company-acores' || bar.id === 'azores-brewing' || (bar.name && bar.name.toLowerCase().includes('azores brewing'));
+  const isArtesanalis = bar.id === 'artesanalis-bottle-shop-lisboa' || bar.id === 'artesanalis' || (bar.name && bar.name.toLowerCase().includes('artesanalis'));
+  const isTheBeerStation = bar.id === 'the-beer-station-lisboa' || bar.id === 'the-beer-station' || (bar.name && (bar.name.toLowerCase().includes('the beer station') || bar.name.toLowerCase().includes('beer station')));
+  const isCerveteca = bar.id === 'cerveteca-lisboa-lisboa' || bar.id === 'cerveteca' || (bar.name && bar.name.toLowerCase().includes('cerveteca'));
   const isDeusesDoMalte = bar.id === 'deuses-do-malte-v-n-gaia' || bar.id === 'deuses-do-malte' || (bar.name && bar.name.toLowerCase().includes('deuses do malte'));
   const isPicaria = bar.id === 'a-fabrica-da-picaria-brew-pub-porto' || bar.id === 'fabrica-da-picaria' || (bar.name && bar.name.toLowerCase().includes('picaria'));
   const isVirtudes = bar.id === 'musa-das-virtudes-porto' || bar.id === 'musa-virtudes' || (bar.name && bar.name.toLowerCase().includes('virtudes'));
@@ -58,6 +71,12 @@ export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFea
     tapsCount = 16;
   } else if (isAzoresBrewing) {
     tapsCount = 6;
+  } else if (isArtesanalis) {
+    tapsCount = 2;
+  } else if (isTheBeerStation) {
+    tapsCount = 11;
+  } else if (isCerveteca) {
+    tapsCount = 10;
   } else if (isBrew) {
     tapsCount = 23;
   } else if (isPicaria) {
@@ -112,10 +131,10 @@ export function SpotFeatureBadges({ bar, lang = 'PT', compact = false }: SpotFea
   } else if (isPicaria || isVirtudes) {
     parkingLabel = lang === 'PT' ? 'Estacionamento: Sim (público)' : 'Parking: Yes (public)';
     parkingNegative = false;
-  } else if (isProst || isCatraio) {
+  } else if (isProst || isCatraio || isArtesanalis || isTheBeerStation) {
     parkingLabel = lang === 'PT' ? 'Estacionamento: Não' : 'Parking: No';
     parkingNegative = true;
-  } else if (isDeusesDoMalte || isAzoresBrewing) {
+  } else if (isDeusesDoMalte || isAzoresBrewing || isCerveteca) {
     parkingLabel = lang === 'PT' ? 'Estacionamento: Sim' : 'Parking: Yes';
     parkingNegative = false;
   } else if (isVerified) {

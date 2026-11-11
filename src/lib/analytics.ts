@@ -277,8 +277,18 @@ export const KNOWN_REGISTERED_USER_CHECKINS: Record<string, Array<{ spotId: stri
     { spotId: 'azores-brewing-company-acores', spotName: 'Azores Brewing Company (Açores)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-15' },
     { spotId: 'beerstore-pt-acores', spotName: 'Beerstore.pt (Açores)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-12' }
   ],
+  'x0.zeri@gmail.com': [
+    { spotId: 'catraio-craft-beer-shop-bar-porto', spotName: 'Catraio Craft Beer Shop & Bar (Porto)', count: 4, beerStyle: 'Craft Beer', date: '2026-09-19' },
+    { spotId: 'azores-brewing-company-acores', spotName: 'Azores Brewing Company (Açores)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-15' },
+    { spotId: 'beerstore-pt-acores', spotName: 'Beerstore.pt (Açores)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-12' }
+  ],
   // testeapp (testeapp@testeapp.com - 3 points): 1 at Cervejaria do Carmo, 1 at Mania Beer, 1 at Algarvian Brewing
   'tsCoXh770IVG9FIBPY6JTyRvRAm1': [
+    { spotId: 'cervejaria-do-carmo-porto', spotName: 'Cervejaria do Carmo (Porto)', count: 1, beerStyle: 'Indian Pale Ale (IPA)', date: '2026-09-01' },
+    { spotId: 'mania-beer-brewery-lagos', spotName: 'Mania Beer (Brewery) (Lagos)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-10' },
+    { spotId: 'algarvian-brewing-company-portimao', spotName: 'Algarvian Brewing Company (Portimão)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-10' }
+  ],
+  'testeapp@testeapp.com': [
     { spotId: 'cervejaria-do-carmo-porto', spotName: 'Cervejaria do Carmo (Porto)', count: 1, beerStyle: 'Indian Pale Ale (IPA)', date: '2026-09-01' },
     { spotId: 'mania-beer-brewery-lagos', spotName: 'Mania Beer (Brewery) (Lagos)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-10' },
     { spotId: 'algarvian-brewing-company-portimao', spotName: 'Algarvian Brewing Company (Portimão)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-10' }
@@ -287,32 +297,56 @@ export const KNOWN_REGISTERED_USER_CHECKINS: Record<string, Array<{ spotId: stri
   'w3SODTlTEQT0TJt8pv1UE4BR7ZW2': [
     { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 2, beerStyle: 'Weissbier', date: '2026-09-19' }
   ],
+  'magalhaes939@gmail.com': [
+    { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 2, beerStyle: 'Weissbier', date: '2026-09-19' }
+  ],
   // Machado (rui.mac92@gmail.com - 2 points): 2 at Prost! Guimarães
   'ZF945VFR1LRyWMn9hStjM5vekWz2': [
+    { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 2, beerStyle: 'Weissbier', date: '2026-09-19' }
+  ],
+  'rui.mac92@gmail.com': [
     { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 2, beerStyle: 'Weissbier', date: '2026-09-19' }
   ],
   // Claudio Ribeiro (rafaelribeiro101@hotmail.com - 1 point): 1 at Prost! Guimarães
   'qQ9nUcVKdoQL1ouZrcmLvY4EnnJ2': [
     { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 1, beerStyle: 'Weissbier', date: '2026-09-19' }
   ],
+  'rafaelribeiro101@hotmail.com': [
+    { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 1, beerStyle: 'Weissbier', date: '2026-09-19' }
+  ],
   // Daniel (danyelrib01@gmail.com - 1 point): 1 at Prost! Guimarães
   'sl98Q02eAxNN5vKybO5c8KMxJvo2': [
+    { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 1, beerStyle: 'Weissbier', date: '2026-09-19' }
+  ],
+  'danyelrib01@gmail.com': [
     { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 1, beerStyle: 'Weissbier', date: '2026-09-19' }
   ],
   // Kevin (kkruckenhauser@gmail.com - 1 point): 1 at Prost! Guimarães
   'm4wNMAm9uLXAhM83Z3YI4ndBFyt2': [
     { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 1, beerStyle: 'Weissbier', date: '2026-09-19' }
   ],
+  'kkruckenhauser@gmail.com': [
+    { spotId: 'prost-guimaraes', spotName: 'Prost! (Guimarães)', count: 1, beerStyle: 'Weissbier', date: '2026-09-19' }
+  ],
   // Ricardo (ricardo@marrafa.pt - 1 point): 1 at Marrafa Jesufrei
   'yyAm9XFO5TaCbFZfJCX9scNMZpD3': [
+    { spotId: 'marrafa-jesufrei', spotName: 'Marrafa (Jesufrei)', count: 1, beerStyle: 'Amber Ale / Red Ale', date: '2026-09-18' }
+  ],
+  'ricardo@marrafa.pt': [
     { spotId: 'marrafa-jesufrei', spotName: 'Marrafa (Jesufrei)', count: 1, beerStyle: 'Amber Ale / Red Ale', date: '2026-09-18' }
   ],
   // Reisinho (pedro.reisinho@gmail.com - 1 point): 1 at Catraio
   'T3HLfFAkCSXYvTjKxmZ0P5kqccH2': [
     { spotId: 'catraio-craft-beer-shop-bar-porto', spotName: 'Catraio Craft Beer Shop & Bar (Porto)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-19' }
   ],
+  'pedro.reisinho@gmail.com': [
+    { spotId: 'catraio-craft-beer-shop-bar-porto', spotName: 'Catraio Craft Beer Shop & Bar (Porto)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-19' }
+  ],
   // tramels (jrps.silva@gmail.com - 1 point): 1 at Catraio
   'wEc45qWwWQfPl7vDN96G0AKzx5s1': [
+    { spotId: 'catraio-craft-beer-shop-bar-porto', spotName: 'Catraio Craft Beer Shop & Bar (Porto)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-10' }
+  ],
+  'jrps.silva@gmail.com': [
     { spotId: 'catraio-craft-beer-shop-bar-porto', spotName: 'Catraio Craft Beer Shop & Bar (Porto)', count: 1, beerStyle: 'Craft Beer', date: '2026-09-10' }
   ]
 };

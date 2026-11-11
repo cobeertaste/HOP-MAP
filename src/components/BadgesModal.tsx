@@ -51,7 +51,15 @@ export function BadgesModal({
   const filteredBadges = useMemo(() => {
     const list = activeCategory === 'all'
       ? [...badgeStatuses]
-      : badgeStatuses.filter(b => b.badge.category === activeCategory);
+      : badgeStatuses.filter(b => {
+          if (activeCategory === 'holidays' && (b.badge.id === 'holiday_halloween' || b.badge.id === 'special_halloween')) {
+            return true;
+          }
+          if (activeCategory === 'special' && (b.badge.id === 'holiday_halloween' || b.badge.id === 'special_halloween')) {
+            return true;
+          }
+          return b.badge.category === activeCategory;
+        });
 
     return list.sort((a, b) => {
       // 1. Conquered/unlocked badges first

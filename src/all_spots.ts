@@ -675,7 +675,15 @@ export const ALL_SPOTS: Bar[] = [
     facebookUrl: "https://www.facebook.com/cervetecalisboa/%3Flocale%3Dpt_PT",
     latitude: 38.741736640233114,
     longitude: -9.132607695497105,
-    hasApplePay: true
+    hasApplePay: true,
+    taps: 10,
+    hasFood: true,
+    petFriendly: true,
+    hasParking: true,
+    hasTerrace: true,
+    parkingNotePT: "Sim",
+    parkingNoteEN: "Yes",
+    isVerified: true
   },
   {
     id: "artesanalis-bottle-shop-lisboa",
@@ -696,7 +704,15 @@ export const ALL_SPOTS: Bar[] = [
     facebookUrl: "https://www.facebook.com/artesanalisbottleshop/",
     latitude: 38.75538874342096,
     longitude: -9.136983929885442,
-    hasApplePay: true
+    hasApplePay: true,
+    taps: 2,
+    hasFood: true,
+    petFriendly: true,
+    hasParking: false,
+    hasTerrace: true,
+    parkingNotePT: "Não",
+    parkingNoteEN: "No",
+    isVerified: true
   },
   {
     id: "flor-de-lupulo-lisboa",
@@ -759,7 +775,15 @@ export const ALL_SPOTS: Bar[] = [
     facebookUrl: "https://www.facebook.com/p/The-Beer-Station-100063524715171/%3Flocale%3Dpt_PT",
     latitude: 38.71394956513612,
     longitude: -9.1410545822357,
-    hasApplePay: true
+    hasApplePay: true,
+    taps: 11,
+    hasFood: true,
+    petFriendly: true,
+    hasParking: false,
+    hasTerrace: true,
+    parkingNotePT: "Não",
+    parkingNoteEN: "No",
+    isVerified: true
   },
   {
     id: "sailors-bar-lisboa",
