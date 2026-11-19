@@ -3,6 +3,8 @@ export type SpecialEventType =
   | 'reinheitsgebot' 
   | 'wenceslaus' 
   | 'st_patricks' 
+  | 'valentines'
+  | 'freedom_day'
   | 'christmas'
   | 'new_year'
   | 'gta6'
@@ -16,6 +18,9 @@ export interface SpecialEventInfo {
   subtitleEN?: string;
   themeColor?: string; // e.g. '#10B981' for St. Patrick's Day
   isGreenTheme?: boolean;
+  isValentines?: boolean;
+  isStPatricks?: boolean;
+  isFreedomDay?: boolean;
   isChristmas?: boolean;
   isNewYear?: boolean;
   isGta6Theme?: boolean;
@@ -53,6 +58,33 @@ export function isNewYearThemeActive(customDate?: Date): boolean {
   const month = date.getMonth(); // 0-indexed: 11 = December, 0 = January
   const day = date.getDate();
   return (month === 11 && day === 31) || (month === 0 && day === 1);
+}
+
+/**
+ * Returns true strictly on February 14th (Valentine's Day / Dia dos Namorados).
+ * Reverts automatically to the base template UI from February 15th onwards.
+ */
+export function isValentinesThemeActive(customDate?: Date): boolean {
+  const date = customDate || new Date();
+  return date.getMonth() === 1 && date.getDate() === 14;
+}
+
+/**
+ * Returns true strictly on March 17th (St. Patrick's Day).
+ * Reverts automatically to the base template UI from March 18th onwards.
+ */
+export function isStPatricksThemeActive(customDate?: Date): boolean {
+  const date = customDate || new Date();
+  return date.getMonth() === 2 && date.getDate() === 17;
+}
+
+/**
+ * Returns true strictly on April 25th (Dia da Liberdade / 25 de Abril).
+ * Reverts automatically to the base template UI from April 26th onwards.
+ */
+export function isFreedomDayThemeActive(customDate?: Date): boolean {
+  const date = customDate || new Date();
+  return date.getMonth() === 3 && date.getDate() === 25;
 }
 
 /**
@@ -111,16 +143,43 @@ export function getActiveSpecialEvent(customDate?: Date): SpecialEventInfo | nul
     };
   }
 
-  // 4. 17 de Março: St. Patrick's Day (Tema Verde)
-  if (month === 2 && day === 17) {
+  // 4. 14 de Fevereiro: Dia dos Namorados (apenas no dia 14 de Fevereiro)
+  if (isValentinesThemeActive(date)) {
+    return {
+      type: 'valentines',
+      titlePT: 'DIA DOS NAMORADOS · BRINDE A DOIS',
+      titleEN: 'VALENTINE\'S DAY · CRAFT LOVE',
+      subtitlePT: '14 de Fevereiro · Ambiente especial só hoje',
+      subtitleEN: 'Feb 14 · Special romantic atmosphere today only',
+      themeColor: '#E11D48',
+      isValentines: true
+    };
+  }
+
+  // 5. 17 de Março: St. Patrick's Day (apenas no dia 17 de Março)
+  if (isStPatricksThemeActive(date)) {
     return {
       type: 'st_patricks',
-      titlePT: 'ST. PATRICK\'S DAY',
-      titleEN: 'ST. PATRICK\'S DAY',
-      subtitlePT: 'Sláinte! Celebração de St. Patrick',
-      subtitleEN: 'Sláinte! St. Patrick celebration',
+      titlePT: 'ST. PATRICK\'S DAY · EDIÇÃO ESMERALDA',
+      titleEN: 'ST. PATRICK\'S DAY · EMERALD EDITION',
+      subtitlePT: '17 de Março · Sláinte! Ambiente especial só hoje',
+      subtitleEN: 'Mar 17 · Sláinte! Special Irish craft atmosphere today only',
       themeColor: '#10B981',
-      isGreenTheme: true
+      isGreenTheme: true,
+      isStPatricks: true
+    };
+  }
+
+  // 6. 25 de Abril: Dia da Liberdade (apenas no dia 25 de Abril)
+  if (isFreedomDayThemeActive(date)) {
+    return {
+      type: 'freedom_day',
+      titlePT: '25 DE ABRIL · DIA DA LIBERDADE',
+      titleEN: 'APRIL 25TH · FREEDOM DAY',
+      subtitlePT: '25 de Abril · Cravos vermelhos, liberdade e boa cerveja',
+      subtitleEN: 'Apr 25 · Red carnations, freedom & craft cheers',
+      themeColor: '#DC2626',
+      isFreedomDay: true
     };
   }
 

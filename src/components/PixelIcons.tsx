@@ -98,7 +98,7 @@ export function PixelIcon({
   className = '',
   overrideColor
 }: {
-  name: 'pacman' | 'beer-mug' | 'beer-glass' | 'hop' | 'ghost-red' | 'ghost-pink' | 'ghost-cyan' | 'ghost-orange' | 'compass' | 'map-pin' | 'calendar' | 'star' | 'user' | 'tap' | 'food' | 'pet' | 'terrace' | 'parking' | 'beershop' | 'route' | 'podium' | 'coin' | 'mic' | 'microphone' | 'chat-bubble' | 'speech-bubble' | 'balloon' | 'ticket' | 'christmas-tree' | 'santa-hat' | 'gift' | 'shamrock' | 'bell' | 'firework' | 'champagne';
+  name: 'pacman' | 'beer-mug' | 'beer-glass' | 'hop' | 'ghost-red' | 'ghost-pink' | 'ghost-cyan' | 'ghost-orange' | 'compass' | 'map-pin' | 'calendar' | 'star' | 'user' | 'tap' | 'food' | 'pet' | 'terrace' | 'parking' | 'beershop' | 'route' | 'podium' | 'coin' | 'mic' | 'microphone' | 'chat-bubble' | 'speech-bubble' | 'balloon' | 'ticket' | 'christmas-tree' | 'santa-hat' | 'gift' | 'shamrock' | 'bell' | 'firework' | 'champagne' | 'heart' | 'carnation';
   size?: number;
   className?: string;
   overrideColor?: string;
@@ -267,6 +267,52 @@ export function PixelIcon({
             'W': '#FFFDF5',
             'Y': overrideColor || '#FFD770',
             'G': '#CBD5E1'
+          }
+        };
+      }
+      case 'heart': {
+        const grid = [
+          "............",
+          "..RR....RR..",
+          ".RRRR..RRRR.",
+          "RRRRR..RRRRR",
+          "RRRRRRRRRRRR",
+          "RRRRRRRRRRRR",
+          ".RRRRRRRRRR.",
+          "..RRRRRRRR..",
+          "...RRRRRR...",
+          "....RRRR....",
+          ".....RR.....",
+          "............"
+        ];
+        return {
+          grid,
+          colors: {
+            'R': overrideColor || '#FB7185'
+          }
+        };
+      }
+      case 'carnation': {
+        const grid = [
+          "...RR..RR...",
+          "..RRRRRRRR..",
+          ".RRRWRRWRRR.",
+          ".RRRRRRRRRR.",
+          "..RRRRRRRR..",
+          "...RRRRRR...",
+          "....GGGG....",
+          ".....GG.....",
+          "...GGGGGG...",
+          ".....GG.....",
+          ".....GG.....",
+          ".....GG....."
+        ];
+        return {
+          grid,
+          colors: {
+            'R': overrideColor || '#EF4444',
+            'W': '#FCA5A5',
+            'G': '#22C55E'
           }
         };
       }
@@ -1004,18 +1050,24 @@ export function PixelBeerGlass({ size = 24, className = '', overrideColor }: { s
   );
 }
 
-// Logo Component replicating the retro craft aesthetic (HOP-MAP), Vice Edition, Christmas Edition, or New Year's Edition
+// Logo Component replicating the retro craft aesthetic (HOP-MAP) & seasonal editions
 export function PixelLogo({
   className = '',
   gta6Mode = false,
   christmasMode = false,
-  newYearMode = false
+  newYearMode = false,
+  valentinesMode = false,
+  stPatricksMode = false,
+  freedomDayMode = false
 }: {
   size?: number | string;
   className?: string;
   gta6Mode?: boolean;
   christmasMode?: boolean;
   newYearMode?: boolean;
+  valentinesMode?: boolean;
+  stPatricksMode?: boolean;
+  freedomDayMode?: boolean;
 }) {
   if (gta6Mode) {
     return (
@@ -1123,6 +1175,123 @@ export function PixelLogo({
             style={{ fontFamily: "'Pacifico', cursive" }}
           >
             Feliz Ano Novo
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (valentinesMode) {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center p-0 relative select-none w-full max-w-xs mx-auto ${className}`}
+      >
+        <div className="flex items-center justify-center gap-3 mb-2.5 relative">
+          <div className="relative flex items-center justify-center drop-shadow-[0_2px_10px_rgba(251,113,133,0.55)]">
+            <PixelPacman size={38} overrideColor="#FB7185" />
+          </div>
+          <div className="flex items-center gap-2">
+            <PixelBeerGlass size={22} overrideColor="#E11D48" />
+            <PixelBeerGlass size={22} overrideColor="#FCD34D" />
+            <PixelBeerGlass size={22} overrideColor="#FB7185" />
+          </div>
+        </div>
+
+        <div className="w-full flex flex-col items-center justify-center select-none mt-1" id="login-hop-map-title">
+          <div className="w-full flex items-center justify-between px-0.5">
+            {['H', 'O', 'P', '-', 'M', 'A', 'P'].map((char, index) => (
+              <span
+                key={index}
+                className="font-bold font-press text-[#FFF5F7] text-[28px] sm:text-[34px] leading-none select-none inline-block text-center"
+                style={{ textShadow: '2px 2px 0px #E11D48, 3.5px 3.5px 0px #190610' }}
+              >
+                {char}
+              </span>
+            ))}
+          </div>
+          <span
+            className="text-lg sm:text-xl text-[#FCD34D] mt-1 drop-shadow-[0_2px_8px_rgba(225,29,72,0.6)]"
+            style={{ fontFamily: "'Pacifico', cursive" }}
+          >
+            Dia dos Namorados
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (stPatricksMode) {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center p-0 relative select-none w-full max-w-xs mx-auto ${className}`}
+      >
+        <div className="flex items-center justify-center gap-3 mb-2.5 relative">
+          <div className="relative flex items-center justify-center drop-shadow-[0_2px_10px_rgba(74,222,128,0.5)]">
+            <PixelPacman size={38} overrideColor="#4ADE80" />
+          </div>
+          <div className="flex items-center gap-2">
+            <PixelBeerGlass size={22} overrideColor="#16A34A" />
+            <PixelBeerGlass size={22} overrideColor="#FACC15" />
+            <PixelBeerGlass size={22} overrideColor="#4ADE80" />
+          </div>
+        </div>
+
+        <div className="w-full flex flex-col items-center justify-center select-none mt-1" id="login-hop-map-title">
+          <div className="w-full flex items-center justify-between px-0.5">
+            {['H', 'O', 'P', '-', 'M', 'A', 'P'].map((char, index) => (
+              <span
+                key={index}
+                className="font-bold font-press text-[#F0FDF4] text-[28px] sm:text-[34px] leading-none select-none inline-block text-center"
+                style={{ textShadow: '2px 2px 0px #16A34A, 3.5px 3.5px 0px #04150E' }}
+              >
+                {char}
+              </span>
+            ))}
+          </div>
+          <span
+            className="text-lg sm:text-xl text-[#FACC15] mt-1 drop-shadow-[0_2px_8px_rgba(22,163,74,0.6)]"
+            style={{ fontFamily: "'Pacifico', cursive" }}
+          >
+            St. Patrick&apos;s Day
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (freedomDayMode) {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center p-0 relative select-none w-full max-w-xs mx-auto ${className}`}
+      >
+        <div className="flex items-center justify-center gap-3 mb-2.5 relative">
+          <div className="relative flex items-center justify-center drop-shadow-[0_2px_10px_rgba(239,68,68,0.55)]">
+            <PixelPacman size={38} overrideColor="#FBBF24" />
+          </div>
+          <div className="flex items-center gap-2">
+            <PixelBeerGlass size={22} overrideColor="#DC2626" />
+            <PixelBeerGlass size={22} overrideColor="#FBBF24" />
+            <PixelBeerGlass size={22} overrideColor="#16A34A" />
+          </div>
+        </div>
+
+        <div className="w-full flex flex-col items-center justify-center select-none mt-1" id="login-hop-map-title">
+          <div className="w-full flex items-center justify-between px-0.5">
+            {['H', 'O', 'P', '-', 'M', 'A', 'P'].map((char, index) => (
+              <span
+                key={index}
+                className="font-bold font-press text-[#FFFDF7] text-[28px] sm:text-[34px] leading-none select-none inline-block text-center"
+                style={{ textShadow: '2px 2px 0px #DC2626, 3.5px 3.5px 0px #14080A' }}
+              >
+                {char}
+              </span>
+            ))}
+          </div>
+          <span
+            className="text-lg sm:text-xl text-[#FBBF24] mt-1 drop-shadow-[0_2px_8px_rgba(220,38,38,0.6)]"
+            style={{ fontFamily: "'Pacifico', cursive" }}
+          >
+            25 de Abril · Liberdade
           </span>
         </div>
       </div>

@@ -22,10 +22,21 @@ import { HopCommunityChatModal } from './components/HopCommunityChatModal';
 import { SpotVibeCheck, CompactSpotVibeBadge } from './components/SpotVibeCheck';
 import { MentionNotificationToast, MentionNotificationPayload } from './components/MentionNotificationToast';
 import { SpecialEventsBanner } from './components/SpecialEventsBanner';
-import { getActiveSpecialEvent, isGta6ThemeActive, isChristmasThemeActive, isNewYearThemeActive } from './utils/specialEvents';
+import {
+  getActiveSpecialEvent,
+  isGta6ThemeActive,
+  isChristmasThemeActive,
+  isNewYearThemeActive,
+  isValentinesThemeActive,
+  isStPatricksThemeActive,
+  isFreedomDayThemeActive
+} from './utils/specialEvents';
 import gta6ViceSkyline from './assets/images/gta6_vice_skyline_1795092472161.jpg';
 import christmasWinterScene from './assets/images/christmas_winter_scene_1795093770691.jpg';
 import newyearFireworksSkyline from './assets/images/newyear_fireworks_skyline_1795094667421.jpg';
+import valentinesRomanticEvening from './assets/images/valentines_romantic_evening_1795097940188.jpg';
+import stpatricksEmeraldEvening from './assets/images/stpatricks_emerald_evening_1795097940698.jpg';
+import april25RedCarnations from './assets/images/april25_red_carnations_1795097940171.jpg';
 import {
   playChristmasTapBell,
   playChristmasStampChime,
@@ -664,6 +675,9 @@ export default function App() {
   const activeSpecialEvent = getActiveSpecialEvent(currentThemeDate);
   const isChristmas = isChristmasThemeActive(currentThemeDate);
   const isNewYear = isNewYearThemeActive(currentThemeDate);
+  const isValentines = isValentinesThemeActive(currentThemeDate);
+  const isStPatricks = isStPatricksThemeActive(currentThemeDate);
+  const isFreedomDay = isFreedomDayThemeActive(currentThemeDate);
   const isGta6Active = isGta6ThemeActive(currentThemeDate);
 
   useEffect(() => {
@@ -678,11 +692,20 @@ export default function App() {
     } else if (isNewYear) {
       root.setAttribute('data-theme', 'newyear');
       if (themeMeta) themeMeta.setAttribute('content', '#0B1026');
+    } else if (isValentines) {
+      root.setAttribute('data-theme', 'valentines');
+      if (themeMeta) themeMeta.setAttribute('content', '#210915');
+    } else if (isStPatricks) {
+      root.setAttribute('data-theme', 'stpatricks');
+      if (themeMeta) themeMeta.setAttribute('content', '#061E14');
+    } else if (isFreedomDay) {
+      root.setAttribute('data-theme', 'freedomday');
+      if (themeMeta) themeMeta.setAttribute('content', '#1D0D10');
     } else {
       root.removeAttribute('data-theme');
       if (themeMeta) themeMeta.setAttribute('content', '#F6EFDC');
     }
-  }, [isGta6Active, isChristmas, isNewYear]);
+  }, [isGta6Active, isChristmas, isNewYear, isValentines, isStPatricks, isFreedomDay]);
   
   // Check-In Pixel Confetti Animation States
   const [animatingCheckinBarId, setAnimatingCheckinBarId] = useState<string | null>(null);
@@ -5320,6 +5343,75 @@ export default function App() {
             </div>
           </>
         )}
+
+        {!user.isLoggedIn && isValentines && (
+          <>
+            <img
+              src={valentinesRomanticEvening}
+              alt=""
+              aria-hidden="true"
+              referrerPolicy="no-referrer"
+              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none opacity-60"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-b from-[#210915]/82 via-[#2E0F20]/74 to-[#16050D]/92 pointer-events-none"
+            />
+            <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden z-[1]">
+              <span className="seasonal-float-particle absolute top-0 left-[12%] text-[#FB7185]/80 text-xs" style={{ animationDelay: '0s', animationDuration: '8.5s' }}>♥</span>
+              <span className="seasonal-float-particle absolute top-0 left-[30%] text-[#FBBF24]/75 text-[10px]" style={{ animationDelay: '1.9s', animationDuration: '10s' }}>✦</span>
+              <span className="seasonal-float-particle absolute top-0 left-[52%] text-[#F43F5E]/80 text-sm" style={{ animationDelay: '3.5s', animationDuration: '9s' }}>♥</span>
+              <span className="seasonal-float-particle absolute top-0 left-[72%] text-[#FDA4AF]/75 text-xs" style={{ animationDelay: '1.4s', animationDuration: '11s' }}>♥</span>
+              <span className="seasonal-float-particle absolute top-0 left-[88%] text-[#FBBF24]/75 text-[11px]" style={{ animationDelay: '2.8s', animationDuration: '8.8s' }}>✦</span>
+            </div>
+          </>
+        )}
+
+        {!user.isLoggedIn && isStPatricks && (
+          <>
+            <img
+              src={stpatricksEmeraldEvening}
+              alt=""
+              aria-hidden="true"
+              referrerPolicy="no-referrer"
+              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none opacity-60"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-b from-[#061E14]/82 via-[#0A2B1D]/74 to-[#04150E]/92 pointer-events-none"
+            />
+            <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden z-[1]">
+              <span className="seasonal-float-particle absolute top-0 left-[11%] text-[#4ADE80]/80 text-xs" style={{ animationDelay: '0s', animationDuration: '8.2s' }}>☘</span>
+              <span className="seasonal-float-particle absolute top-0 left-[29%] text-[#FBBF24]/80 text-[10px]" style={{ animationDelay: '2.0s', animationDuration: '9.8s' }}>✦</span>
+              <span className="seasonal-float-particle absolute top-0 left-[49%] text-[#22C55E]/80 text-sm" style={{ animationDelay: '3.7s', animationDuration: '9.2s' }}>☘</span>
+              <span className="seasonal-float-particle absolute top-0 left-[69%] text-[#86EFAC]/75 text-xs" style={{ animationDelay: '1.3s', animationDuration: '10.6s' }}>☘</span>
+              <span className="seasonal-float-particle absolute top-0 left-[87%] text-[#FBBF24]/80 text-[11px]" style={{ animationDelay: '2.7s', animationDuration: '8.6s' }}>✦</span>
+            </div>
+          </>
+        )}
+
+        {!user.isLoggedIn && isFreedomDay && (
+          <>
+            <img
+              src={april25RedCarnations}
+              alt=""
+              aria-hidden="true"
+              referrerPolicy="no-referrer"
+              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none opacity-60"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-b from-[#1D0D10]/82 via-[#2B1217]/74 to-[#14080A]/92 pointer-events-none"
+            />
+            <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden z-[1]">
+              <span className="seasonal-float-particle absolute top-0 left-[12%] text-[#EF4444]/85 text-xs" style={{ animationDelay: '0s', animationDuration: '8.4s' }}>✿</span>
+              <span className="seasonal-float-particle absolute top-0 left-[31%] text-[#FBBF24]/80 text-[10px]" style={{ animationDelay: '1.8s', animationDuration: '9.6s' }}>✦</span>
+              <span className="seasonal-float-particle absolute top-0 left-[50%] text-[#22C55E]/80 text-sm" style={{ animationDelay: '3.4s', animationDuration: '9s' }}>✿</span>
+              <span className="seasonal-float-particle absolute top-0 left-[71%] text-[#F87171]/80 text-xs" style={{ animationDelay: '1.2s', animationDuration: '10.4s' }}>✿</span>
+              <span className="seasonal-float-particle absolute top-0 left-[87%] text-[#FBBF24]/80 text-[11px]" style={{ animationDelay: '2.6s', animationDuration: '8.7s' }}>✦</span>
+            </div>
+          </>
+        )}
         
         {/* TOP COMPACT APP TITLE & PUSH SIMULATOR BUTTON */}
         {user.isLoggedIn && (
@@ -5337,7 +5429,23 @@ export default function App() {
               <PixelPacman 
                 size={20} 
                 santaHat={isChristmas} 
-                overrideColor={isGta6Active ? '#FF5E93' : isChristmas ? '#FFD166' : isNewYear ? '#FFD770' : activeSpecialEvent?.isGreenTheme ? '#12908C' : '#F2A93B'} 
+                overrideColor={
+                  isGta6Active
+                    ? '#FF5E93'
+                    : isChristmas
+                      ? '#FFD166'
+                      : isNewYear
+                        ? '#FFD770'
+                        : isValentines
+                          ? '#FB7185'
+                          : isStPatricks
+                            ? '#4ADE80'
+                            : isFreedomDay
+                              ? '#FBBF24'
+                              : activeSpecialEvent?.isGreenTheme
+                                ? '#12908C'
+                                : '#F2A93B'
+                } 
                 className="animate-pulse shrink-0" 
               />
               <div className="flex items-baseline gap-1 sm:gap-2 min-w-0">
@@ -5350,7 +5458,13 @@ export default function App() {
                         ? '0 2px 10px rgba(214, 40, 57, 0.7)'
                         : isNewYear
                           ? '0 2px 10px rgba(255, 215, 112, 0.55)'
-                          : '1px 1px 0px #F2A93B' 
+                          : isValentines
+                            ? '0 2px 10px rgba(225, 29, 72, 0.65)'
+                            : isStPatricks
+                              ? '0 2px 10px rgba(22, 163, 74, 0.65)'
+                              : isFreedomDay
+                                ? '0 2px 10px rgba(220, 38, 38, 0.65)'
+                                : '1px 1px 0px #F2A93B' 
                   }}
                 >
                   HOP-MAP
@@ -5396,6 +5510,9 @@ export default function App() {
                 isChristmas={isChristmas}
                 isNewYear={isNewYear}
                 isGta6={isGta6Active}
+                isValentines={isValentines}
+                isStPatricks={isStPatricks}
+                isFreedomDay={isFreedomDay}
               />
             </div>
           </header>
@@ -5450,7 +5567,15 @@ export default function App() {
           >
             {/* Logo */}
             <div className="mb-3 shrink-0 flex flex-col items-center justify-center w-full max-w-xs mx-auto">
-              <PixelLogo className="w-full max-w-xs" gta6Mode={isGta6Active} christmasMode={isChristmas} newYearMode={isNewYear} />
+              <PixelLogo
+                className="w-full max-w-xs"
+                gta6Mode={isGta6Active}
+                christmasMode={isChristmas}
+                newYearMode={isNewYear}
+                valentinesMode={isValentines}
+                stPatricksMode={isStPatricks}
+                freedomDayMode={isFreedomDay}
+              />
             </div>
 
             <p 
@@ -9588,7 +9713,7 @@ export default function App() {
               id="tab-btn-explore"
             >
               <div className={`p-0.5 rounded-md transition-all ${activeTab === 'explore' ? 'scale-110' : 'opacity-75'}`}>
-                <PixelIcon name="compass" size={19} overrideColor={isGta6Active ? (activeTab === 'explore' ? '#2EE6D6' : '#E9DDFB') : isChristmas ? (activeTab === 'explore' ? '#FFD166' : '#DCEBE2') : isNewYear ? (activeTab === 'explore' ? '#FFD770' : '#CBD5E1') : (activeTab === 'explore' ? '#12908C' : '#1B2036')} />
+                <PixelIcon name="compass" size={19} overrideColor={isGta6Active ? (activeTab === 'explore' ? '#2EE6D6' : '#E9DDFB') : isChristmas ? (activeTab === 'explore' ? '#FFD166' : '#DCEBE2') : isNewYear ? (activeTab === 'explore' ? '#FFD770' : '#CBD5E1') : isValentines ? (activeTab === 'explore' ? '#FDA4AF' : '#FBCFE8') : isStPatricks ? (activeTab === 'explore' ? '#4ADE80' : '#BBF7D0') : isFreedomDay ? (activeTab === 'explore' ? '#FBBF24' : '#E7D6D8') : (activeTab === 'explore' ? '#12908C' : '#1B2036')} />
               </div>
               <span className={`text-[8px] sm:text-[9px] font-press uppercase tracking-wider truncate max-w-full ${activeTab === 'explore' ? 'text-[#12908C] font-bold' : 'text-[#1B2036] font-bold opacity-80'}`}>
                 {t('tabMap', lang)}
@@ -9602,7 +9727,7 @@ export default function App() {
               id="tab-btn-routes"
             >
               <div className={`p-0.5 rounded-md transition-all ${activeTab === 'routes' ? 'scale-110' : 'opacity-75'}`}>
-                <PixelIcon name="route" size={19} overrideColor={isGta6Active ? (activeTab === 'routes' ? '#2EE6D6' : '#E9DDFB') : isChristmas ? (activeTab === 'routes' ? '#FFD166' : '#DCEBE2') : isNewYear ? (activeTab === 'routes' ? '#FFD770' : '#CBD5E1') : (activeTab === 'routes' ? '#12908C' : '#1B2036')} />
+                <PixelIcon name="route" size={19} overrideColor={isGta6Active ? (activeTab === 'routes' ? '#2EE6D6' : '#E9DDFB') : isChristmas ? (activeTab === 'routes' ? '#FFD166' : '#DCEBE2') : isNewYear ? (activeTab === 'routes' ? '#FFD770' : '#CBD5E1') : isValentines ? (activeTab === 'routes' ? '#FDA4AF' : '#FBCFE8') : isStPatricks ? (activeTab === 'routes' ? '#4ADE80' : '#BBF7D0') : isFreedomDay ? (activeTab === 'routes' ? '#FBBF24' : '#E7D6D8') : (activeTab === 'routes' ? '#12908C' : '#1B2036')} />
               </div>
               <span className={`text-[8px] sm:text-[9px] font-press uppercase tracking-wider truncate max-w-full ${activeTab === 'routes' ? 'text-[#12908C] font-bold' : 'text-[#1B2036] font-bold opacity-80'}`}>
                 {t('tabRoutes', lang)}
@@ -9616,7 +9741,7 @@ export default function App() {
               id="tab-btn-events"
             >
               <div className={`p-0.5 rounded-md transition-all ${activeTab === 'events' ? 'scale-110' : 'opacity-75'}`}>
-                <PixelIcon name="calendar" size={19} overrideColor={isGta6Active ? (activeTab === 'events' ? '#2EE6D6' : '#E9DDFB') : isChristmas ? (activeTab === 'events' ? '#FFD166' : '#DCEBE2') : isNewYear ? (activeTab === 'events' ? '#FFD770' : '#CBD5E1') : (activeTab === 'events' ? '#12908C' : '#1B2036')} />
+                <PixelIcon name="calendar" size={19} overrideColor={isGta6Active ? (activeTab === 'events' ? '#2EE6D6' : '#E9DDFB') : isChristmas ? (activeTab === 'events' ? '#FFD166' : '#DCEBE2') : isNewYear ? (activeTab === 'events' ? '#FFD770' : '#CBD5E1') : isValentines ? (activeTab === 'events' ? '#FDA4AF' : '#FBCFE8') : isStPatricks ? (activeTab === 'events' ? '#4ADE80' : '#BBF7D0') : isFreedomDay ? (activeTab === 'events' ? '#FBBF24' : '#E7D6D8') : (activeTab === 'events' ? '#12908C' : '#1B2036')} />
               </div>
               <span className={`text-[8px] sm:text-[9px] font-press uppercase tracking-wider truncate max-w-full ${activeTab === 'events' ? 'text-[#12908C] font-bold' : 'text-[#1B2036] font-bold opacity-80'}`}>
                 {t('tabFestivals', lang)}
@@ -9630,7 +9755,7 @@ export default function App() {
               id="tab-btn-loyalty"
             >
               <div className={`p-0.5 rounded-md transition-all ${activeTab === 'loyalty' ? 'scale-110' : 'opacity-75'}`}>
-                <PixelIcon name="ticket" size={19} overrideColor={isGta6Active ? (activeTab === 'loyalty' ? '#2EE6D6' : '#E9DDFB') : isChristmas ? (activeTab === 'loyalty' ? '#FFD166' : '#DCEBE2') : isNewYear ? (activeTab === 'loyalty' ? '#FFD770' : '#CBD5E1') : (activeTab === 'loyalty' ? '#12908C' : '#1B2036')} />
+                <PixelIcon name="ticket" size={19} overrideColor={isGta6Active ? (activeTab === 'loyalty' ? '#2EE6D6' : '#E9DDFB') : isChristmas ? (activeTab === 'loyalty' ? '#FFD166' : '#DCEBE2') : isNewYear ? (activeTab === 'loyalty' ? '#FFD770' : '#CBD5E1') : isValentines ? (activeTab === 'loyalty' ? '#FDA4AF' : '#FBCFE8') : isStPatricks ? (activeTab === 'loyalty' ? '#4ADE80' : '#BBF7D0') : isFreedomDay ? (activeTab === 'loyalty' ? '#FBBF24' : '#E7D6D8') : (activeTab === 'loyalty' ? '#12908C' : '#1B2036')} />
               </div>
               <span className={`text-[8px] sm:text-[9px] font-press uppercase tracking-wider truncate max-w-full ${activeTab === 'loyalty' ? 'text-[#12908C] font-bold' : 'text-[#1B2036] font-bold opacity-80'}`}>
                 {t('tabCheckin', lang)}

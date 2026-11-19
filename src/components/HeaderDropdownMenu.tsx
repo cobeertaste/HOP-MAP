@@ -26,6 +26,9 @@ interface HeaderDropdownMenuProps {
   hasUnreadNotifications?: boolean;
   isChristmas?: boolean;
   isNewYear?: boolean;
+  isValentines?: boolean;
+  isStPatricks?: boolean;
+  isFreedomDay?: boolean;
   isGta6?: boolean;
 }
 
@@ -44,6 +47,9 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
   hasUnreadNotifications = false,
   isChristmas = false,
   isNewYear = false,
+  isValentines = false,
+  isStPatricks = false,
+  isFreedomDay = false,
   isGta6 = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -148,7 +154,7 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-[#EFE6CC] border-2 border-[#1B2036] flex items-center justify-center shadow-[1.5px_1.5px_0px_#1B2036] shrink-0 group-hover:scale-105 transition-transform">
-                    <PixelIcon name="user" size={18} overrideColor={isGta6 ? "#2EE6D6" : isChristmas ? "#FFD166" : isNewYear ? "#FFD770" : "#1B2036"} />
+                    <PixelIcon name="user" size={18} overrideColor={isGta6 ? "#2EE6D6" : isChristmas ? "#FFD166" : isNewYear ? "#FFD770" : isValentines ? "#FB7185" : isStPatricks ? "#4ADE80" : isFreedomDay ? "#FBBF24" : "#1B2036"} />
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-bold font-sans text-[#1B2036] flex items-center gap-1.5">
@@ -174,7 +180,7 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-[#EFE6CC] border-2 border-[#1B2036] flex items-center justify-center shadow-[1.5px_1.5px_0px_#1B2036] shrink-0 group-hover:scale-105 transition-transform">
-                    <PixelIcon name={isChristmas ? "bell" : isNewYear ? "firework" : "chat-bubble"} size={18} overrideColor={isGta6 ? "#FF5E93" : isChristmas ? "#FFD166" : isNewYear ? "#FFD770" : "#1B2036"} />
+                    <PixelIcon name={isChristmas ? "bell" : isNewYear ? "firework" : isValentines ? "heart" : isStPatricks ? "shamrock" : isFreedomDay ? "carnation" : "chat-bubble"} size={18} overrideColor={isGta6 ? "#FF5E93" : isChristmas ? "#FFD166" : isNewYear ? "#FFD770" : isValentines ? "#FB7185" : isStPatricks ? "#4ADE80" : isFreedomDay ? "#EF4444" : "#1B2036"} />
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-bold font-sans text-[#1B2036]">
@@ -197,7 +203,7 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-[#EFE6CC] border-2 border-[#1B2036] flex items-center justify-center shadow-[1.5px_1.5px_0px_#1B2036] shrink-0 group-hover:scale-105 transition-transform">
-                    <PixelIcon name={isChristmas ? "santa-hat" : isNewYear ? "champagne" : "beer-mug"} size={18} overrideColor={isGta6 ? "#FFB347" : isChristmas ? "#FF6B7A" : isNewYear ? "#FFD770" : "#1B2036"} />
+                    <PixelIcon name={isChristmas ? "santa-hat" : isNewYear ? "champagne" : isValentines ? "heart" : isStPatricks ? "shamrock" : isFreedomDay ? "carnation" : "beer-mug"} size={18} overrideColor={isGta6 ? "#FFB347" : isChristmas ? "#FF6B7A" : isNewYear ? "#FFD770" : isValentines ? "#FCD34D" : isStPatricks ? "#FACC15" : isFreedomDay ? "#FBBF24" : "#1B2036"} />
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-bold font-sans text-[#1B2036]">
@@ -220,7 +226,7 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-[#EFE6CC] border-2 border-[#1B2036] flex items-center justify-center shadow-[1.5px_1.5px_0px_#1B2036] shrink-0 group-hover:scale-105 transition-transform">
-                    <PixelIcon name={isChristmas ? "gift" : "podium"} size={18} overrideColor={isGta6 ? "#FFB347" : isChristmas ? "#4ADE80" : isNewYear ? "#38BDF8" : "#1B2036"} />
+                    <PixelIcon name={isChristmas ? "gift" : "podium"} size={18} overrideColor={isGta6 ? "#FFB347" : isChristmas ? "#4ADE80" : isNewYear ? "#38BDF8" : isValentines ? "#FCD34D" : isStPatricks ? "#FACC15" : isFreedomDay ? "#22C55E" : "#1B2036"} />
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-bold font-sans text-[#1B2036]">

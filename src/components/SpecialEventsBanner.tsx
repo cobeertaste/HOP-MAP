@@ -3,6 +3,9 @@ import { SpecialEventInfo } from '../utils/specialEvents';
 import gta6ViceSkyline from '../assets/images/gta6_vice_skyline_1795092472161.jpg';
 import christmasWinterScene from '../assets/images/christmas_winter_scene_1795093770691.jpg';
 import newyearFireworksSkyline from '../assets/images/newyear_fireworks_skyline_1795094667421.jpg';
+import valentinesRomanticEvening from '../assets/images/valentines_romantic_evening_1795097940188.jpg';
+import stpatricksEmeraldEvening from '../assets/images/stpatricks_emerald_evening_1795097940698.jpg';
+import april25RedCarnations from '../assets/images/april25_red_carnations_1795097940171.jpg';
 
 // Pixel Festive Shamrock (St. Patrick's)
 export function PixelShamrock({ size = 20, className = '' }: { size?: number; className?: string }) {
@@ -229,6 +232,61 @@ export function PixelFirework({ size = 22, className = '' }: { size?: number; cl
   );
 }
 
+// Pixel Heart for Valentine's Day
+export function PixelHeart({ size = 20, className = '' }: { size?: number; className?: string }) {
+  const grid = [
+    "............",
+    "..RR....RR..",
+    ".RRRR..RRRR.",
+    "RRRRR..RRRRR",
+    "RRRRRRRRRRRR",
+    "RRRRRRRRRRRR",
+    ".RRRRRRRRRR.",
+    "..RRRRRRRR..",
+    "...RRRRRR...",
+    "....RRRR....",
+    ".....RR.....",
+    "............"
+  ];
+  return (
+    <svg width={size} height={size} viewBox="0 0 12 12" className={`select-none ${className}`} style={{ imageRendering: 'pixelated' }}>
+      {grid.map((row, r) => row.split('').map((c, col) => c === 'R' ? (
+        <rect key={`${r}-${col}`} x={col} y={r} width={1} height={1} fill="#FB7185" />
+      ) : null))}
+    </svg>
+  );
+}
+
+// Pixel Red Carnation (Cravo Vermelho) for April 25th
+export function PixelCarnation({ size = 22, className = '' }: { size?: number; className?: string }) {
+  const grid = [
+    "...RR..RR...",
+    "..RRRRRRRR..",
+    ".RRRWRRWRRR.",
+    ".RRRRRRRRRR.",
+    "..RRRRRRRR..",
+    "...RRRRRR...",
+    "....GGGG....",
+    ".....GG.....",
+    "...GGGGGG...",
+    ".....GG.....",
+    ".....GG.....",
+    ".....GG....."
+  ];
+  const colors: Record<string, string> = {
+    'R': '#EF4444',
+    'W': '#FCA5A5',
+    'G': '#22C55E'
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 12 12" className={`select-none ${className}`} style={{ imageRendering: 'pixelated' }}>
+      {grid.map((row, r) => row.split('').map((c, col) => colors[c] ? (
+        <rect key={`${r}-${col}`} x={col} y={r} width={1} height={1} fill={colors[c]} />
+      ) : null))}
+    </svg>
+  );
+}
+
 interface SpecialEventsBannerProps {
   event: SpecialEventInfo | null;
   lang: 'PT' | 'EN';
@@ -278,36 +336,138 @@ export function SpecialEventsBanner({ event, lang, darkMode }: SpecialEventsBann
     );
   }
 
-  // St. Patrick's Day style
-  if (event.type === 'st_patricks') {
+  // Valentine's Day / Dia dos Namorados style (Feb 14 only)
+  if (event.type === 'valentines') {
     return (
-      <div 
-        id="special-event-banner-st-patricks"
-        className="w-full relative overflow-hidden rounded-2xl border-2 border-emerald-400 bg-gradient-to-r from-emerald-900/90 via-emerald-800/80 to-emerald-950/90 text-white p-2.5 sm:p-3 shadow-lg shadow-emerald-950/50 select-none animate-fade-in"
+      <div
+        id="special-event-banner-valentines"
+        className="w-full relative overflow-hidden rounded-2xl border-2 border-[#FB7185] bg-gradient-to-r from-[#210915] via-[#3D1429] to-[#210915] text-[#FFF5F7] px-3.5 py-3 shadow-[0_8px_24px_rgba(225,29,72,0.25)] select-none animate-fade-in"
       >
-        <div className="relative z-10 flex items-center justify-between gap-3">
-          <div className="flex items-center space-x-2.5 shrink-0">
-            <PixelShamrock size={24} className="animate-bounce" />
-            <PixelShamrock size={18} className="hidden sm:inline-block" />
+        <img
+          src={valentinesRomanticEvening}
+          alt="Valentine's Day Craft Lounge"
+          referrerPolicy="no-referrer"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-55 pointer-events-none"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1A0610]/90 via-[#2E0E1F]/76 to-[#1A0610]/90 pointer-events-none" />
+        <div className="relative z-10 flex items-center justify-between gap-2.5">
+          <div className="flex items-center space-x-2 shrink-0">
+            <PixelHeart size={22} className="animate-pulse" />
           </div>
 
           <div className="text-center min-w-0 flex-1">
-            <h2 
-              className="text-xs sm:text-sm font-black font-press-start tracking-wider text-emerald-300 drop-shadow-md whitespace-normal leading-relaxed"
-              style={{ textShadow: '1px 1px 0px #064E3B, 2px 2px 0px #022C22' }}
+            <div className="flex items-center justify-center gap-2 text-[10px] font-bold tracking-wider text-[#FCD34D] uppercase mb-0.5">
+              <span>14 Fev</span>
+              <span aria-hidden="true">·</span>
+              <span>{lang === 'PT' ? 'Só Hoje' : 'Today Only'}</span>
+            </div>
+            <h2
+              className="text-xs sm:text-sm font-black font-press-start tracking-wider text-[#FDA4AF] drop-shadow-md whitespace-normal leading-relaxed"
+              style={{ textShadow: '1.5px 1.5px 0px #9F1239, 2.5px 2.5px 0px #190610' }}
             >
               {title}
             </h2>
             {subtitle && (
-              <p className="text-[9px] sm:text-[10px] text-emerald-100 font-mono font-bold mt-0.5 tracking-wide">
-                🍀 {subtitle} 🍀
+              <p className="text-[10px] sm:text-xs text-[#FFE4E6] font-medium mt-0.5 tracking-wide">
+                {subtitle}
               </p>
             )}
           </div>
 
-          <div className="flex items-center space-x-2.5 shrink-0">
-            <PixelShamrock size={18} className="hidden sm:inline-block" />
-            <PixelShamrock size={24} className="animate-bounce" />
+          <div className="flex items-center space-x-2 shrink-0">
+            <PixelHeart size={22} className="animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // St. Patrick's Day style (Mar 17 only)
+  if (event.type === 'st_patricks') {
+    return (
+      <div 
+        id="special-event-banner-st-patricks"
+        className="w-full relative overflow-hidden rounded-2xl border-2 border-[#4ADE80] bg-gradient-to-r from-[#061E14] via-[#103A29] to-[#061E14] text-[#F0FDF4] px-3.5 py-3 shadow-[0_8px_24px_rgba(34,197,94,0.22)] select-none animate-fade-in"
+      >
+        <img
+          src={stpatricksEmeraldEvening}
+          alt="St. Patrick's Day Emerald Taproom"
+          referrerPolicy="no-referrer"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-55 pointer-events-none"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#04150E]/90 via-[#0C2F21]/76 to-[#04150E]/90 pointer-events-none" />
+        <div className="relative z-10 flex items-center justify-between gap-2.5">
+          <div className="flex items-center space-x-2 shrink-0">
+            <PixelShamrock size={22} className="animate-bounce" />
+          </div>
+
+          <div className="text-center min-w-0 flex-1">
+            <div className="flex items-center justify-center gap-2 text-[10px] font-bold tracking-wider text-[#FACC15] uppercase mb-0.5">
+              <span>17 Mar</span>
+              <span aria-hidden="true">·</span>
+              <span>Sláinte</span>
+            </div>
+            <h2 
+              className="text-xs sm:text-sm font-black font-press-start tracking-wider text-[#4ADE80] drop-shadow-md whitespace-normal leading-relaxed"
+              style={{ textShadow: '1.5px 1.5px 0px #15803D, 2.5px 2.5px 0px #04150E' }}
+            >
+              {title}
+            </h2>
+            {subtitle && (
+              <p className="text-[10px] sm:text-xs text-[#DCFCE7] font-medium mt-0.5 tracking-wide">
+                {subtitle}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-2 shrink-0">
+            <PixelShamrock size={22} className="animate-bounce" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 25 de Abril / Freedom Day style (Apr 25 only)
+  if (event.type === 'freedom_day') {
+    return (
+      <div
+        id="special-event-banner-freedom-day"
+        className="w-full relative overflow-hidden rounded-2xl border-2 border-[#EF4444] bg-gradient-to-r from-[#1D0D10] via-[#36191F] to-[#1D0D10] text-[#FFFDF7] px-3.5 py-3 shadow-[0_8px_24px_rgba(220,38,38,0.24)] select-none animate-fade-in"
+      >
+        <img
+          src={april25RedCarnations}
+          alt="25 de Abril Cravos Vermelhos"
+          referrerPolicy="no-referrer"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-55 pointer-events-none"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#14080A]/90 via-[#2B1216]/76 to-[#14080A]/90 pointer-events-none" />
+        <div className="relative z-10 flex items-center justify-between gap-2.5">
+          <div className="flex items-center space-x-2 shrink-0">
+            <PixelCarnation size={24} className="animate-pulse" />
+          </div>
+
+          <div className="text-center min-w-0 flex-1">
+            <div className="flex items-center justify-center gap-2 text-[10px] font-bold tracking-wider text-[#FBBF24] uppercase mb-0.5">
+              <span>25 Abr</span>
+              <span aria-hidden="true">·</span>
+              <span>{lang === 'PT' ? 'Liberdade' : 'Freedom Day'}</span>
+            </div>
+            <h2
+              className="text-xs sm:text-sm font-black font-press-start tracking-wider text-[#FBBF24] drop-shadow-md whitespace-normal leading-relaxed"
+              style={{ textShadow: '1.5px 1.5px 0px #DC2626, 2.5px 2.5px 0px #14080A' }}
+            >
+              {title}
+            </h2>
+            {subtitle && (
+              <p className="text-[10px] sm:text-xs text-[#FEE2E2] font-medium mt-0.5 tracking-wide">
+                {subtitle}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-2 shrink-0">
+            <PixelCarnation size={24} className="animate-pulse" />
           </div>
         </div>
       </div>
