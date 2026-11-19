@@ -98,7 +98,7 @@ export function PixelIcon({
   className = '',
   overrideColor
 }: {
-  name: 'pacman' | 'beer-mug' | 'beer-glass' | 'hop' | 'ghost-red' | 'ghost-pink' | 'ghost-cyan' | 'ghost-orange' | 'compass' | 'map-pin' | 'calendar' | 'star' | 'user' | 'tap' | 'food' | 'pet' | 'terrace' | 'parking' | 'beershop' | 'route' | 'podium' | 'coin' | 'mic' | 'microphone' | 'chat-bubble' | 'speech-bubble' | 'balloon' | 'ticket' | 'christmas-tree' | 'santa-hat' | 'gift' | 'shamrock' | 'bell';
+  name: 'pacman' | 'beer-mug' | 'beer-glass' | 'hop' | 'ghost-red' | 'ghost-pink' | 'ghost-cyan' | 'ghost-orange' | 'compass' | 'map-pin' | 'calendar' | 'star' | 'user' | 'tap' | 'food' | 'pet' | 'terrace' | 'parking' | 'beershop' | 'route' | 'podium' | 'coin' | 'mic' | 'microphone' | 'chat-bubble' | 'speech-bubble' | 'balloon' | 'ticket' | 'christmas-tree' | 'santa-hat' | 'gift' | 'shamrock' | 'bell' | 'firework' | 'champagne';
   size?: number;
   className?: string;
   overrideColor?: string;
@@ -218,6 +218,55 @@ export function PixelIcon({
           colors: {
             'Y': overrideColor || '#FFCA00',
             'R': '#EF4444'
+          }
+        };
+      }
+      case 'firework': {
+        const grid = [
+          ".....YY.....",
+          ".S...YY...S.",
+          "..S..YY..S..",
+          "...C.YY.C...",
+          "....CYYC....",
+          "YYYYWWWWYYYY",
+          "YYYYWWWWYYYY",
+          "....CYYC....",
+          "...C.YY.C...",
+          "..S..YY..S..",
+          ".S...YY...S.",
+          ".....YY....."
+        ];
+        return {
+          grid,
+          colors: {
+            'Y': overrideColor || '#FFD770',
+            'W': '#FFFDF5',
+            'C': '#38BDF8',
+            'S': '#FB7185'
+          }
+        };
+      }
+      case 'champagne': {
+        const grid = [
+          "....WWWW....",
+          "....YYYY....",
+          "....YYYY....",
+          "....YYYY....",
+          ".....YY.....",
+          ".....YY.....",
+          ".....GG.....",
+          ".....GG.....",
+          ".....GG.....",
+          ".....GG.....",
+          "...GGGGGG...",
+          "............"
+        ];
+        return {
+          grid,
+          colors: {
+            'W': '#FFFDF5',
+            'Y': overrideColor || '#FFD770',
+            'G': '#CBD5E1'
           }
         };
       }
@@ -955,8 +1004,131 @@ export function PixelBeerGlass({ size = 24, className = '', overrideColor }: { s
   );
 }
 
-// Logo Component replicating the retro craft aesthetic (HOP-MAP)
-export function PixelLogo({ className = '' }: { size?: number | string; className?: string }) {
+// Logo Component replicating the retro craft aesthetic (HOP-MAP), Vice Edition, Christmas Edition, or New Year's Edition
+export function PixelLogo({
+  className = '',
+  gta6Mode = false,
+  christmasMode = false,
+  newYearMode = false
+}: {
+  size?: number | string;
+  className?: string;
+  gta6Mode?: boolean;
+  christmasMode?: boolean;
+  newYearMode?: boolean;
+}) {
+  if (gta6Mode) {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center p-0 relative select-none w-full max-w-xs mx-auto ${className}`}
+      >
+        <div className="flex items-center justify-center gap-3 mb-2 relative">
+          <div className="relative flex items-center justify-center drop-shadow-[0_0_12px_rgba(255,78,136,0.6)]">
+            <PixelPacman size={38} overrideColor="#FF5E93" />
+          </div>
+          <div className="flex items-center gap-2">
+            <PixelBeerGlass size={22} overrideColor="#FFB347" />
+            <PixelBeerGlass size={22} overrideColor="#FF7EA8" />
+            <PixelBeerGlass size={22} overrideColor="#2EE6D6" />
+          </div>
+        </div>
+
+        <div className="w-full flex flex-col items-center justify-center select-none mt-1" id="login-hop-map-title">
+          <span
+            className="font-bold uppercase tracking-[0.14em] text-[44px] sm:text-[50px] leading-[0.95] text-transparent bg-clip-text bg-gradient-to-b from-[#FFE6A7] via-[#FF9E44] to-[#FF4E88] drop-shadow-[0_4px_16px_rgba(255,78,136,0.45)]"
+            style={{ fontFamily: "'Oswald', sans-serif" }}
+          >
+            HOP-MAP
+          </span>
+          <span
+            className="text-xl sm:text-2xl text-[#2EE6D6] -mt-2 drop-shadow-[0_2px_10px_rgba(46,230,214,0.65)]"
+            style={{ fontFamily: "'Pacifico', cursive" }}
+          >
+            Vice Edition
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (christmasMode) {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center p-0 relative select-none w-full max-w-xs mx-auto ${className}`}
+      >
+        <div className="flex items-center justify-center gap-3 mb-2.5 relative">
+          <div className="relative flex items-center justify-center drop-shadow-[0_2px_10px_rgba(255,209,102,0.45)]">
+            <PixelPacman size={38} santaHat={true} overrideColor="#FFD166" />
+          </div>
+          <div className="flex items-center gap-2">
+            <PixelBeerGlass size={22} overrideColor="#D62839" />
+            <PixelBeerGlass size={22} overrideColor="#FFD166" />
+            <PixelBeerGlass size={22} overrideColor="#4ADE80" />
+          </div>
+        </div>
+
+        <div className="w-full flex flex-col items-center justify-center select-none mt-1" id="login-hop-map-title">
+          <div className="w-full flex items-center justify-between px-0.5">
+            {['H', 'O', 'P', '-', 'M', 'A', 'P'].map((char, index) => (
+              <span
+                key={index}
+                className="font-bold font-press text-[#FFFDF7] text-[28px] sm:text-[34px] leading-none select-none inline-block text-center"
+                style={{ textShadow: '2px 2px 0px #D62839, 3.5px 3.5px 0px #08150F' }}
+              >
+                {char}
+              </span>
+            ))}
+          </div>
+          <span
+            className="text-lg sm:text-xl text-[#FFD166] mt-1 drop-shadow-[0_2px_8px_rgba(214,40,57,0.6)]"
+            style={{ fontFamily: "'Pacifico', cursive" }}
+          >
+            Boas Festas
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (newYearMode) {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center p-0 relative select-none w-full max-w-xs mx-auto ${className}`}
+      >
+        <div className="flex items-center justify-center gap-3 mb-2.5 relative">
+          <div className="relative flex items-center justify-center drop-shadow-[0_2px_12px_rgba(255,215,112,0.55)]">
+            <PixelPacman size={38} overrideColor="#FFD770" />
+          </div>
+          <div className="flex items-center gap-2">
+            <PixelBeerGlass size={22} overrideColor="#FFD770" />
+            <PixelBeerGlass size={22} overrideColor="#38BDF8" />
+            <PixelBeerGlass size={22} overrideColor="#FB7185" />
+          </div>
+        </div>
+
+        <div className="w-full flex flex-col items-center justify-center select-none mt-1" id="login-hop-map-title">
+          <div className="w-full flex items-center justify-between px-0.5">
+            {['H', 'O', 'P', '-', 'M', 'A', 'P'].map((char, index) => (
+              <span
+                key={index}
+                className="font-bold font-press text-[#FFFDF5] text-[28px] sm:text-[34px] leading-none select-none inline-block text-center"
+                style={{ textShadow: '2px 2px 0px #D97706, 3.5px 3.5px 0px #080C1F' }}
+              >
+                {char}
+              </span>
+            ))}
+          </div>
+          <span
+            className="text-lg sm:text-xl text-[#FFD770] mt-1 drop-shadow-[0_2px_10px_rgba(255,215,112,0.55)]"
+            style={{ fontFamily: "'Pacifico', cursive" }}
+          >
+            Feliz Ano Novo
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
       className={`flex flex-col items-center justify-center p-0 relative select-none w-full max-w-xs mx-auto ${className}`}

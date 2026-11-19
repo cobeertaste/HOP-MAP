@@ -4,6 +4,7 @@
  */
 
 import express, { Request, Response } from 'express';
+import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
@@ -100,6 +101,7 @@ function checkMonthlyReportAutoDispatchScheduler() {
 
 async function startServer() {
   const app = express();
+  const httpServer = http.createServer(app);
   const PORT = 3000;
 
   app.use(express.json());
@@ -315,8 +317,15 @@ async function startServer() {
 
   // Vite middleware in development vs static serving in production
   if (process.env.NODE_ENV !== 'production') {
+    const disableWatch = process.env.DISABLE_HMR === 'true' || Boolean(process.env.K_SERVICE);
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: {
+          server: httpServer,
+        },
+        ...(disableWatch ? { watch: null } : {}),
+      },
       appType: 'custom',
     });
     app.use(vite.middlewares);
@@ -384,7 +393,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`Hop-Map Server running on http://0.0.0.0:${PORT}`);
     // Check monthly report dispatch schedule
     checkMonthlyReportAutoDispatchScheduler();

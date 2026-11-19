@@ -22,7 +22,15 @@ import { HopCommunityChatModal } from './components/HopCommunityChatModal';
 import { SpotVibeCheck, CompactSpotVibeBadge } from './components/SpotVibeCheck';
 import { MentionNotificationToast, MentionNotificationPayload } from './components/MentionNotificationToast';
 import { SpecialEventsBanner } from './components/SpecialEventsBanner';
-import { getActiveSpecialEvent } from './utils/specialEvents';
+import { getActiveSpecialEvent, isGta6ThemeActive, isChristmasThemeActive, isNewYearThemeActive } from './utils/specialEvents';
+import gta6ViceSkyline from './assets/images/gta6_vice_skyline_1795092472161.jpg';
+import christmasWinterScene from './assets/images/christmas_winter_scene_1795093770691.jpg';
+import newyearFireworksSkyline from './assets/images/newyear_fireworks_skyline_1795094667421.jpg';
+import {
+  playChristmasTapBell,
+  playChristmasStampChime,
+  playChristmasRewardMelody
+} from './utils/christmasAudio';
 
 import { BARS_DATA, EVENTS_DATA, getReviewsForBar } from './data';
 import { getBarGoogleMapsUrl } from './maps_utils';
@@ -228,6 +236,10 @@ const PARTICLE_TEMPLATES = Array.from({ length: 18 }).map((_, idx) => {
 
 // Synthesized audio feedback using Web Audio API for rewarding gamification
 const playStampSound = () => {
+  if (isChristmasThemeActive()) {
+    playChristmasStampChime();
+    return;
+  }
   try {
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const primaryOsc = audioCtx.createOscillator();
@@ -259,6 +271,10 @@ const playStampSound = () => {
 };
 
 const playRewardChime = () => {
+  if (isChristmasThemeActive()) {
+    playChristmasRewardMelody();
+    return;
+  }
   try {
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const synthChords = [523.25, 659.25, 783.99, 1046.50]; // C-Major chord arpeggio
@@ -280,6 +296,10 @@ const playRewardChime = () => {
 };
 
 const playPacmanSound = () => {
+  if (isChristmasThemeActive()) {
+    playChristmasTapBell();
+    return;
+  }
   try {
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const now = audioCtx.currentTime;
@@ -626,9 +646,43 @@ export default function App() {
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
 
-  // Active seasonal / commemorative date event
-  const activeSpecialEvent = getActiveSpecialEvent();
-  const isChristmas = activeSpecialEvent?.type === 'christmas';
+  // Active seasonal / commemorative date event (re-checked dynamically so it reverts automatically after Sunday 22-11-2026)
+  const [themeNowTick, setThemeNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const refreshThemeClock = () => setThemeNowTick(Date.now());
+    const interval = setInterval(refreshThemeClock, 30_000);
+    window.addEventListener('focus', refreshThemeClock);
+    document.addEventListener('visibilitychange', refreshThemeClock);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', refreshThemeClock);
+      document.removeEventListener('visibilitychange', refreshThemeClock);
+    };
+  }, []);
+
+  const currentThemeDate = new Date(themeNowTick);
+  const activeSpecialEvent = getActiveSpecialEvent(currentThemeDate);
+  const isChristmas = isChristmasThemeActive(currentThemeDate);
+  const isNewYear = isNewYearThemeActive(currentThemeDate);
+  const isGta6Active = isGta6ThemeActive(currentThemeDate);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (isGta6Active) {
+      root.setAttribute('data-theme', 'gta6');
+      if (themeMeta) themeMeta.setAttribute('content', '#120923');
+    } else if (isChristmas) {
+      root.setAttribute('data-theme', 'christmas');
+      if (themeMeta) themeMeta.setAttribute('content', '#0F241B');
+    } else if (isNewYear) {
+      root.setAttribute('data-theme', 'newyear');
+      if (themeMeta) themeMeta.setAttribute('content', '#0B1026');
+    } else {
+      root.removeAttribute('data-theme');
+      if (themeMeta) themeMeta.setAttribute('content', '#F6EFDC');
+    }
+  }, [isGta6Active, isChristmas, isNewYear]);
   
   // Check-In Pixel Confetti Animation States
   const [animatingCheckinBarId, setAnimatingCheckinBarId] = useState<string | null>(null);
@@ -1884,19 +1938,30 @@ export default function App() {
       return;
     }
 
-    // Identify newly unlocked badges
-    let foundNewBadge: Badge | null = null;
-    for (const badge of unlockedBadges) {
-      if (!prevUnlockedBadgeIdsRef.current.has(badge.id)) {
-        foundNewBadge = badge;
-        setNewlyUnlockedBadge(badge);
-        triggerSelfPush(
-          lang === 'PT' ? '🏆 Novo Badge Desbloqueado!' : '🏆 New Badge Unlocked!',
-          lang === 'PT' ? `Parabéns, ganhaste o badge: ${badge.namePt}!` : `Congrats, you earned the badge: ${badge.nameEn}!`,
-          'reward'
-        );
-        break;
-      }
+    // Identify newly unlocked badges (prioritize seasonal/limited GTA 6 & higher-rarity badges for toast)
+    const newlyUnlockedList = unlockedBadges.filter(
+      badge => !prevUnlockedBadgeIdsRef.current.has(badge.id)
+    );
+    const rarityPriority: Record<string, number> = {
+      legendary: 4,
+      epic: 3,
+      rare: 2,
+      common: 1
+    };
+    const prioritizedNewBadge = [...newlyUnlockedList].sort((a, b) => {
+      if (a.id === 'special_gta6' && b.id !== 'special_gta6') return -1;
+      if (b.id === 'special_gta6' && a.id !== 'special_gta6') return 1;
+      return (rarityPriority[b.rarity] || 0) - (rarityPriority[a.rarity] || 0);
+    })[0] || null;
+
+    const foundNewBadge: Badge | null = prioritizedNewBadge;
+    if (foundNewBadge) {
+      setNewlyUnlockedBadge(foundNewBadge);
+      triggerSelfPush(
+        lang === 'PT' ? '🏆 Novo Badge Desbloqueado!' : '🏆 New Badge Unlocked!',
+        lang === 'PT' ? `Parabéns, ganhaste o badge: ${foundNewBadge.namePt}!` : `Congrats, you earned the badge: ${foundNewBadge.nameEn}!`,
+        'reward'
+      );
     }
 
     if (foundNewBadge) {
@@ -5195,6 +5260,66 @@ export default function App() {
 
       {/* Screen layout wrapper holding our views */}
       <div className="flex-1 w-full h-full flex flex-col relative overflow-hidden bg-[#F6EFDC] text-[#1B2036]">
+        {!user.isLoggedIn && isGta6Active && (
+          <>
+            <img
+              src={gta6ViceSkyline}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none opacity-65"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-b from-[#120923]/80 via-[#120923]/72 to-[#120923]/92 pointer-events-none"
+            />
+          </>
+        )}
+        
+        {!user.isLoggedIn && isChristmas && (
+          <>
+            <img
+              src={christmasWinterScene}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none opacity-60"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-b from-[#0A1A13]/82 via-[#0F241B]/76 to-[#0A1A13]/92 pointer-events-none"
+            />
+            <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden z-[1]">
+              <span className="christmas-snowflake absolute top-0 left-[8%] text-white/75 text-xs" style={{ animationDelay: '0s', animationDuration: '8s' }}>❄</span>
+              <span className="christmas-snowflake absolute top-0 left-[22%] text-[#FFD166]/70 text-[10px]" style={{ animationDelay: '2.1s', animationDuration: '10s' }}>✦</span>
+              <span className="christmas-snowflake absolute top-0 left-[41%] text-white/70 text-sm" style={{ animationDelay: '4s', animationDuration: '9.5s' }}>❄</span>
+              <span className="christmas-snowflake absolute top-0 left-[64%] text-white/65 text-xs" style={{ animationDelay: '1.3s', animationDuration: '11s' }}>❄</span>
+              <span className="christmas-snowflake absolute top-0 left-[83%] text-[#FFD166]/65 text-[10px]" style={{ animationDelay: '3.2s', animationDuration: '8.5s' }}>✦</span>
+              <span className="christmas-snowflake absolute top-0 left-[93%] text-white/75 text-xs" style={{ animationDelay: '5s', animationDuration: '10.5s' }}>❄</span>
+            </div>
+          </>
+        )}
+
+        {!user.isLoggedIn && isNewYear && (
+          <>
+            <img
+              src={newyearFireworksSkyline}
+              alt=""
+              aria-hidden="true"
+              referrerPolicy="no-referrer"
+              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none opacity-60"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-b from-[#080C1F]/80 via-[#0B1026]/74 to-[#080C1F]/92 pointer-events-none"
+            />
+            <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden z-[1]">
+              <span className="newyear-sparkle absolute top-0 left-[10%] text-[#FFD770]/80 text-xs" style={{ animationDelay: '0s', animationDuration: '8s' }}>✦</span>
+              <span className="newyear-sparkle absolute top-0 left-[26%] text-[#38BDF8]/75 text-[10px]" style={{ animationDelay: '1.8s', animationDuration: '9.5s' }}>✧</span>
+              <span className="newyear-sparkle absolute top-0 left-[46%] text-[#FFD770]/75 text-sm" style={{ animationDelay: '3.6s', animationDuration: '9s' }}>✦</span>
+              <span className="newyear-sparkle absolute top-0 left-[67%] text-[#FB7185]/70 text-xs" style={{ animationDelay: '1.2s', animationDuration: '10.5s' }}>✧</span>
+              <span className="newyear-sparkle absolute top-0 left-[85%] text-[#FFD770]/80 text-[11px]" style={{ animationDelay: '2.9s', animationDuration: '8.5s' }}>✦</span>
+            </div>
+          </>
+        )}
         
         {/* TOP COMPACT APP TITLE & PUSH SIMULATOR BUTTON */}
         {user.isLoggedIn && (
@@ -5212,14 +5337,20 @@ export default function App() {
               <PixelPacman 
                 size={20} 
                 santaHat={isChristmas} 
-                overrideColor={activeSpecialEvent?.isGreenTheme ? '#12908C' : '#F2A93B'} 
+                overrideColor={isGta6Active ? '#FF5E93' : isChristmas ? '#FFD166' : isNewYear ? '#FFD770' : activeSpecialEvent?.isGreenTheme ? '#12908C' : '#F2A93B'} 
                 className="animate-pulse shrink-0" 
               />
               <div className="flex items-baseline gap-1 sm:gap-2 min-w-0">
                 <h1 
                   className="text-xs sm:text-base md:text-lg font-bold tracking-wider font-press text-[#1B2036] whitespace-nowrap"
                   style={{ 
-                    textShadow: '1px 1px 0px #F2A93B' 
+                    textShadow: isGta6Active
+                      ? '0 2px 10px rgba(255, 94, 147, 0.55)'
+                      : isChristmas
+                        ? '0 2px 10px rgba(214, 40, 57, 0.7)'
+                        : isNewYear
+                          ? '0 2px 10px rgba(255, 215, 112, 0.55)'
+                          : '1px 1px 0px #F2A93B' 
                   }}
                 >
                   HOP-MAP
@@ -5263,6 +5394,8 @@ export default function App() {
                 }}
                 hasUnreadNotifications={notifications.some(n => !n.isRead)}
                 isChristmas={isChristmas}
+                isNewYear={isNewYear}
+                isGta6={isGta6Active}
               />
             </div>
           </header>
@@ -5313,11 +5446,11 @@ export default function App() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="flex-1 w-full min-h-0 overflow-y-auto flex flex-col justify-center items-center p-4 sm:p-6 text-center select-none relative"
+            className="flex-1 w-full min-h-0 overflow-y-auto flex flex-col justify-center items-center p-4 sm:p-6 text-center select-none relative z-10"
           >
             {/* Logo */}
             <div className="mb-3 shrink-0 flex flex-col items-center justify-center w-full max-w-xs mx-auto">
-              <PixelLogo className="w-full max-w-xs" />
+              <PixelLogo className="w-full max-w-xs" gta6Mode={isGta6Active} christmasMode={isChristmas} newYearMode={isNewYear} />
             </div>
 
             <p 
@@ -9455,7 +9588,7 @@ export default function App() {
               id="tab-btn-explore"
             >
               <div className={`p-0.5 rounded-md transition-all ${activeTab === 'explore' ? 'scale-110' : 'opacity-75'}`}>
-                <PixelIcon name="compass" size={19} overrideColor={activeTab === 'explore' ? "#12908C" : "#1B2036"} />
+                <PixelIcon name="compass" size={19} overrideColor={isGta6Active ? (activeTab === 'explore' ? '#2EE6D6' : '#E9DDFB') : isChristmas ? (activeTab === 'explore' ? '#FFD166' : '#DCEBE2') : isNewYear ? (activeTab === 'explore' ? '#FFD770' : '#CBD5E1') : (activeTab === 'explore' ? '#12908C' : '#1B2036')} />
               </div>
               <span className={`text-[8px] sm:text-[9px] font-press uppercase tracking-wider truncate max-w-full ${activeTab === 'explore' ? 'text-[#12908C] font-bold' : 'text-[#1B2036] font-bold opacity-80'}`}>
                 {t('tabMap', lang)}
@@ -9469,7 +9602,7 @@ export default function App() {
               id="tab-btn-routes"
             >
               <div className={`p-0.5 rounded-md transition-all ${activeTab === 'routes' ? 'scale-110' : 'opacity-75'}`}>
-                <PixelIcon name="route" size={19} overrideColor={activeTab === 'routes' ? "#12908C" : "#1B2036"} />
+                <PixelIcon name="route" size={19} overrideColor={isGta6Active ? (activeTab === 'routes' ? '#2EE6D6' : '#E9DDFB') : isChristmas ? (activeTab === 'routes' ? '#FFD166' : '#DCEBE2') : isNewYear ? (activeTab === 'routes' ? '#FFD770' : '#CBD5E1') : (activeTab === 'routes' ? '#12908C' : '#1B2036')} />
               </div>
               <span className={`text-[8px] sm:text-[9px] font-press uppercase tracking-wider truncate max-w-full ${activeTab === 'routes' ? 'text-[#12908C] font-bold' : 'text-[#1B2036] font-bold opacity-80'}`}>
                 {t('tabRoutes', lang)}
@@ -9483,7 +9616,7 @@ export default function App() {
               id="tab-btn-events"
             >
               <div className={`p-0.5 rounded-md transition-all ${activeTab === 'events' ? 'scale-110' : 'opacity-75'}`}>
-                <PixelIcon name="calendar" size={19} overrideColor={activeTab === 'events' ? "#12908C" : "#1B2036"} />
+                <PixelIcon name="calendar" size={19} overrideColor={isGta6Active ? (activeTab === 'events' ? '#2EE6D6' : '#E9DDFB') : isChristmas ? (activeTab === 'events' ? '#FFD166' : '#DCEBE2') : isNewYear ? (activeTab === 'events' ? '#FFD770' : '#CBD5E1') : (activeTab === 'events' ? '#12908C' : '#1B2036')} />
               </div>
               <span className={`text-[8px] sm:text-[9px] font-press uppercase tracking-wider truncate max-w-full ${activeTab === 'events' ? 'text-[#12908C] font-bold' : 'text-[#1B2036] font-bold opacity-80'}`}>
                 {t('tabFestivals', lang)}
@@ -9497,7 +9630,7 @@ export default function App() {
               id="tab-btn-loyalty"
             >
               <div className={`p-0.5 rounded-md transition-all ${activeTab === 'loyalty' ? 'scale-110' : 'opacity-75'}`}>
-                <PixelIcon name="ticket" size={19} overrideColor={activeTab === 'loyalty' ? "#12908C" : "#1B2036"} />
+                <PixelIcon name="ticket" size={19} overrideColor={isGta6Active ? (activeTab === 'loyalty' ? '#2EE6D6' : '#E9DDFB') : isChristmas ? (activeTab === 'loyalty' ? '#FFD166' : '#DCEBE2') : isNewYear ? (activeTab === 'loyalty' ? '#FFD770' : '#CBD5E1') : (activeTab === 'loyalty' ? '#12908C' : '#1B2036')} />
               </div>
               <span className={`text-[8px] sm:text-[9px] font-press uppercase tracking-wider truncate max-w-full ${activeTab === 'loyalty' ? 'text-[#12908C] font-bold' : 'text-[#1B2036] font-bold opacity-80'}`}>
                 {t('tabCheckin', lang)}
@@ -9525,6 +9658,10 @@ export default function App() {
                   type="button"
                   onClick={() => {
                     setShowScoreModal(false);
+                    if (isChristmasThemeActive()) {
+                      playChristmasTapBell();
+                      return;
+                    }
                     // Play a soft synthetic retro double beep
                     try {
                       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();

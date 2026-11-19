@@ -6,6 +6,12 @@
 import { Bar } from '../types';
 import { db, isFirebaseConfigured } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, serverTimestamp } from 'firebase/firestore';
+import { isChristmasThemeActive } from '../utils/specialEvents';
+import {
+  playChristmasStageClearFanfare,
+  playChristmasKeypadBell,
+  playChristmasErrorTone
+} from '../utils/christmasAudio';
 
 // Curated 4-digit PINs for notable spots
 const PRESET_SPOT_PINS: Record<string, string> = {
@@ -262,6 +268,10 @@ export function formatSpotPinsEmail(
  * Synthesizes classic 8-bit retro arcade "STAGE CLEAR!" fanfare sound
  */
 export function playStageClearSound() {
+  if (isChristmasThemeActive()) {
+    playChristmasStageClearFanfare();
+    return;
+  }
   try {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
@@ -317,6 +327,10 @@ export function playStageClearSound() {
  * Synthesizes retro 8-bit keypad button blip
  */
 export function playPinKeypadSound(digit?: string | number) {
+  if (isChristmasThemeActive()) {
+    playChristmasKeypadBell(digit);
+    return;
+  }
   try {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
@@ -345,6 +359,10 @@ export function playPinKeypadSound(digit?: string | number) {
  * Synthesizes retro 8-bit error buzz on wrong PIN
  */
 export function playPinErrorSound() {
+  if (isChristmasThemeActive()) {
+    playChristmasErrorTone();
+    return;
+  }
   try {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;

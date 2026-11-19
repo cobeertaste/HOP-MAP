@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Pacifico&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
 @theme {
   --font-sans: "Space Grotesk", sans-serif;
@@ -389,4 +389,816 @@ body {
   -webkit-text-fill-color: transparent;
   background-size: 200% auto;
 }
+
+/* ==========================================================================
+   TEMPORARY GTA 6 / VICE EDITION THEME (19-11-2026 to 22-11-2026)
+   Reverts automatically to the base template UI starting 23-11-2026.
+   ========================================================================== */
+
+.font-gta-script {
+  font-family: 'Pacifico', cursive;
+}
+
+html[data-theme="gta6"],
+html[data-theme="gta6"] body {
+  background-color: #120923;
+  color: #FFF7F2;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  scrollbar-color: #FF5E93 #120923;
+}
+
+html[data-theme="gta6"] ::-webkit-scrollbar-track {
+  background: #120923;
+}
+
+html[data-theme="gta6"] ::-webkit-scrollbar-thumb {
+  background-color: #FF5E93;
+  border: 1.5px solid #120923;
+}
+
+html[data-theme="gta6"] ::-webkit-scrollbar-thumb:hover {
+  background-color: #2EE6D6;
+}
+
+html[data-theme="gta6"] .font-body,
+html[data-theme="gta6"] .font-grotesk,
+html[data-theme="gta6"] .font-sans {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+html[data-theme="gta6"] .font-display,
+html[data-theme="gta6"] .font-press,
+html[data-theme="gta6"] .font-press-start {
+  font-family: 'Oswald', 'Space Grotesk', sans-serif;
+  letter-spacing: 0.045em;
+}
+
+html[data-theme="gta6"] .font-label,
+html[data-theme="gta6"] .font-silkscreen {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+/* Primary twilight canvas & elevated Vice card surfaces */
+html[data-theme="gta6"] .app-screen-container,
+html[data-theme="gta6"] .bg-\[\#F6EFDC\],
+html[data-theme="gta6"] .bg-\[\#FAF6EB\],
+html[data-theme="gta6"] .bg-\[\#FAF7F0\] {
+  background-color: #190F32;
+  color: #FFF7F2;
+}
+
+html[data-theme="gta6"] header.bg-\[\#F6EFDC\] {
+  background: linear-gradient(90deg, rgba(25, 15, 50, 0.96) 0%, rgba(36, 17, 66, 0.96) 50%, rgba(25, 15, 50, 0.96) 100%);
+  border-bottom: 2px solid #FF5E93;
+  box-shadow: 0 4px 20px rgba(255, 78, 136, 0.2);
+}
+
+html[data-theme="gta6"] nav.bg-\[\#F6EFDC\] {
+  background: linear-gradient(90deg, rgba(22, 12, 44, 0.97) 0%, rgba(34, 16, 62, 0.97) 50%, rgba(22, 12, 44, 0.97) 100%);
+  border-top: 2px solid #2EE6D6;
+  box-shadow: 0 -4px 20px rgba(46, 230, 214, 0.16);
+}
+
+/* Secondary inset cards, inputs, and dropdown surfaces */
+html[data-theme="gta6"] .bg-\[\#EFE6CC\],
+html[data-theme="gta6"] .bg-\[\#EFE6CC\]\/70,
+html[data-theme="gta6"] .bg-\[\#EFE6CC\]\/60,
+html[data-theme="gta6"] .bg-\[\#EFE6CC\]\/50,
+html[data-theme="gta6"] .bg-white,
+html[data-theme="gta6"] .bg-white\/95,
+html[data-theme="gta6"] .bg-white\/90,
+html[data-theme="gta6"] .bg-white\/70,
+html[data-theme="gta6"] .bg-white\/60,
+html[data-theme="gta6"] .bg-white\/40,
+html[data-theme="gta6"] .bg-zinc-50,
+html[data-theme="gta6"] .bg-zinc-50\/90,
+html[data-theme="gta6"] .bg-zinc-100,
+html[data-theme="gta6"] .bg-zinc-200,
+html[data-theme="gta6"] .bg-zinc-300,
+html[data-theme="gta6"] .bg-neutral-100,
+html[data-theme="gta6"] .bg-neutral-200,
+html[data-theme="gta6"] .bg-neutral-300,
+html[data-theme="gta6"] .hover\:bg-\[\#EFE6CC\]:hover,
+html[data-theme="gta6"] .hover\:bg-white:hover,
+html[data-theme="gta6"] .hover\:bg-zinc-100:hover {
+  background-color: #251749;
+  color: #FFF7F2;
+}
+
+html[data-theme="gta6"] .bg-amber-50,
+html[data-theme="gta6"] .bg-amber-50\/80,
+html[data-theme="gta6"] .bg-amber-50\/50,
+html[data-theme="gta6"] .bg-amber-100,
+html[data-theme="gta6"] .bg-amber-100\/90,
+html[data-theme="gta6"] .bg-amber-500\/10,
+html[data-theme="gta6"] .bg-amber-500\/15,
+html[data-theme="gta6"] .bg-amber-500\/20 {
+  background-color: rgba(255, 179, 71, 0.14);
+  color: #FFEAD0;
+}
+
+html[data-theme="gta6"] .bg-\[\#FEE2E2\] {
+  background-color: rgba(255, 78, 136, 0.2);
+  color: #FFB8CE;
+}
+
+/* Vice dusk borders & layered elevation shadows */
+html[data-theme="gta6"] .border-\[\#1B2036\],
+html[data-theme="gta6"] .border-black,
+html[data-theme="gta6"] .border-zinc-700,
+html[data-theme="gta6"] .border-zinc-200,
+html[data-theme="gta6"] .border-neutral-200,
+html[data-theme="gta6"] .border-amber-200,
+html[data-theme="gta6"] .border-amber-300 {
+  border-color: rgba(255, 94, 147, 0.45);
+}
+
+html[data-theme="gta6"] .border-\[\#1B2036\]\/20,
+html[data-theme="gta6"] .border-\[\#1B2036\]\/40 {
+  border-color: rgba(255, 94, 147, 0.28);
+}
+
+html[data-theme="gta6"] .shadow-\[1px_1px_0px_\#1B2036\],
+html[data-theme="gta6"] .shadow-\[1px_1px_0px_\#000000\],
+html[data-theme="gta6"] .shadow-\[1\.5px_1\.5px_0px_\#1B2036\],
+html[data-theme="gta6"] .shadow-\[2px_2px_0px_\#1B2036\],
+html[data-theme="gta6"] .shadow-\[2px_2px_0px_\#000000\],
+html[data-theme="gta6"] .shadow-\[3px_3px_0px_\#1B2036\],
+html[data-theme="gta6"] .shadow-\[3px_3px_0px_\#000000\],
+html[data-theme="gta6"] .shadow-\[4px_4px_0px_\#1B2036\],
+html[data-theme="gta6"] .shadow-\[4px_4px_0px_\#000000\],
+html[data-theme="gta6"] .shadow-\[5px_5px_0px_\#1B2036\],
+html[data-theme="gta6"] .shadow-\[6px_6px_0px_\#1B2036\],
+html[data-theme="gta6"] .retro-shadow,
+html[data-theme="gta6"] .retro-shadow-sm,
+html[data-theme="gta6"] .retro-shadow-lg {
+  box-shadow: 0 6px 18px rgba(7, 2, 18, 0.65), 0 0 0 1px rgba(46, 230, 214, 0.14);
+}
+
+/* Dark-surface text inks */
+html[data-theme="gta6"] .text-\[\#1B2036\],
+html[data-theme="gta6"] .text-black,
+html[data-theme="gta6"] .text-neutral-900,
+html[data-theme="gta6"] .text-neutral-800,
+html[data-theme="gta6"] .text-zinc-900,
+html[data-theme="gta6"] .text-zinc-800 {
+  color: #FFF7F2;
+}
+
+html[data-theme="gta6"] .text-\[\#1B2036\]\/80,
+html[data-theme="gta6"] .text-\[\#1B2036\]\/70,
+html[data-theme="gta6"] .text-\[\#1B2036\]\/60,
+html[data-theme="gta6"] .text-\[\#1B2036\]\/50,
+html[data-theme="gta6"] .text-zinc-700,
+html[data-theme="gta6"] .text-zinc-600,
+html[data-theme="gta6"] .text-zinc-500,
+html[data-theme="gta6"] .text-neutral-700,
+html[data-theme="gta6"] .text-neutral-600,
+html[data-theme="gta6"] .text-neutral-500,
+html[data-theme="gta6"] .text-amber-900 {
+  color: #D8C7F0;
+}
+
+/* Vice Neon Accent Inks */
+html[data-theme="gta6"] .text-\[\#12908C\],
+html[data-theme="gta6"] .text-\[\#0B6C69\],
+html[data-theme="gta6"] .hover\:text-\[\#12908C\]:hover,
+html[data-theme="gta6"] .group:hover .group-hover\:text-\[\#12908C\] {
+  color: #2EE6D6;
+}
+
+html[data-theme="gta6"] .text-\[\#E85B41\] {
+  color: #FF5E93;
+}
+
+html[data-theme="gta6"] .text-\[\#F2A93B\],
+html[data-theme="gta6"] .text-\[\#FFCA00\],
+html[data-theme="gta6"] .text-amber-500,
+html[data-theme="gta6"] .text-amber-600 {
+  color: #FFB347;
+}
+
+html[data-theme="gta6"] .text-\[\#991B1B\] {
+  color: #FFB8CE;
+}
+
+html[data-theme="gta6"] input::placeholder,
+html[data-theme="gta6"] textarea::placeholder {
+  color: rgba(216, 199, 240, 0.55);
+}
+
+/* Dark rating pills & zone tags stay rich dark obsidian with gold text */
+html[data-theme="gta6"] .bg-\[\#1B2036\] {
+  background-color: #100821;
+  border-color: rgba(46, 230, 214, 0.45);
+}
+
+/* BRIGHT SURFACE CONTRAST GUARDS:
+   Ensure dark legible ink on bright sunset gold, aqua, and coral CTAs */
+html[data-theme="gta6"] .bg-amber-500,
+html[data-theme="gta6"] .bg-amber-400,
+html[data-theme="gta6"] .bg-\[\#F2A93B\],
+html[data-theme="gta6"] .bg-\[\#FFCA00\],
+html[data-theme="gta6"] .hover\:bg-\[\#F2A93B\]:hover,
+html[data-theme="gta6"] .hover\:bg-amber-400:hover {
+  background: linear-gradient(135deg, #FFB347 0%, #FF785A 100%);
+  color: #160A28;
+  border-color: #FFD28A;
+}
+
+html[data-theme="gta6"] .bg-amber-500 *,
+html[data-theme="gta6"] .bg-amber-400 *,
+html[data-theme="gta6"] .bg-\[\#F2A93B\] *,
+html[data-theme="gta6"] .bg-\[\#FFCA00\] *,
+html[data-theme="gta6"] .hover\:bg-\[\#F2A93B\]:hover * {
+  color: #160A28;
+}
+
+html[data-theme="gta6"] .bg-\[\#12908C\],
+html[data-theme="gta6"] .hover\:bg-\[\#12908C\]:hover,
+html[data-theme="gta6"] .hover\:bg-\[\#0B6C69\]:hover {
+  background: linear-gradient(135deg, #2EE6D6 0%, #10B5A6 100%);
+  color: #0D071B;
+  border-color: #88F7ED;
+}
+
+html[data-theme="gta6"] .bg-\[\#12908C\] *,
+html[data-theme="gta6"] .hover\:bg-\[\#12908C\]:hover * {
+  color: #0D071B;
+}
+
+html[data-theme="gta6"] .bg-\[\#E85B41\] {
+  background: linear-gradient(135deg, #FF4E88 0%, #FF7B54 100%);
+  color: #FFFFFF;
+  border-color: #FF94B8;
+}
+
+html[data-theme="gta6"] .bg-\[\#E85B41\] * {
+  color: #FFFFFF;
+}
+
+/* SVG PixelIcons that hardcode fill="#1B2036" adapt cleanly to dark vs bright surfaces */
+html[data-theme="gta6"] svg rect[fill="#1B2036"] {
+  fill: #FFF7F2;
+}
+
+html[data-theme="gta6"] .bg-\[\#F2A93B\] svg rect[fill="#1B2036"],
+html[data-theme="gta6"] .bg-amber-500 svg rect[fill="#1B2036"],
+html[data-theme="gta6"] .bg-\[\#12908C\] svg rect[fill="#1B2036"],
+html[data-theme="gta6"] .hover\:bg-\[\#F2A93B\]:hover svg rect[fill="#1B2036"] {
+  fill: #160A28;
+}
+
+/* Subtle Vice stripe motif */
+html[data-theme="gta6"] .stripe-mini i:nth-child(1) { background: #FF4E88; }
+html[data-theme="gta6"] .stripe-mini i:nth-child(2) { background: #FFB347; }
+html[data-theme="gta6"] .stripe-mini i:nth-child(3) { background: #2EE6D6; }
+html[data-theme="gta6"] .stripe-mini i:nth-child(4) { background: #9D4EDD; }
+
+/* ==========================================================================
+   TEMPORARY CHRISTMAS / NATAL THEME (Dec 1 – Dec 25)
+   Reverts automatically to the base template UI starting Dec 26.
+   ========================================================================== */
+
+@keyframes christmasSnowFall {
+  0% {
+    transform: translate3d(0, -10%, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.75;
+  }
+  85% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate3d(12px, 110vh, 0);
+    opacity: 0;
+  }
+}
+
+.christmas-snowflake {
+  animation: christmasSnowFall 9s linear infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .christmas-snowflake {
+    animation: none !important;
+    opacity: 0.35;
+  }
+}
+
+html[data-theme="christmas"],
+html[data-theme="christmas"] body {
+  background-color: #0F241B;
+  color: #FFFDF7;
+  scrollbar-color: #D62839 #0F241B;
+}
+
+html[data-theme="christmas"] ::-webkit-scrollbar-track {
+  background: #0F241B;
+}
+
+html[data-theme="christmas"] ::-webkit-scrollbar-thumb {
+  background-color: #D62839;
+  border: 1.5px solid #0F241B;
+}
+
+html[data-theme="christmas"] ::-webkit-scrollbar-thumb:hover {
+  background-color: #FFD166;
+}
+
+/* Evergreen pine canvas & elevated holiday surfaces */
+html[data-theme="christmas"] .app-screen-container,
+html[data-theme="christmas"] .bg-\[\#F6EFDC\],
+html[data-theme="christmas"] .bg-\[\#FAF6EB\],
+html[data-theme="christmas"] .bg-\[\#FAF7F0\] {
+  background-color: #132C21;
+  color: #FFFDF7;
+}
+
+html[data-theme="christmas"] header.bg-\[\#F6EFDC\] {
+  background: linear-gradient(90deg, rgba(12, 31, 23, 0.98) 0%, rgba(21, 50, 37, 0.98) 50%, rgba(12, 31, 23, 0.98) 100%);
+  border-bottom: 2px solid #D62839;
+  box-shadow: 0 4px 20px rgba(214, 40, 57, 0.24);
+}
+
+html[data-theme="christmas"] nav.bg-\[\#F6EFDC\] {
+  background: linear-gradient(90deg, rgba(11, 28, 21, 0.98) 0%, rgba(19, 44, 33, 0.98) 50%, rgba(11, 28, 21, 0.98) 100%);
+  border-top: 2px solid #FFD166;
+  box-shadow: 0 -4px 18px rgba(255, 209, 102, 0.14);
+}
+
+/* Secondary inset cards, inputs, and dropdown surfaces */
+html[data-theme="christmas"] .bg-\[\#EFE6CC\],
+html[data-theme="christmas"] .bg-\[\#EFE6CC\]\/70,
+html[data-theme="christmas"] .bg-\[\#EFE6CC\]\/60,
+html[data-theme="christmas"] .bg-\[\#EFE6CC\]\/50,
+html[data-theme="christmas"] .bg-white,
+html[data-theme="christmas"] .bg-white\/95,
+html[data-theme="christmas"] .bg-white\/90,
+html[data-theme="christmas"] .bg-white\/70,
+html[data-theme="christmas"] .bg-white\/60,
+html[data-theme="christmas"] .bg-white\/40,
+html[data-theme="christmas"] .bg-zinc-50,
+html[data-theme="christmas"] .bg-zinc-50\/90,
+html[data-theme="christmas"] .bg-zinc-100,
+html[data-theme="christmas"] .bg-zinc-200,
+html[data-theme="christmas"] .bg-zinc-300,
+html[data-theme="christmas"] .bg-neutral-100,
+html[data-theme="christmas"] .bg-neutral-200,
+html[data-theme="christmas"] .bg-neutral-300,
+html[data-theme="christmas"] .hover\:bg-\[\#EFE6CC\]:hover,
+html[data-theme="christmas"] .hover\:bg-white:hover,
+html[data-theme="christmas"] .hover\:bg-zinc-100:hover {
+  background-color: #1B3B2D;
+  color: #FFFDF7;
+}
+
+html[data-theme="christmas"] .bg-amber-50,
+html[data-theme="christmas"] .bg-amber-50\/80,
+html[data-theme="christmas"] .bg-amber-50\/50,
+html[data-theme="christmas"] .bg-amber-100,
+html[data-theme="christmas"] .bg-amber-100\/90,
+html[data-theme="christmas"] .bg-amber-500\/10,
+html[data-theme="christmas"] .bg-amber-500\/15,
+html[data-theme="christmas"] .bg-amber-500\/20 {
+  background-color: rgba(255, 209, 102, 0.14);
+  color: #FFF3D1;
+}
+
+html[data-theme="christmas"] .bg-\[\#FEE2E2\] {
+  background-color: rgba(214, 40, 57, 0.24);
+  color: #FFD1D6;
+}
+
+/* Warm holiday gold borders & layered evergreen shadows */
+html[data-theme="christmas"] .border-\[\#1B2036\],
+html[data-theme="christmas"] .border-black,
+html[data-theme="christmas"] .border-zinc-700,
+html[data-theme="christmas"] .border-zinc-200,
+html[data-theme="christmas"] .border-neutral-200,
+html[data-theme="christmas"] .border-amber-200,
+html[data-theme="christmas"] .border-amber-300 {
+  border-color: rgba(255, 209, 102, 0.42);
+}
+
+html[data-theme="christmas"] .border-\[\#1B2036\]\/20,
+html[data-theme="christmas"] .border-\[\#1B2036\]\/40 {
+  border-color: rgba(255, 209, 102, 0.25);
+}
+
+html[data-theme="christmas"] .shadow-\[1px_1px_0px_\#1B2036\],
+html[data-theme="christmas"] .shadow-\[1px_1px_0px_\#000000\],
+html[data-theme="christmas"] .shadow-\[1\.5px_1\.5px_0px_\#1B2036\],
+html[data-theme="christmas"] .shadow-\[2px_2px_0px_\#1B2036\],
+html[data-theme="christmas"] .shadow-\[2px_2px_0px_\#000000\],
+html[data-theme="christmas"] .shadow-\[3px_3px_0px_\#1B2036\],
+html[data-theme="christmas"] .shadow-\[3px_3px_0px_\#000000\],
+html[data-theme="christmas"] .shadow-\[4px_4px_0px_\#1B2036\],
+html[data-theme="christmas"] .shadow-\[4px_4px_0px_\#000000\],
+html[data-theme="christmas"] .shadow-\[5px_5px_0px_\#1B2036\],
+html[data-theme="christmas"] .shadow-\[6px_6px_0px_\#1B2036\],
+html[data-theme="christmas"] .retro-shadow,
+html[data-theme="christmas"] .retro-shadow-sm,
+html[data-theme="christmas"] .retro-shadow-lg {
+  box-shadow: 0 6px 18px rgba(5, 14, 10, 0.65), 0 0 0 1px rgba(255, 209, 102, 0.14);
+}
+
+/* Snow-cream & frost typography on dark evergreen surfaces */
+html[data-theme="christmas"] .text-\[\#1B2036\],
+html[data-theme="christmas"] .text-black,
+html[data-theme="christmas"] .text-neutral-900,
+html[data-theme="christmas"] .text-neutral-800,
+html[data-theme="christmas"] .text-zinc-900,
+html[data-theme="christmas"] .text-zinc-800 {
+  color: #FFFDF7;
+}
+
+html[data-theme="christmas"] .text-\[\#1B2036\]\/80,
+html[data-theme="christmas"] .text-\[\#1B2036\]\/70,
+html[data-theme="christmas"] .text-\[\#1B2036\]\/60,
+html[data-theme="christmas"] .text-\[\#1B2036\]\/50,
+html[data-theme="christmas"] .text-zinc-700,
+html[data-theme="christmas"] .text-zinc-600,
+html[data-theme="christmas"] .text-zinc-500,
+html[data-theme="christmas"] .text-neutral-700,
+html[data-theme="christmas"] .text-neutral-600,
+html[data-theme="christmas"] .text-neutral-500,
+html[data-theme="christmas"] .text-amber-900 {
+  color: #CFE3D8;
+}
+
+/* Warm Candle Gold & Holly Crimson Accents */
+html[data-theme="christmas"] .text-\[\#12908C\],
+html[data-theme="christmas"] .text-\[\#0B6C69\],
+html[data-theme="christmas"] .hover\:text-\[\#12908C\]:hover,
+html[data-theme="christmas"] .group:hover .group-hover\:text-\[\#12908C\] {
+  color: #FFD166;
+}
+
+html[data-theme="christmas"] .text-\[\#E85B41\] {
+  color: #FF7582;
+}
+
+html[data-theme="christmas"] .text-\[\#F2A93B\],
+html[data-theme="christmas"] .text-\[\#FFCA00\],
+html[data-theme="christmas"] .text-amber-500,
+html[data-theme="christmas"] .text-amber-600 {
+  color: #FFD166;
+}
+
+html[data-theme="christmas"] .text-\[\#991B1B\] {
+  color: #FFD1D6;
+}
+
+html[data-theme="christmas"] input::placeholder,
+html[data-theme="christmas"] textarea::placeholder {
+  color: rgba(207, 227, 216, 0.58);
+}
+
+html[data-theme="christmas"] .bg-\[\#1B2036\] {
+  background-color: #091812;
+  border-color: rgba(255, 209, 102, 0.45);
+}
+
+/* BRIGHT SURFACE CONTRAST GUARDS:
+   Ensure legible ink on gold, holly crimson, and emerald CTAs */
+html[data-theme="christmas"] .bg-amber-500,
+html[data-theme="christmas"] .bg-amber-400,
+html[data-theme="christmas"] .bg-\[\#F2A93B\],
+html[data-theme="christmas"] .bg-\[\#FFCA00\],
+html[data-theme="christmas"] .hover\:bg-\[\#F2A93B\]:hover,
+html[data-theme="christmas"] .hover\:bg-amber-400:hover {
+  background: linear-gradient(135deg, #FFD166 0%, #F4A261 100%);
+  color: #0F241B;
+  border-color: #FFE8A3;
+}
+
+html[data-theme="christmas"] .bg-amber-500 *,
+html[data-theme="christmas"] .bg-amber-400 *,
+html[data-theme="christmas"] .bg-\[\#F2A93B\] *,
+html[data-theme="christmas"] .bg-\[\#FFCA00\] *,
+html[data-theme="christmas"] .hover\:bg-\[\#F2A93B\]:hover * {
+  color: #0F241B;
+}
+
+html[data-theme="christmas"] .bg-\[\#12908C\],
+html[data-theme="christmas"] .hover\:bg-\[\#12908C\]:hover,
+html[data-theme="christmas"] .hover\:bg-\[\#0B6C69\]:hover {
+  background: linear-gradient(135deg, #D62839 0%, #B91C2E 100%);
+  color: #FFFFFF;
+  border-color: #FF8591;
+}
+
+html[data-theme="christmas"] .bg-\[\#12908C\] *,
+html[data-theme="christmas"] .hover\:bg-\[\#12908C\]:hover * {
+  color: #FFFFFF;
+}
+
+html[data-theme="christmas"] .bg-\[\#E85B41\] {
+  background: linear-gradient(135deg, #1B7A4E 0%, #145D3B 100%);
+  color: #FFFFFF;
+  border-color: #6EE7B7;
+}
+
+html[data-theme="christmas"] .bg-\[\#E85B41\] * {
+  color: #FFFFFF;
+}
+
+/* SVG PixelIcons adaptation */
+html[data-theme="christmas"] svg rect[fill="#1B2036"] {
+  fill: #FFFDF7;
+}
+
+html[data-theme="christmas"] .bg-\[\#F2A93B\] svg rect[fill="#1B2036"],
+html[data-theme="christmas"] .bg-amber-500 svg rect[fill="#1B2036"],
+html[data-theme="christmas"] .hover\:bg-\[\#F2A93B\]:hover svg rect[fill="#1B2036"] {
+  fill: #0F241B;
+}
+
+html[data-theme="christmas"] .bg-\[\#12908C\] svg rect[fill="#1B2036"] {
+  fill: #FFFFFF;
+}
+
+/* Holiday garland stripe motif */
+html[data-theme="christmas"] .stripe-mini i:nth-child(1) { background: #D62839; }
+html[data-theme="christmas"] .stripe-mini i:nth-child(2) { background: #FFD166; }
+html[data-theme="christmas"] .stripe-mini i:nth-child(3) { background: #22C55E; }
+html[data-theme="christmas"] .stripe-mini i:nth-child(4) { background: #FFFDF7; }
+
+/* ==========================================================================
+   TEMPORARY NEW YEAR'S EVE / PASSAGEM DE ANO THEME (Dec 31 – Jan 1)
+   Reverts automatically to the base template UI starting Jan 2.
+   ========================================================================== */
+
+@keyframes newYearSparkleFall {
+  0% {
+    transform: translate3d(0, -10%, 0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(14px, 110vh, 0) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+.newyear-sparkle {
+  animation: newYearSparkleFall 8.5s linear infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .newyear-sparkle {
+    animation: none !important;
+    opacity: 0.35;
+  }
+}
+
+html[data-theme="newyear"],
+html[data-theme="newyear"] body {
+  background-color: #0B1026;
+  color: #FFFDF5;
+  scrollbar-color: #FFD770 #0B1026;
+}
+
+html[data-theme="newyear"] ::-webkit-scrollbar-track {
+  background: #0B1026;
+}
+
+html[data-theme="newyear"] ::-webkit-scrollbar-thumb {
+  background-color: #FFD770;
+  border: 1.5px solid #0B1026;
+}
+
+html[data-theme="newyear"] ::-webkit-scrollbar-thumb:hover {
+  background-color: #38BDF8;
+}
+
+/* Midnight velvet navy canvas & champagne slate surfaces */
+html[data-theme="newyear"] .app-screen-container,
+html[data-theme="newyear"] .bg-\[\#F6EFDC\],
+html[data-theme="newyear"] .bg-\[\#FAF6EB\],
+html[data-theme="newyear"] .bg-\[\#FAF7F0\] {
+  background-color: #111836;
+  color: #FFFDF5;
+}
+
+html[data-theme="newyear"] header.bg-\[\#F6EFDC\] {
+  background: linear-gradient(90deg, rgba(11, 16, 38, 0.98) 0%, rgba(22, 31, 68, 0.98) 50%, rgba(11, 16, 38, 0.98) 100%);
+  border-bottom: 2px solid #FFD770;
+  box-shadow: 0 4px 22px rgba(255, 215, 112, 0.2);
+}
+
+html[data-theme="newyear"] nav.bg-\[\#F6EFDC\] {
+  background: linear-gradient(90deg, rgba(10, 14, 34, 0.98) 0%, rgba(20, 28, 62, 0.98) 50%, rgba(10, 14, 34, 0.98) 100%);
+  border-top: 2px solid #FFD770;
+  box-shadow: 0 -4px 18px rgba(255, 215, 112, 0.16);
+}
+
+/* Secondary inset cards, inputs, and dropdown surfaces */
+html[data-theme="newyear"] .bg-\[\#EFE6CC\],
+html[data-theme="newyear"] .bg-\[\#EFE6CC\]\/70,
+html[data-theme="newyear"] .bg-\[\#EFE6CC\]\/60,
+html[data-theme="newyear"] .bg-\[\#EFE6CC\]\/50,
+html[data-theme="newyear"] .bg-white,
+html[data-theme="newyear"] .bg-white\/95,
+html[data-theme="newyear"] .bg-white\/90,
+html[data-theme="newyear"] .bg-white\/70,
+html[data-theme="newyear"] .bg-white\/60,
+html[data-theme="newyear"] .bg-white\/40,
+html[data-theme="newyear"] .bg-zinc-50,
+html[data-theme="newyear"] .bg-zinc-50\/90,
+html[data-theme="newyear"] .bg-zinc-100,
+html[data-theme="newyear"] .bg-zinc-200,
+html[data-theme="newyear"] .bg-zinc-300,
+html[data-theme="newyear"] .bg-neutral-100,
+html[data-theme="newyear"] .bg-neutral-200,
+html[data-theme="newyear"] .bg-neutral-300,
+html[data-theme="newyear"] .hover\:bg-\[\#EFE6CC\]:hover,
+html[data-theme="newyear"] .hover\:bg-white:hover,
+html[data-theme="newyear"] .hover\:bg-zinc-100:hover {
+  background-color: #1A234A;
+  color: #FFFDF5;
+}
+
+html[data-theme="newyear"] .bg-amber-50,
+html[data-theme="newyear"] .bg-amber-50\/80,
+html[data-theme="newyear"] .bg-amber-50\/50,
+html[data-theme="newyear"] .bg-amber-100,
+html[data-theme="newyear"] .bg-amber-100\/90,
+html[data-theme="newyear"] .bg-amber-500\/10,
+html[data-theme="newyear"] .bg-amber-500\/15,
+html[data-theme="newyear"] .bg-amber-500\/20 {
+  background-color: rgba(255, 215, 112, 0.14);
+  color: #FFF4D2;
+}
+
+html[data-theme="newyear"] .bg-\[\#FEE2E2\] {
+  background-color: rgba(244, 63, 94, 0.2);
+  color: #FFE4E6;
+}
+
+/* Champagne gold borders & midnight elevation shadows */
+html[data-theme="newyear"] .border-\[\#1B2036\],
+html[data-theme="newyear"] .border-black,
+html[data-theme="newyear"] .border-zinc-700,
+html[data-theme="newyear"] .border-zinc-200,
+html[data-theme="newyear"] .border-neutral-200,
+html[data-theme="newyear"] .border-amber-200,
+html[data-theme="newyear"] .border-amber-300 {
+  border-color: rgba(255, 215, 112, 0.45);
+}
+
+html[data-theme="newyear"] .border-\[\#1B2036\]\/20,
+html[data-theme="newyear"] .border-\[\#1B2036\]\/40 {
+  border-color: rgba(255, 215, 112, 0.28);
+}
+
+html[data-theme="newyear"] .shadow-\[1px_1px_0px_\#1B2036\],
+html[data-theme="newyear"] .shadow-\[1px_1px_0px_\#000000\],
+html[data-theme="newyear"] .shadow-\[1\.5px_1\.5px_0px_\#1B2036\],
+html[data-theme="newyear"] .shadow-\[2px_2px_0px_\#1B2036\],
+html[data-theme="newyear"] .shadow-\[2px_2px_0px_\#000000\],
+html[data-theme="newyear"] .shadow-\[3px_3px_0px_\#1B2036\],
+html[data-theme="newyear"] .shadow-\[3px_3px_0px_\#000000\],
+html[data-theme="newyear"] .shadow-\[4px_4px_0px_\#1B2036\],
+html[data-theme="newyear"] .shadow-\[4px_4px_0px_\#000000\],
+html[data-theme="newyear"] .shadow-\[5px_5px_0px_\#1B2036\],
+html[data-theme="newyear"] .shadow-\[6px_6px_0px_\#1B2036\],
+html[data-theme="newyear"] .retro-shadow,
+html[data-theme="newyear"] .retro-shadow-sm,
+html[data-theme="newyear"] .retro-shadow-lg {
+  box-shadow: 0 6px 18px rgba(4, 7, 22, 0.7), 0 0 0 1px rgba(255, 215, 112, 0.16);
+}
+
+/* Ivory champagne & cool silver typography on midnight surfaces */
+html[data-theme="newyear"] .text-\[\#1B2036\],
+html[data-theme="newyear"] .text-black,
+html[data-theme="newyear"] .text-neutral-900,
+html[data-theme="newyear"] .text-neutral-800,
+html[data-theme="newyear"] .text-zinc-900,
+html[data-theme="newyear"] .text-zinc-800 {
+  color: #FFFDF5;
+}
+
+html[data-theme="newyear"] .text-\[\#1B2036\]\/80,
+html[data-theme="newyear"] .text-\[\#1B2036\]\/70,
+html[data-theme="newyear"] .text-\[\#1B2036\]\/60,
+html[data-theme="newyear"] .text-\[\#1B2036\]\/50,
+html[data-theme="newyear"] .text-zinc-700,
+html[data-theme="newyear"] .text-zinc-600,
+html[data-theme="newyear"] .text-zinc-500,
+html[data-theme="newyear"] .text-neutral-700,
+html[data-theme="newyear"] .text-neutral-600,
+html[data-theme="newyear"] .text-neutral-500,
+html[data-theme="newyear"] .text-amber-900 {
+  color: #CBD5E1;
+}
+
+/* Champagne Gold & Midnight Sparkle Accents */
+html[data-theme="newyear"] .text-\[\#12908C\],
+html[data-theme="newyear"] .text-\[\#0B6C69\],
+html[data-theme="newyear"] .hover\:text-\[\#12908C\]:hover,
+html[data-theme="newyear"] .group:hover .group-hover\:text-\[\#12908C\] {
+  color: #FFD770;
+}
+
+html[data-theme="newyear"] .text-\[\#E85B41\] {
+  color: #FB7185;
+}
+
+html[data-theme="newyear"] .text-\[\#F2A93B\],
+html[data-theme="newyear"] .text-\[\#FFCA00\],
+html[data-theme="newyear"] .text-amber-500,
+html[data-theme="newyear"] .text-amber-600 {
+  color: #FFD770;
+}
+
+html[data-theme="newyear"] .text-\[\#991B1B\] {
+  color: #FFE4E6;
+}
+
+html[data-theme="newyear"] input::placeholder,
+html[data-theme="newyear"] textarea::placeholder {
+  color: rgba(203, 213, 225, 0.58);
+}
+
+html[data-theme="newyear"] .bg-\[\#1B2036\] {
+  background-color: #080C1F;
+  border-color: rgba(255, 215, 112, 0.48);
+}
+
+/* BRIGHT SURFACE CONTRAST GUARDS:
+   Ensure dark legible ink on champagne gold & sparkling azure CTAs */
+html[data-theme="newyear"] .bg-amber-500,
+html[data-theme="newyear"] .bg-amber-400,
+html[data-theme="newyear"] .bg-\[\#F2A93B\],
+html[data-theme="newyear"] .bg-\[\#FFCA00\],
+html[data-theme="newyear"] .hover\:bg-\[\#F2A93B\]:hover,
+html[data-theme="newyear"] .hover\:bg-amber-400:hover {
+  background: linear-gradient(135deg, #FFE28A 0%, #F5B731 100%);
+  color: #0B1026;
+  border-color: #FFF3C4;
+}
+
+html[data-theme="newyear"] .bg-amber-500 *,
+html[data-theme="newyear"] .bg-amber-400 *,
+html[data-theme="newyear"] .bg-\[\#F2A93B\] *,
+html[data-theme="newyear"] .bg-\[\#FFCA00\] *,
+html[data-theme="newyear"] .hover\:bg-\[\#F2A93B\]:hover * {
+  color: #0B1026;
+}
+
+html[data-theme="newyear"] .bg-\[\#12908C\],
+html[data-theme="newyear"] .hover\:bg-\[\#12908C\]:hover,
+html[data-theme="newyear"] .hover\:bg-\[\#0B6C69\]:hover {
+  background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
+  color: #081226;
+  border-color: #BAE6FD;
+}
+
+html[data-theme="newyear"] .bg-\[\#12908C\] *,
+html[data-theme="newyear"] .hover\:bg-\[\#12908C\]:hover * {
+  color: #081226;
+}
+
+html[data-theme="newyear"] .bg-\[\#E85B41\] {
+  background: linear-gradient(135deg, #F43F5E 0%, #D97706 100%);
+  color: #FFFFFF;
+  border-color: #FDE68A;
+}
+
+html[data-theme="newyear"] .bg-\[\#E85B41\] * {
+  color: #FFFFFF;
+}
+
+/* SVG PixelIcons adaptation */
+html[data-theme="newyear"] svg rect[fill="#1B2036"] {
+  fill: #FFFDF5;
+}
+
+html[data-theme="newyear"] .bg-\[\#F2A93B\] svg rect[fill="#1B2036"],
+html[data-theme="newyear"] .bg-amber-500 svg rect[fill="#1B2036"],
+html[data-theme="newyear"] .bg-\[\#12908C\] svg rect[fill="#1B2036"],
+html[data-theme="newyear"] .hover\:bg-\[\#F2A93B\]:hover svg rect[fill="#1B2036"] {
+  fill: #0B1026;
+}
+
+/* Festive champagne & fireworks stripe motif */
+html[data-theme="newyear"] .stripe-mini i:nth-child(1) { background: #FFD770; }
+html[data-theme="newyear"] .stripe-mini i:nth-child(2) { background: #FFFDF5; }
+html[data-theme="newyear"] .stripe-mini i:nth-child(3) { background: #38BDF8; }
+html[data-theme="newyear"] .stripe-mini i:nth-child(4) { background: #FB7185; }
+
+
 

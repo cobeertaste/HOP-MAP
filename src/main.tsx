@@ -75,9 +75,9 @@ if (typeof window !== 'undefined') {
     if (
       reasonStr.includes('google.maps') || 
       reasonStr.includes('gm_authFailure') || 
-      reasonStr.includes('ApiNotActivatedMapError')
+      reasonStr.includes('ApiNotActivatedMapError') ||
+      reasonStr.includes('WebSocket closed without opened')
     ) {
-      console.warn('Ignored Google Maps unhandled promise rejection:', reason);
       event.preventDefault();
     }
   });

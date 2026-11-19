@@ -468,6 +468,17 @@ export const ALL_BADGES: Badge[] = [
     rarity: 'legendary'
   },
   {
+    id: 'special_gta6',
+    code: 'SPECIAL_GTA6',
+    icon: '🌴',
+    namePt: 'VICE HOPPER (GTA VI)',
+    nameEn: 'VICE HOPPER (GTA VI)',
+    descriptionPt: 'Badge especial Edição GTA 6! Conquistado por utilizadores que façam pelo menos um check-in até dia 22 de Novembro de 2026.',
+    descriptionEn: 'Special GTA 6 Edition badge! Awarded to users who complete at least one check-in on or before November 22, 2026.',
+    category: 'special',
+    rarity: 'legendary'
+  },
+  {
     id: 'pioneer_referral',
     code: 'PIONEER_REFERRAL',
     icon: '🤝',
@@ -750,6 +761,7 @@ export interface BadgeCalculationContext {
   reviewsCount?: number;
   donationsCount?: number;
   lang?: Language;
+  now?: Date;
 }
 
 // Anonymous Gregorian Easter Sunday calculation
@@ -1408,6 +1420,41 @@ export function calculateUserBadges(ctx: BadgeCalculationContext): BadgeUnlockSt
         } else {
           progressPercent = 0;
           progressText = isPt ? 'Expirado a 31 de Dezembro de 2026 🔒' : 'Expired on December 31, 2026 🔒';
+        }
+        break;
+      }
+
+      case 'special_gta6': {
+        const now = ctx.now ?? new Date();
+        // Cutoff deadline: November 22, 2026 23:59:59.999 (local time)
+        const cutoffDate = new Date(2026, 10, 22, 23, 59, 59, 999);
+        const isCurrentlyBeforeCutoff = now.getTime() <= cutoffDate.getTime();
+        const hasAnyRecordedCheckin = totalCheckinsCount >= 1 || checkedInBars.length >= 1 || festivals.length >= 1;
+
+        const hasDateOnOrBeforeCutoff =
+          allParsedDates.some(d => d.year < 2026 || (d.year === 2026 && (d.month < 11 || (d.month === 11 && d.day <= 22)))) ||
+          history.some(h => {
+            const parsed = parseCheckinDate(h.date, h.timestamp);
+            if (!parsed) return false;
+            return parsed.year < 2026 || (parsed.year === 2026 && (parsed.month < 11 || (parsed.month === 11 && parsed.day <= 22)));
+          });
+
+        const alreadyEarned = Boolean(
+          (user.earnedBadges && user.earnedBadges.includes('special_gta6')) ||
+          (user.badges && user.badges.some((b: any) => (typeof b === 'string' ? b : b?.id) === 'special_gta6'))
+        );
+
+        unlocked = alreadyEarned || hasDateOnOrBeforeCutoff || (isCurrentlyBeforeCutoff && hasAnyRecordedCheckin);
+
+        if (unlocked) {
+          progressPercent = 100;
+          progressText = isPt ? 'Conquistado! 🌴 (Vice Edition 2026)' : 'Unlocked! 🌴 (Vice Edition 2026)';
+        } else if (isCurrentlyBeforeCutoff) {
+          progressPercent = 0;
+          progressText = isPt ? 'Faz 1 check-in até 22/11/2026 (0/1)' : 'Do 1 check-in until Nov 22, 2026 (0/1)';
+        } else {
+          progressPercent = 0;
+          progressText = isPt ? 'Expirado a 22 de Novembro de 2026 🔒' : 'Expired on November 22, 2026 🔒';
         }
         break;
       }
